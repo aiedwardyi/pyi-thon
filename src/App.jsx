@@ -19,26 +19,29 @@ const DARK = {
   syntaxNumber: "#38bdf8", syntaxFunction: "#818cf8", syntaxBuiltin: "#34d399",
   dotGrid: "rgba(255,255,255,0.03)", scheme: "dark",
   trafficRed: "rgba(244,63,94,0.5)", trafficYellow: "rgba(245,158,11,0.5)", trafficGreen: "rgba(34,197,94,0.5)",
+  btnText: "#ffffff",
 };
 
 const LIGHT = {
-  bg: "#f5f5f7", bgCard: "#ffffff", bgPanel: "#f0f0f3", bgSubtle: "rgba(0,0,0,0.025)",
-  bgGlass: "rgba(255,255,255,0.88)", bgGlassStrong: "rgba(255,255,255,0.95)",
-  border: "rgba(0,0,0,0.1)", borderLight: "rgba(0,0,0,0.06)", borderFocus: "rgba(99,102,241,0.4)",
-  text: "#1a1a2e", textMuted: "rgba(0,0,0,0.75)", textDim: "rgba(0,0,0,0.4)",
-  accent: "#6366f1", accentLight: "#818cf8", accentDark: "#4f46e5", accentDeep: "#4338ca",
-  accentGlow: "rgba(99,102,241,0.25)", accentGlowSoft: "rgba(99,102,241,0.08)",
-  accentText: "rgba(79,70,229,0.85)", accentTextDim: "rgba(79,70,229,0.45)",
-  accentBg: "rgba(99,102,241,0.08)", accentBorder: "rgba(99,102,241,0.2)",
-  green: "#059669", greenLight: "#34d399", greenBg: "rgba(16,185,129,0.08)", greenBorder: "rgba(16,185,129,0.2)",
-  red: "#e11d48", redBg: "rgba(244,63,94,0.06)", redBorder: "rgba(244,63,94,0.18)",
-  amber: "#d97706", amberBg: "rgba(245,158,11,0.08)", amberBorder: "rgba(245,158,11,0.18)", amberText: "rgba(180,83,9,0.85)",
-  codeBg: "rgba(0,0,0,0.04)", codeText: "#047857",
-  lineNum: "rgba(99,102,241,0.2)", lineNumActive: "rgba(99,102,241,0.5)",
-  syntaxKeyword: "#7c3aed", syntaxString: "#b45309", syntaxComment: "rgba(0,0,0,0.35)",
-  syntaxNumber: "#0284c7", syntaxFunction: "#4f46e5", syntaxBuiltin: "#059669",
+  bg: "#f0f1f5", bgCard: "#ffffff", bgPanel: "#e8e9ee", bgSubtle: "rgba(0,0,0,0.03)",
+  bgGlass: "rgba(240,241,245,0.85)", bgGlassStrong: "rgba(240,241,245,0.95)",
+  border: "rgba(0,0,0,0.12)", borderLight: "rgba(0,0,0,0.08)", borderFocus: "rgba(99,102,241,0.5)",
+  text: "#111827", textMuted: "#374151", textDim: "#6b7280",
+  accent: "#4f46e5", accentLight: "#6366f1", accentDark: "#4338ca", accentDeep: "#3730a3",
+  accentGlow: "rgba(79,70,229,0.2)", accentGlowSoft: "rgba(79,70,229,0.06)",
+  accentText: "#4338ca", accentTextDim: "#6b7280",
+  accentBg: "rgba(99,102,241,0.08)", accentBorder: "rgba(99,102,241,0.25)",
+  green: "#047857", greenLight: "#059669", greenBg: "rgba(5,150,105,0.08)", greenBorder: "rgba(5,150,105,0.25)",
+  red: "#be123c", redBg: "rgba(190,18,60,0.06)", redBorder: "rgba(190,18,60,0.2)",
+  amber: "#b45309", amberBg: "rgba(180,83,9,0.08)", amberBorder: "rgba(180,83,9,0.2)", amberText: "#92400e",
+  codeBg: "#f3f4f6", codeText: "#065f46",
+  lineNum: "rgba(79,70,229,0.25)", lineNumActive: "rgba(79,70,229,0.6)",
+  syntaxKeyword: "#7c3aed", syntaxString: "#92400e", syntaxComment: "#9ca3af",
+  syntaxNumber: "#0369a1", syntaxFunction: "#4338ca", syntaxBuiltin: "#047857",
   dotGrid: "rgba(0,0,0,0.04)", scheme: "light",
-  trafficRed: "rgba(244,63,94,0.6)", trafficYellow: "rgba(245,158,11,0.6)", trafficGreen: "rgba(34,197,94,0.6)",
+  trafficRed: "rgba(220,38,38,0.6)", trafficYellow: "rgba(217,119,6,0.6)", trafficGreen: "rgba(5,150,105,0.6)",
+  // Light mode button text on gradient backgrounds should be white
+  btnText: "#ffffff",
 };
 
 // Mutable theme reference — updated by component
@@ -46,43 +49,45 @@ let C = { ...DARK };
 
 // ─── OFFLINE EVALUATOR ───
 function evaluateOffline(userCode, level) {
-  const code = userCode.trim().toLowerCase();
-  const expected = level.expectedOutput.trim().toLowerCase();
-  if (!code || code === level.starterCode.trim().toLowerCase()) {
+  const code = userCode.trim();
+  const codeLower = code.toLowerCase();
+  const expected = level.expectedOutput.trim();
+  const expectedLower = expected.toLowerCase();
+  if (!code || code === level.starterCode.trim()) {
     return { correct: false, feedback: "Write some code first!", explanation: "" };
   }
-  // Check for key patterns from the expected output in the code
-  const expectedLines = expected.split("\n");
-  const hintClean = (level.hint || "").replace(/\\n/g, "\n").toLowerCase();
 
-  // Simple heuristic checks
-  let score = 0;
-  let checks = 0;
-
-  // Check if expected output values appear in code (as strings or expressions)
-  for (const line of expectedLines) {
-    checks++;
-    if (code.includes(line) || code.includes(`"${line}"`) || code.includes(`'${line}'`)) score++;
+  // Must have print() for levels that expect output
+  if (expected && !codeLower.includes("print")) {
+    return { correct: false, feedback: "Don't forget to use print() to display your output.", explanation: "Offline mode checks for key patterns." };
   }
+
+  // Check if expected output values appear in the code as strings or expressions
+  const expectedLines = expectedLower.split("\n");
+  let outputMatches = 0;
+  for (const line of expectedLines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    if (codeLower.includes(`"${trimmed}"`) || codeLower.includes(`'${trimmed}'`) || codeLower.includes(trimmed)) outputMatches++;
+  }
+  const outputRatio = expectedLines.filter(l => l.trim()).length > 0
+    ? outputMatches / expectedLines.filter(l => l.trim()).length : 0;
 
   // Check for key constructs from the hint
-  const hintKeywords = hintClean.match(/\b(print|input|def|class|for|while|if|elif|else|return|import|try|except|with|open|append|range|len|sum|int|str|float|round)\b/g) || [];
-  const uniqueHintKw = [...new Set(hintKeywords)];
-  for (const kw of uniqueHintKw) {
-    checks++;
-    if (code.includes(kw)) score++;
-  }
+  const hintClean = (level.hint || "").replace(/\\n/g, "\n").toLowerCase();
+  const hintKeywords = [...new Set((hintClean.match(/\b(print|input|def|class|for|while|if|elif|else|return|import|try|except|with|open|append|range|len|sum|int|str|float|round|break|continue)\b/g) || []))];
+  let kwMatches = 0;
+  for (const kw of hintKeywords) { if (codeLower.includes(kw)) kwMatches++; }
+  const kwRatio = hintKeywords.length > 0 ? kwMatches / hintKeywords.length : 1;
 
-  // Check if the code has print() (almost always required)
-  if (level.expectedOutput && !code.includes("print")) {
-    return { correct: false, feedback: "Don't forget to use print() to display your output.", explanation: "Offline mode: checking for print() statement." };
-  }
-
-  const ratio = checks > 0 ? score / checks : 0;
-  if (ratio >= 0.6) {
+  // Require both: expected output values present AND key constructs used
+  if (outputRatio >= 0.5 && kwRatio >= 0.5) {
     return { correct: true, feedback: "Looks correct! (Offline mode — pattern matching)", explanation: "Offline evaluation checks for key patterns. For smarter feedback, switch to Claude mode." };
   }
-  return { correct: false, feedback: "Hmm, that doesn't look quite right. Check the hint for guidance.", explanation: "Offline evaluation checks for key patterns. Your code may still be correct — try Claude mode for smarter evaluation." };
+  if (outputRatio < 0.5) {
+    return { correct: false, feedback: "Your output doesn't seem to match what's expected. Check the task description.", explanation: "Offline mode checks for expected output patterns in your code." };
+  }
+  return { correct: false, feedback: "Hmm, that doesn't look quite right. Check the hint for guidance.", explanation: "Offline evaluation checks for key patterns. Try Claude mode for smarter evaluation." };
 }
 
 // ─── PYTHON SYNTAX HIGHLIGHTER ───
@@ -440,20 +445,20 @@ export default function PyithonApp() {
   // ═══ RENDER: SETTINGS ═══
   const toggleStyle = (active) => ({
     width: 44, height: 24, borderRadius: 12, padding: 2, cursor: "pointer", border: "none",
-    background: active ? C.accent : C.bgSubtle, transition: "all 0.2s",
+    background: active ? C.accent : (darkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.12)"),
+    transition: "all 0.2s",
     display: "flex", alignItems: "center", justifyContent: active ? "flex-end" : "flex-start",
-    boxShadow: `inset 0 1px 3px ${active ? "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.1)"}`,
   });
-  const toggleDot = { width: 20, height: 20, borderRadius: "50%", background: darkMode ? "#fff" : (({ active }) => active ? "#fff" : C.text)({ active: false }), transition: "all 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" };
 
   if (showApiSetup) {
     return (
-      <div style={{ ...pageStyle, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 32 }}>
-        <div style={{ position: "fixed", top: "40%", left: "50%", transform: "translate(-50%,-50%)", width: 600, height: 600, background: C.accentGlowSoft, borderRadius: "50%", filter: "blur(150px)", pointerEvents: "none" }} />
+      <div style={{ ...pageStyle, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 32, position: "relative" }}>
+        {/* Clickable backdrop */}
+        <div onClick={() => setShowApiSetup(false)} style={{ position: "fixed", inset: 0, background: darkMode ? "rgba(0,0,0,0.5)" : "rgba(0,0,0,0.2)", backdropFilter: "blur(8px)", zIndex: 0 }} />
         <div style={{
           maxWidth: 440, width: "100%", background: C.bgGlass, backdropFilter: "blur(24px)",
           border: `1px solid ${C.border}`, borderRadius: 20, padding: 32,
-          boxShadow: `0 24px 64px rgba(0,0,0,${darkMode ? "0.5" : "0.15"}), inset 0 1px 0 rgba(255,255,255,0.04)`,
+          boxShadow: `0 24px 64px rgba(0,0,0,${darkMode ? "0.5" : "0.15"})`,
           position: "relative", zIndex: 1,
         }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
@@ -470,7 +475,7 @@ export default function PyithonApp() {
               <p style={{ color: C.textDim, fontSize: 12, margin: "2px 0 0" }}>Switch appearance</p>
             </div>
             <button onClick={() => setDarkMode(!darkMode)} style={toggleStyle(!darkMode)}>
-              <div style={{ ...toggleDot, background: "#fff" }} />
+              <div style={{ width: 20, height: 20, borderRadius: "50%", background: "#fff", transition: "all 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }} />
             </button>
           </div>
 
@@ -481,7 +486,7 @@ export default function PyithonApp() {
               <p style={{ color: C.textDim, fontSize: 12, margin: "2px 0 0" }}>{offlineMode ? "Pattern matching (no API)" : "Claude evaluates your code"}</p>
             </div>
             <button onClick={() => setOfflineMode(!offlineMode)} style={toggleStyle(offlineMode)}>
-              <div style={{ ...toggleDot, background: "#fff" }} />
+              <div style={{ width: 20, height: 20, borderRadius: "50%", background: "#fff", transition: "all 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }} />
             </button>
           </div>
 
@@ -543,7 +548,7 @@ export default function PyithonApp() {
           <p style={{ color: C.accentTextDim, fontSize: 12, marginBottom: 48, letterSpacing: 2, textTransform: "uppercase" }}>30 levels &middot; 3 phases &middot; Local Edition</p>
 
           <button onClick={() => setShowWelcome(false)} style={{
-            padding: "16px 52px", borderRadius: 14, fontWeight: 700, color: C.text, fontSize: 16,
+            padding: "16px 52px", borderRadius: 14, fontWeight: 700, color: C.btnText, fontSize: 16,
             border: "none", cursor: "pointer", fontFamily: "inherit",
             background: `linear-gradient(135deg, ${C.accentDeep}, ${C.accent})`,
             boxShadow: `0 8px 40px ${C.accentGlow}, inset 0 1px 0 rgba(255,255,255,0.1)`,
@@ -598,7 +603,7 @@ export default function PyithonApp() {
                   width: 32, height: 32, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center",
                   fontSize: 11, fontWeight: 800, letterSpacing: 1,
                   background: `linear-gradient(135deg, ${PHASE_COLORS[phase][0]}, ${PHASE_COLORS[phase][1]})`,
-                  color: C.text,
+                  color: C.btnText,
                 }}>{PHASE_ICONS[phase]}</div>
                 <span style={{ fontSize: 14, fontWeight: 700, color: C.text, letterSpacing: -0.3 }}>{PHASE_NAMES[phase]}</span>
                 <div style={{ flex: 1, height: 1, background: C.border }} />
@@ -771,7 +776,7 @@ export default function PyithonApp() {
               }
             </div>
             <div style={{ flex: 1 }}>
-              <span style={{ fontSize: 14, fontWeight: 700, color: feedback.correct ? C.greenLight : "#fca5a5" }}>{feedback.message}</span>
+              <span style={{ fontSize: 14, fontWeight: 700, color: feedback.correct ? C.green : C.red }}>{feedback.message}</span>
             </div>
             {feedback.correct && <span style={{ fontSize: 13, color: C.amber, fontWeight: 700, background: C.amberBg, padding: "4px 10px", borderRadius: 8, border: `1px solid ${C.amberBorder}` }}>+100 XP</span>}
           </div>
@@ -804,7 +809,7 @@ export default function PyithonApp() {
 
           <div style={{ paddingTop: 16, borderTop: `1px solid ${C.border}` }}>
             <p style={{ fontSize: 10, fontWeight: 700, color: C.accentTextDim, textTransform: "uppercase", letterSpacing: 1.5, margin: "0 0 6px" }}>Concept</p>
-            <p style={{ color: "rgba(165,180,252,0.6)", fontSize: 12, lineHeight: 1.7, margin: 0 }}>{level.explanation}</p>
+            <p style={{ color: C.textDim, fontSize: 12, lineHeight: 1.7, margin: 0 }}>{level.explanation}</p>
           </div>
         </div>
       ) : (
@@ -927,7 +932,7 @@ export default function PyithonApp() {
             <div style={{
               fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 20,
               background: `linear-gradient(135deg, ${PHASE_COLORS[level.phase][0]}, ${PHASE_COLORS[level.phase][1]})`,
-              color: C.text, letterSpacing: 0.5,
+              color: C.btnText, letterSpacing: 0.5,
             }}>Phase {level.phase}</div>
             <span style={{ color: C.textDim, fontSize: 11 }}>Day {level.day}</span>
             {level.tags.includes("boss") && <span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 20, background: C.amberBg, border: `1px solid ${C.amberBorder}`, color: C.amber, fontWeight: 700 }}>BOSS</span>}
@@ -1036,7 +1041,7 @@ export default function PyithonApp() {
 
         <button onClick={handleSubmit} disabled={isEvaluating} style={{
           flex: 1, padding: "12px 0", borderRadius: 12, fontSize: 14, fontWeight: 700,
-          color: C.text, border: "none", fontFamily: "inherit",
+          color: C.btnText, border: "none", fontFamily: "inherit",
           cursor: isEvaluating ? "not-allowed" : "pointer",
           background: `linear-gradient(135deg, ${C.accentDeep}, ${C.accent})`,
           boxShadow: `0 4px 24px ${C.accentGlow}`,
