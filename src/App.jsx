@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 
-// ─── COLOR PALETTE (Blue-Violet Premium Dark) ───
-const C = {
+// ─── COLOR PALETTES ───
+const DARK = {
   bg: "#08090e", bgCard: "#0f1117", bgPanel: "#131520", bgSubtle: "rgba(255,255,255,0.025)",
   bgGlass: "rgba(15,17,23,0.85)", bgGlassStrong: "rgba(15,17,23,0.95)",
   border: "rgba(255,255,255,0.06)", borderLight: "rgba(255,255,255,0.04)", borderFocus: "rgba(129,140,248,0.3)",
@@ -15,10 +15,75 @@ const C = {
   amber: "#fbbf24", amberBg: "rgba(245,158,11,0.08)", amberBorder: "rgba(245,158,11,0.18)", amberText: "rgba(252,211,77,0.9)",
   codeBg: "rgba(0,0,0,0.35)", codeText: "#6ee7b7",
   lineNum: "rgba(129,140,248,0.18)", lineNumActive: "rgba(129,140,248,0.45)",
-  // Syntax highlighting
   syntaxKeyword: "#c084fc", syntaxString: "#fbbf24", syntaxComment: "rgba(255,255,255,0.3)",
   syntaxNumber: "#38bdf8", syntaxFunction: "#818cf8", syntaxBuiltin: "#34d399",
+  dotGrid: "rgba(255,255,255,0.03)", scheme: "dark",
+  trafficRed: "rgba(244,63,94,0.5)", trafficYellow: "rgba(245,158,11,0.5)", trafficGreen: "rgba(34,197,94,0.5)",
 };
+
+const LIGHT = {
+  bg: "#f5f5f7", bgCard: "#ffffff", bgPanel: "#f0f0f3", bgSubtle: "rgba(0,0,0,0.025)",
+  bgGlass: "rgba(255,255,255,0.88)", bgGlassStrong: "rgba(255,255,255,0.95)",
+  border: "rgba(0,0,0,0.1)", borderLight: "rgba(0,0,0,0.06)", borderFocus: "rgba(99,102,241,0.4)",
+  text: "#1a1a2e", textMuted: "rgba(0,0,0,0.75)", textDim: "rgba(0,0,0,0.4)",
+  accent: "#6366f1", accentLight: "#818cf8", accentDark: "#4f46e5", accentDeep: "#4338ca",
+  accentGlow: "rgba(99,102,241,0.25)", accentGlowSoft: "rgba(99,102,241,0.08)",
+  accentText: "rgba(79,70,229,0.85)", accentTextDim: "rgba(79,70,229,0.45)",
+  accentBg: "rgba(99,102,241,0.08)", accentBorder: "rgba(99,102,241,0.2)",
+  green: "#059669", greenLight: "#34d399", greenBg: "rgba(16,185,129,0.08)", greenBorder: "rgba(16,185,129,0.2)",
+  red: "#e11d48", redBg: "rgba(244,63,94,0.06)", redBorder: "rgba(244,63,94,0.18)",
+  amber: "#d97706", amberBg: "rgba(245,158,11,0.08)", amberBorder: "rgba(245,158,11,0.18)", amberText: "rgba(180,83,9,0.85)",
+  codeBg: "rgba(0,0,0,0.04)", codeText: "#047857",
+  lineNum: "rgba(99,102,241,0.2)", lineNumActive: "rgba(99,102,241,0.5)",
+  syntaxKeyword: "#7c3aed", syntaxString: "#b45309", syntaxComment: "rgba(0,0,0,0.35)",
+  syntaxNumber: "#0284c7", syntaxFunction: "#4f46e5", syntaxBuiltin: "#059669",
+  dotGrid: "rgba(0,0,0,0.04)", scheme: "light",
+  trafficRed: "rgba(244,63,94,0.6)", trafficYellow: "rgba(245,158,11,0.6)", trafficGreen: "rgba(34,197,94,0.6)",
+};
+
+// Mutable theme reference — updated by component
+let C = { ...DARK };
+
+// ─── OFFLINE EVALUATOR ───
+function evaluateOffline(userCode, level) {
+  const code = userCode.trim().toLowerCase();
+  const expected = level.expectedOutput.trim().toLowerCase();
+  if (!code || code === level.starterCode.trim().toLowerCase()) {
+    return { correct: false, feedback: "Write some code first!", explanation: "" };
+  }
+  // Check for key patterns from the expected output in the code
+  const expectedLines = expected.split("\n");
+  const hintClean = (level.hint || "").replace(/\\n/g, "\n").toLowerCase();
+
+  // Simple heuristic checks
+  let score = 0;
+  let checks = 0;
+
+  // Check if expected output values appear in code (as strings or expressions)
+  for (const line of expectedLines) {
+    checks++;
+    if (code.includes(line) || code.includes(`"${line}"`) || code.includes(`'${line}'`)) score++;
+  }
+
+  // Check for key constructs from the hint
+  const hintKeywords = hintClean.match(/\b(print|input|def|class|for|while|if|elif|else|return|import|try|except|with|open|append|range|len|sum|int|str|float|round)\b/g) || [];
+  const uniqueHintKw = [...new Set(hintKeywords)];
+  for (const kw of uniqueHintKw) {
+    checks++;
+    if (code.includes(kw)) score++;
+  }
+
+  // Check if the code has print() (almost always required)
+  if (level.expectedOutput && !code.includes("print")) {
+    return { correct: false, feedback: "Don't forget to use print() to display your output.", explanation: "Offline mode: checking for print() statement." };
+  }
+
+  const ratio = checks > 0 ? score / checks : 0;
+  if (ratio >= 0.6) {
+    return { correct: true, feedback: "Looks correct! (Offline mode — pattern matching)", explanation: "Offline evaluation checks for key patterns. For smarter feedback, switch to Claude mode." };
+  }
+  return { correct: false, feedback: "Hmm, that doesn't look quite right. Check the hint for guidance.", explanation: "Offline evaluation checks for key patterns. Your code may still be correct — try Claude mode for smarter evaluation." };
+}
 
 // ─── PYTHON SYNTAX HIGHLIGHTER ───
 const PY_KEYWORDS = new Set(["def","class","if","elif","else","for","while","return","import","from","as","try","except","finally","with","in","not","and","or","is","True","False","None","break","continue","pass","raise","yield","lambda","global","nonlocal","assert","del"]);
@@ -210,6 +275,8 @@ export default function PyithonApp() {
   const [apiKey, setApiKey] = useState(() => import.meta.env.VITE_ANTHROPIC_API_KEY || localStorage.getItem("pyithon-api-key") || "");
   const [showApiSetup, setShowApiSetup] = useState(false);
   const [apiKeyInput, setApiKeyInput] = useState("");
+  const [offlineMode, setOfflineMode] = useState(() => localStorage.getItem("pyithon-offline") === "true");
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem("pyithon-theme") !== "light");
   const editorRef = useRef(null);
   const highlightRef = useRef(null);
   const audioCtxRef = useRef(null);
@@ -256,8 +323,11 @@ export default function PyithonApp() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  // Sound preference sync
+  // Theme + preferences sync
+  Object.assign(C, darkMode ? DARK : LIGHT);
   useEffect(() => { localStorage.setItem("pyithon-sound", soundEnabled); }, [soundEnabled]);
+  useEffect(() => { localStorage.setItem("pyithon-offline", offlineMode); }, [offlineMode]);
+  useEffect(() => { localStorage.setItem("pyithon-theme", darkMode ? "dark" : "light"); }, [darkMode]);
 
   // Welcome typing animation
   useEffect(() => {
@@ -297,7 +367,7 @@ export default function PyithonApp() {
 
   const handleSubmit = useCallback(async () => {
     if (isEvaluating) return;
-    if (!apiKey) { setShowApiSetup(true); return; }
+    if (!offlineMode && !apiKey) { setShowApiSetup(true); return; }
     const userCode = code.trim();
     if (!userCode || userCode === level.starterCode.trim()) {
       setFeedback({ correct: false, message: "Write some code first!", expected: level.expectedOutput });
@@ -308,7 +378,7 @@ export default function PyithonApp() {
     const expected = level.expectedOutput.trim();
     setIsEvaluating(true); setFeedback(null); setTab("output");
     try {
-      const result = await evaluateWithClaude(userCode, level, apiKey);
+      const result = offlineMode ? evaluateOffline(userCode, level) : await evaluateWithClaude(userCode, level, apiKey);
       if (result.correct) {
         setFeedback({ correct: true, message: result.feedback || "Correct!", expected, aiExplanation: result.explanation });
         const isNew = !completedLevels.has(level.id);
@@ -329,7 +399,7 @@ export default function PyithonApp() {
     } catch (err) {
       setFeedback({ correct: false, message: "Error: " + err.message, expected });
     } finally { setIsEvaluating(false); }
-  }, [code, level, completedLevels, bestStreak, streak, apiKey, isEvaluating, playTone]);
+  }, [code, level, completedLevels, bestStreak, streak, apiKey, isEvaluating, playTone, offlineMode]);
 
   // Ctrl+Enter to run
   useEffect(() => {
@@ -346,8 +416,8 @@ export default function PyithonApp() {
   const pageStyle = {
     minHeight: "100vh", background: C.bg, color: C.text,
     fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-    colorScheme: "dark",
-    backgroundImage: "radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px)",
+    colorScheme: C.scheme,
+    backgroundImage: `radial-gradient(${C.dotGrid} 1px, transparent 1px)`,
     backgroundSize: "24px 24px",
   };
   const monoFont = "'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'SF Mono', monospace";
@@ -367,58 +437,82 @@ export default function PyithonApp() {
     return { shape, color, size, left, delay, duration, drift, rotation, key: i };
   });
 
-  // ═══ RENDER: API KEY SETUP ═══
+  // ═══ RENDER: SETTINGS ═══
+  const toggleStyle = (active) => ({
+    width: 44, height: 24, borderRadius: 12, padding: 2, cursor: "pointer", border: "none",
+    background: active ? C.accent : C.bgSubtle, transition: "all 0.2s",
+    display: "flex", alignItems: "center", justifyContent: active ? "flex-end" : "flex-start",
+    boxShadow: `inset 0 1px 3px ${active ? "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.1)"}`,
+  });
+  const toggleDot = { width: 20, height: 20, borderRadius: "50%", background: darkMode ? "#fff" : (({ active }) => active ? "#fff" : C.text)({ active: false }), transition: "all 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" };
+
   if (showApiSetup) {
     return (
       <div style={{ ...pageStyle, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 32 }}>
         <div style={{ position: "fixed", top: "40%", left: "50%", transform: "translate(-50%,-50%)", width: 600, height: 600, background: C.accentGlowSoft, borderRadius: "50%", filter: "blur(150px)", pointerEvents: "none" }} />
         <div style={{
-          maxWidth: 420, width: "100%", background: C.bgGlass, backdropFilter: "blur(24px)",
+          maxWidth: 440, width: "100%", background: C.bgGlass, backdropFilter: "blur(24px)",
           border: `1px solid ${C.border}`, borderRadius: 20, padding: 32,
-          boxShadow: "0 24px 64px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04)",
+          boxShadow: `0 24px 64px rgba(0,0,0,${darkMode ? "0.5" : "0.15"}), inset 0 1px 0 rgba(255,255,255,0.04)`,
           position: "relative", zIndex: 1,
         }}>
-          <div style={{ width: 48, height: 48, borderRadius: 14, background: C.accentBg, border: `1px solid ${C.accentBorder}`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2" strokeLinecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
+            <h2 style={{ color: C.text, fontSize: 20, fontWeight: 700, margin: 0, letterSpacing: -0.5 }}>Settings</h2>
+            <button onClick={() => setShowApiSetup(false)} style={{ color: C.textDim, background: "none", border: "none", cursor: "pointer", padding: 4 }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
           </div>
-          <h2 style={{ color: C.text, fontSize: 20, fontWeight: 700, margin: "0 0 8px", letterSpacing: -0.5 }}>API Key Required</h2>
-          <p style={{ color: C.accentTextDim, fontSize: 13, lineHeight: 1.7, margin: "0 0 24px" }}>
-            Pyi-thon uses Claude to evaluate your code.<br />
-            Get a key at <span style={{ color: C.accent }}>console.anthropic.com</span><br />
-            Or set <span style={{ color: C.codeText, background: C.codeBg, padding: "1px 6px", borderRadius: 4, fontSize: 11 }}>VITE_ANTHROPIC_API_KEY</span> in .env
-          </p>
-          <input type="password" value={apiKeyInput} onChange={e => setApiKeyInput(e.target.value)} placeholder="sk-ant-..."
-            style={{
-              width: "100%", padding: "12px 16px", borderRadius: 12, background: C.codeBg,
-              border: `1px solid ${C.border}`, color: C.codeText, fontSize: 13, outline: "none",
-              fontFamily: "inherit", marginBottom: 16, transition: "border-color 0.2s",
-            }}
-            onFocus={e => e.target.style.borderColor = C.borderFocus}
-            onBlur={e => e.target.style.borderColor = C.border}
-            onKeyDown={e => e.key === "Enter" && handleSaveApiKey()}
-          />
-          <div style={{ display: "flex", gap: 10 }}>
-            <button onClick={() => setShowApiSetup(false)} style={{
-              flex: 1, padding: "12px 0", borderRadius: 12, background: "rgba(255,255,255,0.03)",
-              color: C.accentTextDim, border: `1px solid ${C.border}`, cursor: "pointer",
-              fontFamily: "inherit", fontSize: 13, fontWeight: 600, transition: "all 0.2s",
-            }}
-              onMouseEnter={e => { e.target.style.background = "rgba(255,255,255,0.06)"; e.target.style.borderColor = C.borderFocus; }}
-              onMouseLeave={e => { e.target.style.background = "rgba(255,255,255,0.03)"; e.target.style.borderColor = C.border; }}
-            >Cancel</button>
-            <button onClick={handleSaveApiKey} style={{
-              flex: 1, padding: "12px 0", borderRadius: 12,
-              background: `linear-gradient(135deg, ${C.accentDeep}, ${C.accent})`,
-              color: C.text, border: "none", cursor: "pointer", fontFamily: "inherit",
-              fontSize: 13, fontWeight: 700, transition: "all 0.2s",
-              boxShadow: `0 4px 16px ${C.accentGlow}`,
-            }}
-              onMouseEnter={e => { e.target.style.transform = "translateY(-1px)"; e.target.style.boxShadow = `0 6px 24px ${C.accentGlow}`; }}
-              onMouseLeave={e => { e.target.style.transform = "translateY(0)"; e.target.style.boxShadow = `0 4px 16px ${C.accentGlow}`; }}
-            >Save Key</button>
+
+          {/* Theme toggle */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 0", borderBottom: `1px solid ${C.border}` }}>
+            <div>
+              <p style={{ color: C.text, fontSize: 14, fontWeight: 600, margin: 0 }}>{darkMode ? "Dark" : "Light"} Mode</p>
+              <p style={{ color: C.textDim, fontSize: 12, margin: "2px 0 0" }}>Switch appearance</p>
+            </div>
+            <button onClick={() => setDarkMode(!darkMode)} style={toggleStyle(!darkMode)}>
+              <div style={{ ...toggleDot, background: "#fff" }} />
+            </button>
           </div>
+
+          {/* Offline mode toggle */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 0", borderBottom: `1px solid ${C.border}` }}>
+            <div>
+              <p style={{ color: C.text, fontSize: 14, fontWeight: 600, margin: 0 }}>Offline Mode</p>
+              <p style={{ color: C.textDim, fontSize: 12, margin: "2px 0 0" }}>{offlineMode ? "Pattern matching (no API)" : "Claude evaluates your code"}</p>
+            </div>
+            <button onClick={() => setOfflineMode(!offlineMode)} style={toggleStyle(offlineMode)}>
+              <div style={{ ...toggleDot, background: "#fff" }} />
+            </button>
+          </div>
+
+          {/* API Key */}
+          {!offlineMode && (
+            <div style={{ paddingTop: 16 }}>
+              <p style={{ color: C.text, fontSize: 14, fontWeight: 600, margin: "0 0 4px" }}>API Key</p>
+              <p style={{ color: C.textDim, fontSize: 12, lineHeight: 1.6, margin: "0 0 12px" }}>
+                Get a key at <span style={{ color: C.accent }}>console.anthropic.com</span>
+              </p>
+              <input type="password" value={apiKeyInput} onChange={e => setApiKeyInput(e.target.value)} placeholder={apiKey ? "••••••••" : "sk-ant-..."}
+                style={{
+                  width: "100%", padding: "12px 16px", borderRadius: 12, background: C.codeBg,
+                  border: `1px solid ${C.border}`, color: C.text, fontSize: 13, outline: "none",
+                  fontFamily: monoFont, marginBottom: 12, transition: "border-color 0.2s",
+                }}
+                onFocus={e => e.target.style.borderColor = C.borderFocus}
+                onBlur={e => e.target.style.borderColor = C.border}
+                onKeyDown={e => e.key === "Enter" && handleSaveApiKey()}
+              />
+              <button onClick={handleSaveApiKey} style={{
+                width: "100%", padding: "12px 0", borderRadius: 12,
+                background: `linear-gradient(135deg, ${C.accentDeep}, ${C.accent})`,
+                color: "#fff", border: "none", cursor: "pointer", fontFamily: "inherit",
+                fontSize: 13, fontWeight: 700, transition: "all 0.2s",
+                boxShadow: `0 4px 16px ${C.accentGlow}`,
+              }}>Save Key</button>
+            </div>
+          )}
         </div>
-        <style>{globalStyles}</style>
+        <style>{getGlobalStyles(C)}</style>
       </div>
     );
   }
@@ -467,7 +561,7 @@ export default function PyithonApp() {
             onMouseLeave={e => e.target.style.color = C.accentTextDim}
           >Configure API Key</button>
         </div>
-        <style>{globalStyles}</style>
+        <style>{getGlobalStyles(C)}</style>
       </div>
     );
   }
@@ -549,7 +643,7 @@ export default function PyithonApp() {
             </div>
           ))}
         </div>
-        <style>{globalStyles}</style>
+        <style>{getGlobalStyles(C)}</style>
       </div>
     );
   }
@@ -578,9 +672,9 @@ export default function PyithonApp() {
           background: "rgba(255,255,255,0.02)", borderBottom: `1px solid ${C.borderLight}`,
         }}>
           <div style={{ display: "flex", gap: 5 }}>
-            <div style={{ width: 10, height: 10, borderRadius: "50%", background: "rgba(244,63,94,0.5)" }} />
-            <div style={{ width: 10, height: 10, borderRadius: "50%", background: "rgba(245,158,11,0.5)" }} />
-            <div style={{ width: 10, height: 10, borderRadius: "50%", background: "rgba(34,197,94,0.5)" }} />
+            <div style={{ width: 10, height: 10, borderRadius: "50%", background: C.trafficRed }} />
+            <div style={{ width: 10, height: 10, borderRadius: "50%", background: C.trafficYellow }} />
+            <div style={{ width: 10, height: 10, borderRadius: "50%", background: C.trafficGreen }} />
           </div>
           <div style={{
             display: "flex", alignItems: "center", gap: 6, marginLeft: 8,
@@ -966,14 +1060,15 @@ export default function PyithonApp() {
           >Next &rarr;</button>
         )}
       </div>
-      <style>{globalStyles}</style>
+      <style>{getGlobalStyles(C)}</style>
     </div>
   );
 }
 
-const globalStyles = `
+function getGlobalStyles(theme) {
+  return `
   *, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body { margin: 0; padding: 0; background: ${C.bg} !important; color-scheme: dark; }
+  html, body { margin: 0; padding: 0; background: ${theme.bg} !important; color-scheme: ${theme.scheme}; }
   html { height: 100%; }
   body { min-height: 100%; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
   #root { min-height: 100vh; }
@@ -1025,3 +1120,5 @@ const globalStyles = `
 
   ::selection { background: rgba(99,102,241,0.3); }
 `;
+}
+const globalStyles = getGlobalStyles(DARK);
