@@ -831,8 +831,8 @@ export default function PyithonApp() {
             {feedback.correct && <span style={{ fontSize: 12, color: C.amber, fontWeight: 700, background: C.amberBg, padding: "4px 10px", borderRadius: 8, border: `1px solid ${C.amberBorder}` }}>+100 XP</span>}
           </div>
 
-          {/* Claude says */}
-          {feedback.aiExplanation && (
+          {/* Claude says — only shown in online mode */}
+          {feedback.aiExplanation && !offlineMode && (
             <div style={{
               marginBottom: 16, borderRadius: 10, padding: 14, position: "relative",
               background: C.accentBg, border: `1px solid ${C.accentBorder}`,
