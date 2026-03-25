@@ -52,7 +52,6 @@ function evaluateOffline(userCode, level) {
   const code = userCode.trim();
   const codeLower = code.toLowerCase();
   const expected = level.expectedOutput.trim();
-  const expectedLower = expected.toLowerCase();
   if (!code || code === level.starterCode.trim()) {
     return { correct: false, feedback: "Write some code first!", explanation: "" };
   }
@@ -62,16 +61,44 @@ function evaluateOffline(userCode, level) {
     return { correct: false, feedback: "Don't forget to use print() to display your output.", explanation: "Offline mode checks for key patterns." };
   }
 
-  // Check if expected output values appear in the code as strings or expressions
-  const expectedLines = expectedLower.split("\n");
-  let outputMatches = 0;
-  for (const line of expectedLines) {
-    const trimmed = line.trim();
-    if (!trimmed) continue;
-    if (codeLower.includes(`"${trimmed}"`) || codeLower.includes(`'${trimmed}'`) || codeLower.includes(trimmed)) outputMatches++;
+  // Extract all string literals from the code
+  const stringLiterals = [];
+  const strRegex = /(?:f?)("""[\s\S]*?"""|'''[\s\S]*?'''|"([^"\\]|\\.)*"|'([^'\\]|\\.)*')/g;
+  let m;
+  while ((m = strRegex.exec(code)) !== null) {
+    // Remove surrounding quotes
+    let s = m[0];
+    if (s.startsWith("f")) s = s.slice(1);
+    if (s.startsWith('"""') || s.startsWith("'''")) s = s.slice(3, -3);
+    else s = s.slice(1, -1);
+    stringLiterals.push(s);
   }
-  const outputRatio = expectedLines.filter(l => l.trim()).length > 0
-    ? outputMatches / expectedLines.filter(l => l.trim()).length : 0;
+
+  // For single-line expected output, require EXACT string match in the code
+  const expectedLines = expected.split("\n").map(l => l.trim()).filter(Boolean);
+  if (expectedLines.length === 1) {
+    const target = expectedLines[0];
+    const exactMatch = stringLiterals.some(s => s === target);
+    // Also check for numeric/expression outputs like "14", "20.0", etc
+    const isNumeric = /^[\d.\-]+$/.test(target);
+    if (!exactMatch && !isNumeric) {
+      // Check if any string is close but not exact (extra/missing chars)
+      const closeMatch = stringLiterals.some(s => s.includes(target) && s !== target);
+      if (closeMatch) {
+        return { correct: false, feedback: `Close! But your output has extra characters. Expected exactly: ${target}`, explanation: "Offline mode checks for exact string matches." };
+      }
+      return { correct: false, feedback: "Your output doesn't match what's expected. Check the task carefully.", explanation: "Offline mode checks for exact output patterns." };
+    }
+  } else {
+    // Multi-line: check each expected line appears in code
+    let matched = 0;
+    for (const line of expectedLines) {
+      if (stringLiterals.some(s => s === line) || codeLower.includes(line.toLowerCase())) matched++;
+    }
+    if (matched < expectedLines.length * 0.7) {
+      return { correct: false, feedback: "Your output doesn't seem to match what's expected.", explanation: "Offline mode checks for expected output patterns." };
+    }
+  }
 
   // Check for key constructs from the hint
   const hintClean = (level.hint || "").replace(/\\n/g, "\n").toLowerCase();
@@ -80,14 +107,11 @@ function evaluateOffline(userCode, level) {
   for (const kw of hintKeywords) { if (codeLower.includes(kw)) kwMatches++; }
   const kwRatio = hintKeywords.length > 0 ? kwMatches / hintKeywords.length : 1;
 
-  // Require both: expected output values present AND key constructs used
-  if (outputRatio >= 0.5 && kwRatio >= 0.5) {
-    return { correct: true, feedback: "Looks correct! (Offline mode — pattern matching)", explanation: "Offline evaluation checks for key patterns. For smarter feedback, switch to Claude mode." };
+  if (kwRatio < 0.4) {
+    return { correct: false, feedback: "Hmm, your approach seems different. Check the hint for guidance.", explanation: "Offline mode checks for key patterns." };
   }
-  if (outputRatio < 0.5) {
-    return { correct: false, feedback: "Your output doesn't seem to match what's expected. Check the task description.", explanation: "Offline mode checks for expected output patterns in your code." };
-  }
-  return { correct: false, feedback: "Hmm, that doesn't look quite right. Check the hint for guidance.", explanation: "Offline evaluation checks for key patterns. Try Claude mode for smarter evaluation." };
+
+  return { correct: true, feedback: "Looks correct! (Offline mode)", explanation: "Offline evaluation uses pattern matching. For smarter feedback, switch to Claude mode." };
 }
 
 // ─── PYTHON SYNTAX HIGHLIGHTER ───
@@ -761,61 +785,61 @@ export default function PyithonApp() {
       ) : feedback ? (
         <div style={{
           height: "100%", borderRadius: 14, padding: 20, overflowY: "auto",
-          border: `1px solid ${feedback.correct ? C.greenBorder : C.redBorder}`,
-          background: feedback.correct ? C.greenBg : C.redBg,
+          border: `1px solid ${C.border}`,
+          background: C.bgCard,
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+          {/* Result header — colored accent only on icon */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16, paddingBottom: 16, borderBottom: `1px solid ${C.border}` }}>
             <div style={{
-              width: 32, height: 32, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center",
-              background: feedback.correct ? "rgba(16,185,129,0.15)" : "rgba(244,63,94,0.15)",
-              border: `1px solid ${feedback.correct ? C.greenBorder : C.redBorder}`,
+              width: 36, height: 36, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+              background: feedback.correct ? C.green : C.red,
             }}>
               {feedback.correct
-                ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.red} strokeWidth="3" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               }
             </div>
             <div style={{ flex: 1 }}>
-              <span style={{ fontSize: 14, fontWeight: 700, color: feedback.correct ? C.green : C.red }}>{feedback.message}</span>
+              <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{feedback.correct ? "Correct!" : "Not quite"}</span>
+              <p style={{ fontSize: 12, color: C.textDim, margin: "2px 0 0", lineHeight: 1.5 }}>{feedback.message}</p>
             </div>
-            {feedback.correct && <span style={{ fontSize: 13, color: C.amber, fontWeight: 700, background: C.amberBg, padding: "4px 10px", borderRadius: 8, border: `1px solid ${C.amberBorder}` }}>+100 XP</span>}
+            {feedback.correct && <span style={{ fontSize: 12, color: C.amber, fontWeight: 700, background: C.amberBg, padding: "4px 10px", borderRadius: 8, border: `1px solid ${C.amberBorder}` }}>+100 XP</span>}
           </div>
 
+          {/* Claude says */}
           {feedback.aiExplanation && (
             <div style={{
-              marginBottom: 16, borderRadius: 12, padding: 16, position: "relative", overflow: "hidden",
-              background: `linear-gradient(135deg, rgba(79,70,229,0.1), rgba(99,102,241,0.05))`,
-              border: `1px solid ${C.accentBorder}`,
+              marginBottom: 16, borderRadius: 10, padding: 14, position: "relative",
+              background: C.accentBg, border: `1px solid ${C.accentBorder}`,
             }}>
-              <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: 2, background: `linear-gradient(90deg, ${C.accentDeep}, ${C.accent}, transparent)` }} />
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                <div style={{ width: 20, height: 20, borderRadius: 6, background: C.accentBg, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill={C.accent}><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-2h2v2h-2zm0-4V7h2v6h-2z"/></svg>
-                </div>
-                <span style={{ fontSize: 11, fontWeight: 700, color: C.accent, textTransform: "uppercase", letterSpacing: 1.5 }}>Claude says</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill={C.accent}><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-2h2v2h-2zm0-4V7h2v6h-2z"/></svg>
+                <span style={{ fontSize: 10, fontWeight: 700, color: C.accent, textTransform: "uppercase", letterSpacing: 1.5 }}>Claude says</span>
               </div>
-              <p style={{ color: C.accentText, fontSize: 13, lineHeight: 1.7, margin: 0 }}>{feedback.aiExplanation}</p>
+              <p style={{ color: C.textMuted, fontSize: 13, lineHeight: 1.7, margin: 0 }}>{feedback.aiExplanation}</p>
             </div>
           )}
 
+          {/* Expected output */}
           <div style={{ marginBottom: 16 }}>
-            <p style={{ fontSize: 10, fontWeight: 700, color: C.accentTextDim, textTransform: "uppercase", letterSpacing: 1.5, margin: "0 0 8px" }}>Expected Output</p>
+            <p style={{ fontSize: 10, fontWeight: 700, color: C.textDim, textTransform: "uppercase", letterSpacing: 1.5, margin: "0 0 8px" }}>Expected Output</p>
             <pre style={{
               background: C.codeBg, borderRadius: 10, padding: 14, color: C.codeText, fontSize: 12,
-              overflowX: "auto", fontFamily: "'JetBrains Mono', monospace", margin: 0, whiteSpace: "pre-wrap",
+              overflowX: "auto", fontFamily: monoFont, margin: 0, whiteSpace: "pre-wrap",
               border: `1px solid ${C.borderLight}`,
             }}>{feedback.expected}</pre>
           </div>
 
+          {/* Concept */}
           <div style={{ paddingTop: 16, borderTop: `1px solid ${C.border}` }}>
-            <p style={{ fontSize: 10, fontWeight: 700, color: C.accentTextDim, textTransform: "uppercase", letterSpacing: 1.5, margin: "0 0 6px" }}>Concept</p>
+            <p style={{ fontSize: 10, fontWeight: 700, color: C.textDim, textTransform: "uppercase", letterSpacing: 1.5, margin: "0 0 6px" }}>Concept</p>
             <p style={{ color: C.textDim, fontSize: 12, lineHeight: 1.7, margin: 0 }}>{level.explanation}</p>
           </div>
         </div>
       ) : (
         <div style={{
           height: "100%", borderRadius: 14, border: `1px solid ${C.border}`,
-          background: "rgba(255,255,255,0.015)", display: "flex", flexDirection: "column",
+          background: C.bgSubtle, display: "flex", flexDirection: "column",
           alignItems: "center", justifyContent: "center", gap: 8,
         }}>
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={C.textDim} strokeWidth="1.5" strokeLinecap="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
