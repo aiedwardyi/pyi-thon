@@ -61,6 +61,31 @@ function evaluateOffline(userCode, level) {
     return { correct: false, feedback: "Don't forget to use print() to display your output.", explanation: "Offline mode checks for key patterns." };
   }
 
+  // Basic syntax check — catch garbage text after statements
+  const codeNoStrings = code.replace(/("""[\s\S]*?"""|'''[\s\S]*?'''|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g, '""');
+  const codeNoComments = codeNoStrings.replace(/#.*/g, "");
+  for (const line of codeNoComments.split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    // Check for bare words after closing paren/bracket (e.g. `print("x") garbage`)
+    const afterClose = trimmed.match(/[)\]]\s+([a-zA-Z_]\w*)\s*$/);
+    if (afterClose) {
+      const word = afterClose[1];
+      const pyKeywords = new Set(["if","else","elif","for","while","and","or","not","in","is","as","lambda","def","class","return","import","from","try","except","finally","with","break","continue","pass","raise","yield","del","assert","global","nonlocal"]);
+      if (!pyKeywords.has(word)) {
+        return { correct: false, feedback: `This wouldn't run in Python — unexpected "${word}" on the same line.`, explanation: "Your code has extra text that would cause a SyntaxError." };
+      }
+    }
+    // Check for multiple bare expressions on one line (e.g. `x = 5 abc`)
+    const afterAssign = trimmed.match(/=\s*\S+.*?\s+([a-zA-Z_]\w*)\s*$/);
+    if (afterAssign && !trimmed.includes(",") && !trimmed.includes(" and ") && !trimmed.includes(" or ") && !trimmed.includes(" if ") && !trimmed.includes(" in ") && !trimmed.includes(" not ")) {
+      const word = afterAssign[1];
+      if (!/^(and|or|not|in|is|if|else|for|while)$/.test(word)) {
+        return { correct: false, feedback: `This wouldn't run in Python — unexpected "${word}" after the expression.`, explanation: "Your code has extra text that would cause a SyntaxError." };
+      }
+    }
+  }
+
   // Extract all string literals from the code
   const stringLiterals = [];
   const strRegex = /(?:f?)("""[\s\S]*?"""|'''[\s\S]*?'''|"([^"\\]|\\.)*"|'([^'\\]|\\.)*')/g;
