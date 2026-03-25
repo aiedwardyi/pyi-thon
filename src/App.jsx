@@ -15,7 +15,55 @@ const C = {
   amber: "#fbbf24", amberBg: "rgba(245,158,11,0.08)", amberBorder: "rgba(245,158,11,0.18)", amberText: "rgba(252,211,77,0.9)",
   codeBg: "rgba(0,0,0,0.35)", codeText: "#6ee7b7",
   lineNum: "rgba(129,140,248,0.18)", lineNumActive: "rgba(129,140,248,0.45)",
+  // Syntax highlighting
+  syntaxKeyword: "#c084fc", syntaxString: "#fbbf24", syntaxComment: "rgba(255,255,255,0.3)",
+  syntaxNumber: "#38bdf8", syntaxFunction: "#818cf8", syntaxBuiltin: "#34d399",
 };
+
+// ─── PYTHON SYNTAX HIGHLIGHTER ───
+const PY_KEYWORDS = new Set(["def","class","if","elif","else","for","while","return","import","from","as","try","except","finally","with","in","not","and","or","is","True","False","None","break","continue","pass","raise","yield","lambda","global","nonlocal","assert","del"]);
+const PY_BUILTINS = new Set(["print","input","len","range","int","str","float","list","dict","set","tuple","type","sum","min","max","abs","round","sorted","enumerate","zip","map","filter","open","isinstance","bool","super","property","staticmethod","classmethod","hasattr","getattr","setattr"]);
+
+function highlightPython(code) {
+  const tokens = [];
+  const regex = /(#.*$)|("""[\s\S]*?"""|'''[\s\S]*?''')|("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|(\b\d+\.?\d*\b)|(\b[a-zA-Z_]\w*\b)/gm;
+  let lastIndex = 0;
+  let match;
+  while ((match = regex.exec(code)) !== null) {
+    if (match.index > lastIndex) {
+      tokens.push({ text: code.slice(lastIndex, match.index), color: null });
+    }
+    if (match[1]) { // comment
+      tokens.push({ text: match[0], color: C.syntaxComment });
+    } else if (match[2] || match[3]) { // string
+      tokens.push({ text: match[0], color: C.syntaxString });
+    } else if (match[4]) { // number
+      tokens.push({ text: match[0], color: C.syntaxNumber });
+    } else if (match[5]) { // identifier
+      const word = match[0];
+      if (PY_KEYWORDS.has(word)) {
+        tokens.push({ text: word, color: C.syntaxKeyword });
+      } else if (PY_BUILTINS.has(word)) {
+        tokens.push({ text: word, color: C.syntaxBuiltin });
+      } else {
+        // Check if it's a function call (followed by parenthesis)
+        const rest = code.slice(match.index + word.length);
+        if (/^\s*\(/.test(rest)) {
+          tokens.push({ text: word, color: C.syntaxFunction });
+        } else {
+          tokens.push({ text: word, color: C.codeText });
+        }
+      }
+    } else {
+      tokens.push({ text: match[0], color: null });
+    }
+    lastIndex = match.index + match[0].length;
+  }
+  if (lastIndex < code.length) {
+    tokens.push({ text: code.slice(lastIndex), color: null });
+  }
+  return tokens;
+}
 
 // ─── LEVEL DATA ───
 const LEVELS = [
@@ -150,12 +198,12 @@ export default function PyithonApp() {
   const [code, setCode] = useState(LEVELS[0].starterCode);
   const [showHint, setShowHint] = useState(false);
   const [feedback, setFeedback] = useState(null);
-  const [completedLevels, setCompletedLevels] = useState(() => new Set([1,2,3,4,5,6,7,8,9,10,11]));
+  const [completedLevels, setCompletedLevels] = useState(() => new Set());
   const [streak, setStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
   const [showLevelSelect, setShowLevelSelect] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
-  const [totalXP, setTotalXP] = useState(1100);
+  const [totalXP, setTotalXP] = useState(0);
   const [showConfetti, setShowConfetti] = useState(false);
   const [shakeEditor, setShakeEditor] = useState(false);
   const [isEvaluating, setIsEvaluating] = useState(false);
@@ -163,10 +211,16 @@ export default function PyithonApp() {
   const [showApiSetup, setShowApiSetup] = useState(false);
   const [apiKeyInput, setApiKeyInput] = useState("");
   const editorRef = useRef(null);
+  const highlightRef = useRef(null);
+  const audioCtxRef = useRef(null);
   const [tab, setTab] = useState("editor");
   const [isWide, setIsWide] = useState(window.innerWidth >= 900);
   const [conceptCollapsed, setConceptCollapsed] = useState(false);
   const [levelTransition, setLevelTransition] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(() => localStorage.getItem("pyithon-sound") === "true");
+  const [typedChars, setTypedChars] = useState(0);
+  const [editorGlow, setEditorGlow] = useState(false);
+  const [showXPFloat, setShowXPFloat] = useState(false);
 
   const level = LEVELS[currentLevel];
   const unlockedUpTo = Math.max(...completedLevels, 0) + 1;
@@ -202,6 +256,37 @@ export default function PyithonApp() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
+  // Sound preference sync
+  useEffect(() => { localStorage.setItem("pyithon-sound", soundEnabled); }, [soundEnabled]);
+
+  // Welcome typing animation
+  useEffect(() => {
+    if (!showWelcome) return;
+    const tagline = "Master Python from scratch.\nNo AI. No autocomplete. Just you.";
+    if (typedChars >= tagline.length) return;
+    const t = setInterval(() => setTypedChars(c => { if (c >= tagline.length) { clearInterval(t); return c; } return c + 1; }), 45);
+    return () => clearInterval(t);
+  }, [showWelcome, typedChars]);
+
+  // Sound helper
+  const playTone = useCallback((frequency, duration, type = "sine", volume = 0.12) => {
+    if (!soundEnabled) return;
+    try {
+      if (!audioCtxRef.current) audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      const ctx = audioCtxRef.current;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type;
+      osc.frequency.value = frequency;
+      gain.gain.setValueAtTime(volume, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(); osc.stop(ctx.currentTime + duration);
+    } catch {}
+  }, [soundEnabled]);
+
+  const isMac = typeof navigator !== "undefined" && /Mac/.test(navigator.platform);
+
   const handleSaveApiKey = () => {
     if (apiKeyInput.trim()) {
       setApiKey(apiKeyInput.trim());
@@ -211,11 +296,13 @@ export default function PyithonApp() {
   };
 
   const handleSubmit = useCallback(async () => {
+    if (isEvaluating) return;
     if (!apiKey) { setShowApiSetup(true); return; }
     const userCode = code.trim();
     if (!userCode || userCode === level.starterCode.trim()) {
       setFeedback({ correct: false, message: "Write some code first!", expected: level.expectedOutput });
       setShakeEditor(true); setTimeout(() => setShakeEditor(false), 500);
+      playTone(330, 0.15, "triangle");
       return;
     }
     const expected = level.expectedOutput.trim();
@@ -224,20 +311,32 @@ export default function PyithonApp() {
       const result = await evaluateWithClaude(userCode, level, apiKey);
       if (result.correct) {
         setFeedback({ correct: true, message: result.feedback || "Correct!", expected, aiExplanation: result.explanation });
-        if (!completedLevels.has(level.id)) {
+        const isNew = !completedLevels.has(level.id);
+        if (isNew) {
           const nc = new Set(completedLevels); nc.add(level.id); setCompletedLevels(nc);
           setTotalXP(prev => prev + 100);
+          setShowXPFloat(true); setTimeout(() => setShowXPFloat(false), 1500);
         }
         setStreak(prev => { const n = prev + 1; if (n > bestStreak) setBestStreak(n); return n; });
         setShowConfetti(true); setTimeout(() => setShowConfetti(false), 3000);
+        setEditorGlow(true); setTimeout(() => setEditorGlow(false), 1500);
+        playTone(523.25, 0.1); setTimeout(() => playTone(659.25, 0.1), 100); setTimeout(() => playTone(783.99, 0.15), 200);
       } else {
         setFeedback({ correct: false, message: result.feedback || "Not quite right.", expected, aiExplanation: result.explanation });
         setStreak(0); setShakeEditor(true); setTimeout(() => setShakeEditor(false), 500);
+        playTone(330, 0.15, "triangle");
       }
     } catch (err) {
       setFeedback({ correct: false, message: "Error: " + err.message, expected });
     } finally { setIsEvaluating(false); }
-  }, [code, level, completedLevels, bestStreak, streak, apiKey]);
+  }, [code, level, completedLevels, bestStreak, streak, apiKey, isEvaluating, playTone]);
+
+  // Ctrl+Enter to run
+  useEffect(() => {
+    const handler = (e) => { if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); handleSubmit(); } };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [handleSubmit]);
 
   const handleReset = () => { setCode(level.starterCode); setFeedback(null); setShowHint(false); setTab("editor"); };
   const goToLevel = (idx) => { if (idx < unlockedUpTo || completedLevels.has(LEVELS[idx].id)) { setCurrentLevel(idx); setShowLevelSelect(false); } };
@@ -246,21 +345,24 @@ export default function PyithonApp() {
 
   const pageStyle = {
     minHeight: "100vh", background: C.bg, color: C.text,
-    fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'SF Mono', monospace",
+    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     colorScheme: "dark",
+    backgroundImage: "radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px)",
+    backgroundSize: "24px 24px",
   };
+  const monoFont = "'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'SF Mono', monospace";
 
   // ═══ CONFETTI PARTICLES ═══
   const confettiShapes = ["circle", "rect", "diamond"];
   const confettiColors = [C.accent, C.accentLight, C.green, C.amber, "#ec4899", "#38bdf8", "#c084fc"];
-  const confettiParticles = Array.from({ length: 60 }).map((_, i) => {
+  const confettiParticles = Array.from({ length: 80 }).map((_, i) => {
     const shape = confettiShapes[i % confettiShapes.length];
     const color = confettiColors[i % confettiColors.length];
-    const size = 4 + Math.random() * 10;
+    const size = 4 + Math.random() * 12;
     const left = Math.random() * 100;
-    const delay = Math.random() * 0.8;
-    const duration = 1.8 + Math.random() * 1.5;
-    const drift = (Math.random() - 0.5) * 200;
+    const delay = Math.random() * 1;
+    const duration = 1.8 + Math.random() * 1.8;
+    const drift = (Math.random() - 0.5) * 300;
     const rotation = Math.random() * 1080;
     return { shape, color, size, left, delay, duration, drift, rotation, key: i };
   });
@@ -340,8 +442,9 @@ export default function PyithonApp() {
           <h1 style={{ fontSize: 44, fontWeight: 800, color: C.text, margin: "0 0 12px", letterSpacing: -2, background: `linear-gradient(135deg, ${C.text}, ${C.accentLight})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
             Pyi-thon
           </h1>
-          <p style={{ color: C.accentText, textAlign: "center", maxWidth: 320, marginBottom: 8, fontSize: 15, lineHeight: 1.6, fontWeight: 500 }}>
-            Master Python from scratch.<br />No AI. No autocomplete. Just you.
+          <p style={{ color: C.accentText, textAlign: "center", maxWidth: 320, marginBottom: 8, fontSize: 15, lineHeight: 1.6, fontWeight: 500, minHeight: 48, fontFamily: monoFont }}>
+            {"Master Python from scratch.\nNo AI. No autocomplete. Just you.".substring(0, typedChars).split("\n").map((line, i, arr) => <span key={i}>{line}{i < arr.length - 1 && <br />}</span>)}
+            <span style={{ display: "inline-block", width: 2, height: "1em", background: C.accent, marginLeft: 2, animation: "blink 1s step-end infinite", verticalAlign: "text-bottom" }} />
           </p>
           <p style={{ color: C.accentTextDim, fontSize: 12, marginBottom: 48, letterSpacing: 2, textTransform: "uppercase" }}>30 levels &middot; 3 phases &middot; Local Edition</p>
 
@@ -350,7 +453,7 @@ export default function PyithonApp() {
             border: "none", cursor: "pointer", fontFamily: "inherit",
             background: `linear-gradient(135deg, ${C.accentDeep}, ${C.accent})`,
             boxShadow: `0 8px 40px ${C.accentGlow}, inset 0 1px 0 rgba(255,255,255,0.1)`,
-            transition: "all 0.3s ease",
+            transition: "all 0.3s ease", animation: "gentlePulse 2.5s ease-in-out infinite",
           }}
             onMouseEnter={e => { e.target.style.transform = "translateY(-2px) scale(1.02)"; e.target.style.boxShadow = `0 12px 48px ${C.accentGlow}, inset 0 1px 0 rgba(255,255,255,0.15)`; }}
             onMouseLeave={e => { e.target.style.transform = "translateY(0) scale(1)"; e.target.style.boxShadow = `0 8px 40px ${C.accentGlow}, inset 0 1px 0 rgba(255,255,255,0.1)`; }}
@@ -452,12 +555,22 @@ export default function PyithonApp() {
   }
 
   // ═══ RENDER: EDITOR PANEL ═══
+  const editorSharedStyle = {
+    fontSize: 14, lineHeight: "1.75rem", fontFamily: monoFont,
+    tabSize: 4, whiteSpace: "pre-wrap", wordWrap: "break-word", overflowWrap: "break-word",
+    padding: "14px 16px", margin: 0,
+  };
+  const syntaxTokens = highlightPython(code);
   const editorPanel = (
     <div style={{ flex: 1, position: "relative", minHeight: 240, animation: shakeEditor ? "shake 0.4s ease-in-out" : "none" }}>
       <div style={{
-        position: "absolute", inset: 0, background: C.bgCard, border: `1px solid ${C.border}`,
+        position: "absolute", inset: 0, background: C.bgCard,
+        border: `1px solid ${editorGlow ? C.green : C.border}`,
         borderRadius: 14, overflow: "hidden", display: "flex", flexDirection: "column",
-        boxShadow: "0 8px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.03)",
+        boxShadow: editorGlow
+          ? `0 8px 40px rgba(0,0,0,0.4), 0 0 30px rgba(16,185,129,0.2), inset 0 1px 0 rgba(255,255,255,0.03)`
+          : "0 8px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.03)",
+        transition: "border-color 0.3s, box-shadow 0.3s",
       }}>
         {/* Filename bar */}
         <div style={{
@@ -475,7 +588,7 @@ export default function PyithonApp() {
             border: `1px solid ${C.borderLight}`,
           }}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2" strokeLinecap="round"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
-            <span style={{ fontSize: 11, color: C.accentText, fontWeight: 600 }}>{filename}</span>
+            <span style={{ fontSize: 11, color: C.accentText, fontWeight: 600, fontFamily: monoFont }}>{filename}</span>
           </div>
           <div style={{ flex: 1 }} />
           <span style={{ fontSize: 10, color: C.textDim }}>Python 3</span>
@@ -487,26 +600,36 @@ export default function PyithonApp() {
             paddingTop: 14, display: "flex", flexDirection: "column", alignItems: "center",
           }}>
             {code.split("\n").map((_, i) => (
-              <span key={i} style={{ fontSize: 11, color: C.lineNum, lineHeight: "1.75rem", userSelect: "none", fontWeight: 500 }}>{i + 1}</span>
+              <span key={i} style={{ fontSize: 11, color: C.lineNum, lineHeight: "1.75rem", userSelect: "none", fontWeight: 500, fontFamily: monoFont }}>{i + 1}</span>
             ))}
           </div>
-          <textarea ref={editorRef} value={code} onChange={e => setCode(e.target.value)} spellCheck={false}
-            style={{
-              flex: 1, background: "transparent", color: C.codeText, padding: "14px 16px",
-              fontSize: 14, resize: "none", outline: "none", lineHeight: "1.75rem",
-              fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace",
-              tabSize: 4, border: "none", caretColor: C.accent,
-            }}
-            placeholder="# Write your Python code here..."
-            onKeyDown={e => {
-              if (e.key === "Tab") {
-                e.preventDefault();
-                const s = e.target.selectionStart, end = e.target.selectionEnd;
-                setCode(code.substring(0,s)+"    "+code.substring(end));
-                setTimeout(() => { e.target.selectionStart = e.target.selectionEnd = s+4; }, 0);
-              }
-            }}
-          />
+          {/* Syntax highlight overlay + textarea */}
+          <div style={{ flex: 1, position: "relative" }}>
+            <pre ref={highlightRef} aria-hidden="true" style={{
+              ...editorSharedStyle, position: "absolute", inset: 0, overflow: "hidden",
+              pointerEvents: "none", background: "transparent", color: C.codeText, border: "none",
+            }}>
+              {syntaxTokens.map((t, i) => t.color ? <span key={i} style={{ color: t.color }}>{t.text}</span> : t.text)}
+              {"\n"}
+            </pre>
+            <textarea ref={editorRef} value={code} onChange={e => setCode(e.target.value)} spellCheck={false}
+              style={{
+                ...editorSharedStyle, position: "relative", width: "100%", height: "100%",
+                background: "transparent", color: "transparent", resize: "none", outline: "none",
+                border: "none", caretColor: C.accent, zIndex: 1,
+              }}
+              placeholder="# Write your Python code here..."
+              onScroll={e => { if (highlightRef.current) { highlightRef.current.scrollTop = e.target.scrollTop; highlightRef.current.scrollLeft = e.target.scrollLeft; } }}
+              onKeyDown={e => {
+                if (e.key === "Tab") {
+                  e.preventDefault();
+                  const s = e.target.selectionStart, end = e.target.selectionEnd;
+                  setCode(code.substring(0,s)+"    "+code.substring(end));
+                  setTimeout(() => { e.target.selectionStart = e.target.selectionEnd = s+4; }, 0);
+                }
+              }}
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -669,14 +792,23 @@ export default function PyithonApp() {
               <span style={{ fontSize: 13 }}>&#x1F525;</span>
               <span style={{ fontSize: 12, fontWeight: 700 }}>{streak}</span>
             </div>}
-            <div style={{
-              display: "flex", alignItems: "center", gap: 5, color: C.accentText,
-              background: C.accentBg, padding: "4px 10px", borderRadius: 8,
-              border: `1px solid ${C.accentBorder}`,
-            }}>
+            <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 5, color: C.accentText, background: C.accentBg, padding: "4px 10px", borderRadius: 8, border: `1px solid ${C.accentBorder}` }}>
               <span style={{ fontSize: 13 }}>&#x26A1;</span>
               <span style={{ fontSize: 12, fontWeight: 700 }}>{totalXP}</span>
+              {showXPFloat && <span style={{ position: "absolute", top: -8, right: -4, color: C.amber, fontSize: 12, fontWeight: 700, animation: "xpFloat 1.5s ease-out forwards", pointerEvents: "none" }}>+100</span>}
             </div>
+            <button onClick={() => setSoundEnabled(!soundEnabled)} style={{
+              color: soundEnabled ? C.accent : C.textDim, background: "none", border: "none", cursor: "pointer",
+              fontSize: 14, padding: 4, transition: "color 0.2s",
+            }}
+              onMouseEnter={e => e.currentTarget.style.color = C.accentText}
+              onMouseLeave={e => e.currentTarget.style.color = soundEnabled ? C.accent : C.textDim}
+            >
+              {soundEnabled
+                ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"/></svg>
+                : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+              }
+            </button>
             <button onClick={() => setShowApiSetup(true)} style={{
               color: C.textDim, background: "none", border: "none", cursor: "pointer",
               fontSize: 14, padding: 4, transition: "color 0.2s",
@@ -720,7 +852,9 @@ export default function PyithonApp() {
               <span style={{ fontSize: 10, fontWeight: 700, color: C.accent, textTransform: "uppercase", letterSpacing: 1.5 }}>Concept</span>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.accentTextDim} strokeWidth="2" strokeLinecap="round" style={{ transition: "transform 0.3s", transform: conceptCollapsed ? "rotate(0deg)" : "rotate(180deg)" }}><polyline points="6 9 12 15 18 9"/></svg>
             </div>
-            {!conceptCollapsed && <p style={{ color: C.accentText, fontSize: 13, lineHeight: 1.7, margin: "8px 0 0" }}>{level.concept}</p>}
+            <div style={{ overflow: "hidden", maxHeight: conceptCollapsed ? 0 : 200, opacity: conceptCollapsed ? 0 : 1, transition: "max-height 0.3s ease-in-out, opacity 0.3s ease-in-out" }}>
+              <p style={{ color: C.accentText, fontSize: 13, lineHeight: 1.7, margin: "8px 0 0" }}>{level.concept}</p>
+            </div>
           </button>
 
           <div style={{ background: "rgba(255,255,255,0.015)", border: `1px solid ${C.border}`, borderRadius: 12, padding: "12px 16px" }}>
@@ -817,7 +951,7 @@ export default function PyithonApp() {
           onMouseEnter={e => { if (!isEvaluating) { e.target.style.transform = "translateY(-1px)"; e.target.style.boxShadow = `0 6px 32px ${C.accentGlow}`; }}}
           onMouseLeave={e => { e.target.style.transform = "translateY(0)"; e.target.style.boxShadow = `0 4px 24px ${C.accentGlow}`; }}
         >
-          {isEvaluating ? "Evaluating..." : "Run Code \u25B6"}
+          {isEvaluating ? "Evaluating..." : <>{`Run Code \u25B6`}<span style={{ fontSize: 10, opacity: 0.45, marginLeft: 10 }}>{isMac ? "\u2318" : "Ctrl"}+Enter</span></>}
         </button>
 
         {feedback?.correct && currentLevel < LEVELS.length - 1 && (
@@ -838,12 +972,10 @@ export default function PyithonApp() {
 }
 
 const globalStyles = `
-  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&display=swap');
-
   *, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { margin: 0; padding: 0; background: ${C.bg} !important; color-scheme: dark; }
   html { height: 100%; }
-  body { min-height: 100%; }
+  body { min-height: 100%; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
   #root { min-height: 100vh; }
 
   @keyframes confettiFall {
@@ -873,6 +1005,15 @@ const globalStyles = `
   @keyframes dotBounce {
     0%, 80%, 100% { transform: scale(0.6); opacity: 0.3; }
     40% { transform: scale(1.2); opacity: 1; }
+  }
+  @keyframes gentlePulse {
+    0%, 100% { box-shadow: 0 8px 40px rgba(99,102,241,0.4), inset 0 1px 0 rgba(255,255,255,0.1); }
+    50% { box-shadow: 0 8px 50px rgba(99,102,241,0.6), inset 0 1px 0 rgba(255,255,255,0.15); }
+  }
+  @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+  @keyframes xpFloat {
+    0% { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-40px) scale(0.8); }
   }
   textarea::placeholder { color: rgba(129,140,248,0.2) !important; }
   textarea::-webkit-scrollbar { width: 5px; }
