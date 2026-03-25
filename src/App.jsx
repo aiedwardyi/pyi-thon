@@ -1,17 +1,20 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 
-// ─── COLOR PALETTE ───
+// ─── COLOR PALETTE (Blue-Violet Premium Dark) ───
 const C = {
-  bg: "#0a0a14", bgCard: "#12121f", bgSubtle: "rgba(255,255,255,0.03)",
-  border: "rgba(255,255,255,0.08)", borderLight: "rgba(255,255,255,0.05)",
-  text: "#ffffff", textMuted: "rgba(255,255,255,0.9)", textDim: "rgba(255,255,255,0.4)",
-  purple: "#a855f7", purpleDark: "#7c3aed", purpleGlow: "rgba(139,92,246,0.5)",
-  purpleText: "rgba(196,167,255,0.8)", purpleTextDim: "rgba(196,167,255,0.4)",
-  purpleBg: "rgba(88,28,135,0.3)", purpleBorder: "rgba(88,28,135,0.4)",
-  green: "#4ade80", greenBg: "rgba(20,83,45,0.3)", greenBorder: "rgba(22,101,52,0.3)",
-  red: "#f87171", redBg: "rgba(69,10,10,0.3)", redBorder: "rgba(127,29,29,0.3)",
-  amber: "#fbbf24", amberBg: "rgba(69,26,3,0.3)", amberBorder: "rgba(120,53,15,0.3)", amberText: "rgba(253,230,138,0.8)",
-  codeBg: "rgba(0,0,0,0.3)", codeText: "rgba(134,239,172,0.9)",
+  bg: "#08090e", bgCard: "#0f1117", bgPanel: "#131520", bgSubtle: "rgba(255,255,255,0.025)",
+  bgGlass: "rgba(15,17,23,0.85)", bgGlassStrong: "rgba(15,17,23,0.95)",
+  border: "rgba(255,255,255,0.06)", borderLight: "rgba(255,255,255,0.04)", borderFocus: "rgba(129,140,248,0.3)",
+  text: "#e8eaed", textMuted: "rgba(255,255,255,0.85)", textDim: "rgba(255,255,255,0.35)",
+  accent: "#818cf8", accentLight: "#a5b4fc", accentDark: "#6366f1", accentDeep: "#4f46e5",
+  accentGlow: "rgba(99,102,241,0.4)", accentGlowSoft: "rgba(99,102,241,0.15)",
+  accentText: "rgba(165,180,252,0.9)", accentTextDim: "rgba(165,180,252,0.45)",
+  accentBg: "rgba(79,70,229,0.12)", accentBorder: "rgba(79,70,229,0.25)",
+  green: "#34d399", greenLight: "#6ee7b7", greenBg: "rgba(16,185,129,0.08)", greenBorder: "rgba(16,185,129,0.2)",
+  red: "#fb7185", redBg: "rgba(244,63,94,0.08)", redBorder: "rgba(244,63,94,0.2)",
+  amber: "#fbbf24", amberBg: "rgba(245,158,11,0.08)", amberBorder: "rgba(245,158,11,0.18)", amberText: "rgba(252,211,77,0.9)",
+  codeBg: "rgba(0,0,0,0.35)", codeText: "#6ee7b7",
+  lineNum: "rgba(129,140,248,0.18)", lineNumActive: "rgba(129,140,248,0.45)",
 };
 
 // ─── LEVEL DATA ───
@@ -49,9 +52,10 @@ const LEVELS = [
 ];
 
 const PHASE_NAMES = { 1: "Foundations", 2: "Real Skills", 3: "Beyond" };
-const PHASE_GRADIENTS = { 1: "linear-gradient(135deg, #7c3aed, #9333ea)", 2: "linear-gradient(135deg, #2563eb, #4f46e5)", 3: "linear-gradient(135deg, #d97706, #ea580c)" };
+const PHASE_ICONS = { 1: "01", 2: "02", 3: "03" };
+const PHASE_COLORS = { 1: [C.accentDark, C.accent], 2: ["#0ea5e9", "#38bdf8"], 3: ["#f59e0b", "#fbbf24"] };
 
-// ─── LOCAL STORAGE (replaces window.storage for local dev) ───
+// ─── LOCAL STORAGE ───
 const STORAGE_KEY = "pyithon-progress";
 function loadProgress() {
   try { const d = localStorage.getItem(STORAGE_KEY); return d ? JSON.parse(d) : null; } catch { return null; }
@@ -60,51 +64,82 @@ function saveProgress(data) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (e) { console.error("Save failed:", e); }
 }
 
-// ─── CLAUDE API EVALUATOR (uses Vite proxy to avoid CORS) ───
+// ─── CLAUDE API EVALUATOR (with timeout + error handling) ───
 async function evaluateWithClaude(userCode, level, apiKey) {
-  const systemPrompt = `You are a Python code evaluator. Determine if the student's code is functionally correct.
+  const prompt = `You are a Python code evaluator. Determine if the student's code is functionally correct.
+
 RULES:
 - Would this code produce the expected output in Python 3?
 - Accept creative solutions (different variable names, different approaches).
 - Code must be valid Python that would run.
 - For simulated input, assume input() receives values in order.
 - Be encouraging but honest.
-Respond ONLY with JSON, no markdown fences:
-{"correct": true/false, "feedback": "brief message", "explanation": "1-2 sentences"}`;
 
-  const userPrompt = `TASK: ${level.task}
+TASK: ${level.task}
 EXPECTED OUTPUT: ${level.expectedOutput}
 ${level.simulatedInput ? `SIMULATED INPUT: ${level.simulatedInput}` : ""}
-HINT (reference): ${level.hint}
+HINT (reference solution): ${level.hint}
 
 STUDENT CODE:
 \`\`\`python
 ${userCode}
 \`\`\`
 
-Functionally correct?`;
+Is this functionally correct? Respond ONLY with JSON, no markdown fences:
+{"correct": true/false, "feedback": "brief message", "explanation": "1-2 sentences"}`;
 
-  // In dev mode, use Vite proxy (/api/claude -> api.anthropic.com)
-  const response = await fetch("/api/claude/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 1000,
-      system: systemPrompt,
-      messages: [{ role: "user", content: userPrompt }],
-    }),
-  });
-  const data = await response.json();
-  const text = data.content?.map(b => b.text || "").join("") || "";
-  const clean = text.replace(/```json|```/g, "").trim();
-  try { return JSON.parse(clean); } catch {
-    if (text.toLowerCase().includes('"correct": true') || text.toLowerCase().includes('"correct":true')) return { correct: true, feedback: "Nice work!", explanation: "" };
-    return { correct: false, feedback: "Could not evaluate — try again.", explanation: "" };
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30000);
+
+  try {
+    const response = await fetch("/api/claude/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 500,
+        messages: [{ role: "user", content: prompt }],
+      }),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeout);
+
+    if (!response.ok) {
+      const errText = await response.text();
+      return { correct: false, feedback: `API error (${response.status}): ${errText.substring(0, 150)}`, explanation: "" };
+    }
+
+    const data = await response.json();
+
+    if (data.error) {
+      return { correct: false, feedback: "API error: " + (data.error.message || JSON.stringify(data.error)), explanation: "" };
+    }
+
+    const text = (data.content || []).map(b => b.text || "").join("").trim();
+    if (!text) {
+      return { correct: false, feedback: "Empty response from Claude. Check your API key.", explanation: "" };
+    }
+
+    const clean = text.replace(/```json|```/g, "").trim();
+    try {
+      return JSON.parse(clean);
+    } catch {
+      if (text.toLowerCase().includes('"correct": true') || text.toLowerCase().includes('"correct":true')) {
+        return { correct: true, feedback: "Nice work!", explanation: "" };
+      }
+      return { correct: false, feedback: "Could not parse response.", explanation: "Raw: " + text.substring(0, 200) };
+    }
+  } catch (err) {
+    clearTimeout(timeout);
+    if (err.name === "AbortError") {
+      return { correct: false, feedback: "Request timed out after 30s. Check your internet connection.", explanation: "" };
+    }
+    return { correct: false, feedback: "Network error: " + err.message, explanation: "" };
   }
 }
 
@@ -128,12 +163,14 @@ export default function PyithonApp() {
   const [apiKeyInput, setApiKeyInput] = useState("");
   const editorRef = useRef(null);
   const [tab, setTab] = useState("editor");
+  const [isWide, setIsWide] = useState(window.innerWidth >= 900);
+  const [conceptCollapsed, setConceptCollapsed] = useState(false);
+  const [levelTransition, setLevelTransition] = useState(false);
 
   const level = LEVELS[currentLevel];
   const unlockedUpTo = Math.max(...completedLevels, 0) + 1;
   const progressPercent = (completedLevels.size / LEVELS.length) * 100;
 
-  // Load saved progress on mount
   useEffect(() => {
     const saved = loadProgress();
     if (saved) {
@@ -146,7 +183,6 @@ export default function PyithonApp() {
     }
   }, []);
 
-  // Auto-save
   useEffect(() => {
     saveProgress({ completedLevels: [...completedLevels], currentLevel, streak, bestStreak, totalXP });
   }, [completedLevels, currentLevel, streak, bestStreak, totalXP]);
@@ -154,7 +190,16 @@ export default function PyithonApp() {
   useEffect(() => {
     setCode(LEVELS[currentLevel].starterCode);
     setFeedback(null); setShowHint(false); setTab("editor");
+    setLevelTransition(true);
+    const t = setTimeout(() => setLevelTransition(false), 400);
+    return () => clearTimeout(t);
   }, [currentLevel]);
+
+  useEffect(() => {
+    const onResize = () => setIsWide(window.innerWidth >= 900);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   const handleSaveApiKey = () => {
     if (apiKeyInput.trim()) {
@@ -183,43 +228,91 @@ export default function PyithonApp() {
           setTotalXP(prev => prev + 100);
         }
         setStreak(prev => { const n = prev + 1; if (n > bestStreak) setBestStreak(n); return n; });
-        setShowConfetti(true); setTimeout(() => setShowConfetti(false), 2000);
+        setShowConfetti(true); setTimeout(() => setShowConfetti(false), 3000);
       } else {
         setFeedback({ correct: false, message: result.feedback || "Not quite right.", expected, aiExplanation: result.explanation });
         setStreak(0); setShakeEditor(true); setTimeout(() => setShakeEditor(false), 500);
       }
     } catch (err) {
-      setFeedback({ correct: false, message: "Evaluation error — check your API key and try again.", expected, aiExplanation: err.message });
+      setFeedback({ correct: false, message: "Error: " + err.message, expected });
     } finally { setIsEvaluating(false); }
   }, [code, level, completedLevels, bestStreak, streak, apiKey]);
 
   const handleReset = () => { setCode(level.starterCode); setFeedback(null); setShowHint(false); setTab("editor"); };
   const goToLevel = (idx) => { if (idx < unlockedUpTo || completedLevels.has(LEVELS[idx].id)) { setCurrentLevel(idx); setShowLevelSelect(false); } };
 
-  const pageStyle = { minHeight: "100vh", background: C.bg, color: C.text, fontFamily: "'JetBrains Mono', 'Fira Code', 'Courier New', monospace", colorScheme: "dark" };
+  const filename = `level_${String(level.id).padStart(2, "0")}.py`;
 
-  // ═══ API KEY SETUP MODAL ═══
+  const pageStyle = {
+    minHeight: "100vh", background: C.bg, color: C.text,
+    fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'SF Mono', monospace",
+    colorScheme: "dark",
+  };
+
+  // ═══ CONFETTI PARTICLES ═══
+  const confettiShapes = ["circle", "rect", "diamond"];
+  const confettiColors = [C.accent, C.accentLight, C.green, C.amber, "#ec4899", "#38bdf8", "#c084fc"];
+  const confettiParticles = Array.from({ length: 60 }).map((_, i) => {
+    const shape = confettiShapes[i % confettiShapes.length];
+    const color = confettiColors[i % confettiColors.length];
+    const size = 4 + Math.random() * 10;
+    const left = Math.random() * 100;
+    const delay = Math.random() * 0.8;
+    const duration = 1.8 + Math.random() * 1.5;
+    const drift = (Math.random() - 0.5) * 200;
+    const rotation = Math.random() * 1080;
+    return { shape, color, size, left, delay, duration, drift, rotation, key: i };
+  });
+
+  // ═══ RENDER: API KEY SETUP ═══
   if (showApiSetup) {
     return (
-      <div style={{ ...pageStyle, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24 }}>
-        <div style={{ maxWidth: 400, width: "100%", background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24 }}>
-          <h2 style={{ color: C.text, fontSize: 18, fontWeight: 700, margin: "0 0 8px" }}>🔑 API Key Required</h2>
-          <p style={{ color: C.purpleTextDim, fontSize: 12, lineHeight: 1.6, margin: "0 0 16px" }}>
-            The local version needs an Anthropic API key to evaluate your code with Claude.<br /><br />
-            Get one at <span style={{ color: C.purple }}>console.anthropic.com</span><br />
-            Or set <span style={{ color: C.codeText }}>VITE_ANTHROPIC_API_KEY</span> in a .env file.
+      <div style={{ ...pageStyle, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 32 }}>
+        <div style={{ position: "fixed", top: "40%", left: "50%", transform: "translate(-50%,-50%)", width: 600, height: 600, background: C.accentGlowSoft, borderRadius: "50%", filter: "blur(150px)", pointerEvents: "none" }} />
+        <div style={{
+          maxWidth: 420, width: "100%", background: C.bgGlass, backdropFilter: "blur(24px)",
+          border: `1px solid ${C.border}`, borderRadius: 20, padding: 32,
+          boxShadow: "0 24px 64px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04)",
+          position: "relative", zIndex: 1,
+        }}>
+          <div style={{ width: 48, height: 48, borderRadius: 14, background: C.accentBg, border: `1px solid ${C.accentBorder}`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2" strokeLinecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          </div>
+          <h2 style={{ color: C.text, fontSize: 20, fontWeight: 700, margin: "0 0 8px", letterSpacing: -0.5 }}>API Key Required</h2>
+          <p style={{ color: C.accentTextDim, fontSize: 13, lineHeight: 1.7, margin: "0 0 24px" }}>
+            Pyi-thon uses Claude to evaluate your code.<br />
+            Get a key at <span style={{ color: C.accent }}>console.anthropic.com</span><br />
+            Or set <span style={{ color: C.codeText, background: C.codeBg, padding: "1px 6px", borderRadius: 4, fontSize: 11 }}>VITE_ANTHROPIC_API_KEY</span> in .env
           </p>
-          <input
-            type="password"
-            value={apiKeyInput}
-            onChange={e => setApiKeyInput(e.target.value)}
-            placeholder="sk-ant-..."
-            style={{ width: "100%", padding: "10px 12px", borderRadius: 8, background: C.codeBg, border: `1px solid ${C.border}`, color: C.codeText, fontSize: 13, outline: "none", fontFamily: "inherit", marginBottom: 12 }}
+          <input type="password" value={apiKeyInput} onChange={e => setApiKeyInput(e.target.value)} placeholder="sk-ant-..."
+            style={{
+              width: "100%", padding: "12px 16px", borderRadius: 12, background: C.codeBg,
+              border: `1px solid ${C.border}`, color: C.codeText, fontSize: 13, outline: "none",
+              fontFamily: "inherit", marginBottom: 16, transition: "border-color 0.2s",
+            }}
+            onFocus={e => e.target.style.borderColor = C.borderFocus}
+            onBlur={e => e.target.style.borderColor = C.border}
             onKeyDown={e => e.key === "Enter" && handleSaveApiKey()}
           />
-          <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={() => setShowApiSetup(false)} style={{ flex: 1, padding: "10px 0", borderRadius: 8, background: "rgba(255,255,255,0.04)", color: C.purpleTextDim, border: `1px solid ${C.border}`, cursor: "pointer", fontFamily: "inherit", fontSize: 12 }}>Cancel</button>
-            <button onClick={handleSaveApiKey} style={{ flex: 1, padding: "10px 0", borderRadius: 8, background: "linear-gradient(135deg, #7c3aed, #a855f7)", color: C.text, border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: 12, fontWeight: 700 }}>Save Key</button>
+          <div style={{ display: "flex", gap: 10 }}>
+            <button onClick={() => setShowApiSetup(false)} style={{
+              flex: 1, padding: "12px 0", borderRadius: 12, background: "rgba(255,255,255,0.03)",
+              color: C.accentTextDim, border: `1px solid ${C.border}`, cursor: "pointer",
+              fontFamily: "inherit", fontSize: 13, fontWeight: 600, transition: "all 0.2s",
+            }}
+              onMouseEnter={e => { e.target.style.background = "rgba(255,255,255,0.06)"; e.target.style.borderColor = C.borderFocus; }}
+              onMouseLeave={e => { e.target.style.background = "rgba(255,255,255,0.03)"; e.target.style.borderColor = C.border; }}
+            >Cancel</button>
+            <button onClick={handleSaveApiKey} style={{
+              flex: 1, padding: "12px 0", borderRadius: 12,
+              background: `linear-gradient(135deg, ${C.accentDeep}, ${C.accent})`,
+              color: C.text, border: "none", cursor: "pointer", fontFamily: "inherit",
+              fontSize: 13, fontWeight: 700, transition: "all 0.2s",
+              boxShadow: `0 4px 16px ${C.accentGlow}`,
+            }}
+              onMouseEnter={e => { e.target.style.transform = "translateY(-1px)"; e.target.style.boxShadow = `0 6px 24px ${C.accentGlow}`; }}
+              onMouseLeave={e => { e.target.style.transform = "translateY(0)"; e.target.style.boxShadow = `0 4px 16px ${C.accentGlow}`; }}
+            >Save Key</button>
           </div>
         </div>
         <style>{globalStyles}</style>
@@ -227,203 +320,515 @@ export default function PyithonApp() {
     );
   }
 
-  // ═══ WELCOME ═══
+  // ═══ RENDER: WELCOME ═══
   if (showWelcome) {
     return (
-      <div style={{ ...pageStyle, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24, position: "relative", overflow: "hidden" }}>
-        <div style={{ position: "absolute", top: "30%", left: "50%", transform: "translate(-50%,-50%)", width: 500, height: 500, background: "rgba(139,92,246,0.15)", borderRadius: "50%", filter: "blur(120px)", pointerEvents: "none" }} />
-        <svg viewBox="0 0 200 200" style={{ width: 120, height: 120, marginBottom: 32, filter: `drop-shadow(0 0 30px ${C.purpleGlow})` }}>
-          <defs><linearGradient id="aG" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stopColor="#7c3aed" /><stop offset="100%" stopColor="#c084fc" /></linearGradient></defs>
-          <path d="M60 160 L60 60 L30 90" fill="none" stroke="url(#aG)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M90 160 L90 40 L60 70" fill="none" stroke="url(#aG)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M120 160 L120 60 L90 90" fill="none" stroke="url(#aG)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M150 160 L150 80 L120 110" fill="none" stroke="url(#aG)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-        <h1 style={{ fontSize: 36, fontWeight: 700, color: C.text, margin: "0 0 8px", letterSpacing: -1 }}>Pyi-thon</h1>
-        <p style={{ color: C.purpleText, textAlign: "center", maxWidth: 280, marginBottom: 8, fontSize: 14, lineHeight: 1.5 }}>Master Python from scratch.<br />No AI. No autocomplete. Just you.</p>
-        <p style={{ color: C.purpleTextDim, fontSize: 11, marginBottom: 32 }}>30 levels · 3 phases · Local Edition</p>
-        <button onClick={() => setShowWelcome(false)} style={{ padding: "14px 40px", borderRadius: 12, fontWeight: 700, color: C.text, fontSize: 16, border: "none", cursor: "pointer", background: "linear-gradient(135deg, #7c3aed, #a855f7)", boxShadow: "0 8px 32px rgba(88,28,135,0.4)", fontFamily: "inherit" }}>Start Learning</button>
-        <button onClick={() => { setShowWelcome(false); setShowApiSetup(true); }} style={{ marginTop: 12, color: C.purpleTextDim, fontSize: 12, background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}>⚙️ Set API Key</button>
+      <div style={{ ...pageStyle, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 32, position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", top: "25%", left: "50%", transform: "translate(-50%,-50%)", width: 700, height: 700, background: C.accentGlowSoft, borderRadius: "50%", filter: "blur(180px)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", bottom: "10%", right: "20%", width: 300, height: 300, background: "rgba(16,185,129,0.06)", borderRadius: "50%", filter: "blur(120px)", pointerEvents: "none" }} />
+
+        <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", animation: "fadeSlideUp 0.8s ease-out" }}>
+          <svg viewBox="0 0 200 200" style={{ width: 100, height: 100, marginBottom: 40, filter: `drop-shadow(0 0 40px ${C.accentGlow})` }}>
+            <defs><linearGradient id="aG" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stopColor={C.accentDeep} /><stop offset="100%" stopColor={C.accentLight} /></linearGradient></defs>
+            <path d="M60 160 L60 60 L30 90" fill="none" stroke="url(#aG)" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M90 160 L90 40 L60 70" fill="none" stroke="url(#aG)" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M120 160 L120 60 L90 90" fill="none" stroke="url(#aG)" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M150 160 L150 80 L120 110" fill="none" stroke="url(#aG)" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+
+          <h1 style={{ fontSize: 44, fontWeight: 800, color: C.text, margin: "0 0 12px", letterSpacing: -2, background: `linear-gradient(135deg, ${C.text}, ${C.accentLight})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+            Pyi-thon
+          </h1>
+          <p style={{ color: C.accentText, textAlign: "center", maxWidth: 320, marginBottom: 8, fontSize: 15, lineHeight: 1.6, fontWeight: 500 }}>
+            Master Python from scratch.<br />No AI. No autocomplete. Just you.
+          </p>
+          <p style={{ color: C.accentTextDim, fontSize: 12, marginBottom: 48, letterSpacing: 2, textTransform: "uppercase" }}>30 levels &middot; 3 phases &middot; Local Edition</p>
+
+          <button onClick={() => setShowWelcome(false)} style={{
+            padding: "16px 52px", borderRadius: 14, fontWeight: 700, color: C.text, fontSize: 16,
+            border: "none", cursor: "pointer", fontFamily: "inherit",
+            background: `linear-gradient(135deg, ${C.accentDeep}, ${C.accent})`,
+            boxShadow: `0 8px 40px ${C.accentGlow}, inset 0 1px 0 rgba(255,255,255,0.1)`,
+            transition: "all 0.3s ease",
+          }}
+            onMouseEnter={e => { e.target.style.transform = "translateY(-2px) scale(1.02)"; e.target.style.boxShadow = `0 12px 48px ${C.accentGlow}, inset 0 1px 0 rgba(255,255,255,0.15)`; }}
+            onMouseLeave={e => { e.target.style.transform = "translateY(0) scale(1)"; e.target.style.boxShadow = `0 8px 40px ${C.accentGlow}, inset 0 1px 0 rgba(255,255,255,0.1)`; }}
+          >Start Learning</button>
+
+          <button onClick={() => { setShowWelcome(false); setShowApiSetup(true); }} style={{
+            marginTop: 16, color: C.accentTextDim, fontSize: 13, background: "none",
+            border: "none", cursor: "pointer", fontFamily: "inherit", transition: "color 0.2s",
+          }}
+            onMouseEnter={e => e.target.style.color = C.accentText}
+            onMouseLeave={e => e.target.style.color = C.accentTextDim}
+          >Configure API Key</button>
+        </div>
         <style>{globalStyles}</style>
       </div>
     );
   }
 
-  // ═══ LEVEL SELECT ═══
+  // ═══ RENDER: LEVEL SELECT ═══
   if (showLevelSelect) {
     return (
-      <div style={{ ...pageStyle, padding: "16px 16px 100px", overflowY: "auto", position: "relative" }}>
-        <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: 256, background: "linear-gradient(to bottom, rgba(88,28,135,0.15), transparent)", pointerEvents: "none" }} />
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, position: "relative", zIndex: 10 }}>
-          <button onClick={() => setShowLevelSelect(false)} style={{ color: C.purpleText, background: "none", border: "none", cursor: "pointer", padding: 8 }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
-          </button>
-          <h2 style={{ color: C.text, fontSize: 18, fontWeight: 700 }}>All Levels</h2>
-          <div style={{ width: 32 }} />
-        </div>
-        {[1, 2, 3].map(phase => (
-          <div key={phase} style={{ marginBottom: 24, position: "relative", zIndex: 10 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-              <span style={{ fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 20, background: PHASE_GRADIENTS[phase], color: C.text }}>{PHASE_NAMES[phase]}</span>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {LEVELS.filter(l => l.phase === phase).map(l => {
-                const idx = LEVELS.indexOf(l);
-                const done = completedLevels.has(l.id);
-                const unlocked = idx < unlockedUpTo || done;
-                const curr = idx === currentLevel;
-                return (
-                  <button key={l.id} onClick={() => unlocked && goToLevel(idx)} disabled={!unlocked} style={{
-                    display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 12, textAlign: "left", fontFamily: "inherit",
-                    border: `1px solid ${curr ? "rgba(139,92,246,0.4)" : done ? C.greenBorder : C.border}`,
-                    background: curr ? "rgba(88,28,135,0.2)" : done ? C.greenBg : C.bgSubtle,
-                    cursor: unlocked ? "pointer" : "not-allowed", opacity: unlocked ? 1 : 0.35,
-                  }}>
-                    <div style={{ width: 36, height: 36, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, flexShrink: 0, background: done ? "rgba(34,197,94,0.2)" : curr ? "rgba(139,92,246,0.25)" : "rgba(255,255,255,0.05)", color: done ? C.green : curr ? C.purpleText : C.textDim }}>
-                      {done ? "✓" : l.id}
-                    </div>
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <p style={{ fontSize: 13, fontWeight: 600, color: done ? "#86efac" : unlocked ? C.text : C.textDim, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.title}</p>
-                      <p style={{ fontSize: 11, color: C.purpleTextDim, margin: "2px 0 0" }}>{l.subtitle}</p>
-                    </div>
-                    {l.tags.includes("boss") && <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 20, background: "rgba(245,158,11,0.2)", color: C.amber, fontWeight: 700 }}>BOSS</span>}
-                  </button>
-                );
-              })}
+      <div style={{ ...pageStyle, padding: "20px 20px 100px", overflowY: "auto", position: "relative" }}>
+        <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: 300, background: `linear-gradient(to bottom, ${C.accentGlowSoft}, transparent)`, pointerEvents: "none", zIndex: 0 }} />
+        <div style={{ maxWidth: 640, margin: "0 auto", position: "relative", zIndex: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32 }}>
+            <button onClick={() => setShowLevelSelect(false)} style={{
+              color: C.accentText, background: "rgba(255,255,255,0.03)", border: `1px solid ${C.border}`,
+              cursor: "pointer", padding: "8px 12px", borderRadius: 10, transition: "all 0.2s",
+            }}
+              onMouseEnter={e => { e.target.style.background = "rgba(255,255,255,0.06)"; e.target.style.borderColor = C.borderFocus; }}
+              onMouseLeave={e => { e.target.style.background = "rgba(255,255,255,0.03)"; e.target.style.borderColor = C.border; }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
+            </button>
+            <h2 style={{ color: C.text, fontSize: 20, fontWeight: 700, letterSpacing: -0.5 }}>All Levels</h2>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 12, color: C.accentTextDim }}>{completedLevels.size}/{LEVELS.length}</span>
+              <div style={{ width: 60, height: 4, background: "rgba(255,255,255,0.06)", borderRadius: 4, overflow: "hidden" }}>
+                <div style={{ height: "100%", borderRadius: 4, width: `${progressPercent}%`, background: `linear-gradient(90deg, ${C.accentDeep}, ${C.accent})`, transition: "width 0.5s" }} />
+              </div>
             </div>
           </div>
-        ))}
+
+          {[1, 2, 3].map(phase => (
+            <div key={phase} style={{ marginBottom: 32 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+                <div style={{
+                  width: 32, height: 32, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 11, fontWeight: 800, letterSpacing: 1,
+                  background: `linear-gradient(135deg, ${PHASE_COLORS[phase][0]}, ${PHASE_COLORS[phase][1]})`,
+                  color: C.text,
+                }}>{PHASE_ICONS[phase]}</div>
+                <span style={{ fontSize: 14, fontWeight: 700, color: C.text, letterSpacing: -0.3 }}>{PHASE_NAMES[phase]}</span>
+                <div style={{ flex: 1, height: 1, background: C.border }} />
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {LEVELS.filter(l => l.phase === phase).map(l => {
+                  const idx = LEVELS.indexOf(l);
+                  const done = completedLevels.has(l.id);
+                  const unlocked = idx < unlockedUpTo || done;
+                  const curr = idx === currentLevel;
+                  return (
+                    <button key={l.id} onClick={() => unlocked && goToLevel(idx)} disabled={!unlocked} style={{
+                      display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderRadius: 14, textAlign: "left", fontFamily: "inherit",
+                      border: `1px solid ${curr ? C.accentBorder : done ? C.greenBorder : C.border}`,
+                      background: curr ? C.accentBg : done ? C.greenBg : "rgba(255,255,255,0.015)",
+                      cursor: unlocked ? "pointer" : "not-allowed", opacity: unlocked ? 1 : 0.3,
+                      transition: "all 0.2s ease",
+                      ...(unlocked && !curr ? {} : {}),
+                    }}
+                      onMouseEnter={e => { if (unlocked) { e.currentTarget.style.background = curr ? "rgba(79,70,229,0.18)" : done ? "rgba(16,185,129,0.12)" : "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = curr ? C.accent : done ? C.green : C.borderFocus; e.currentTarget.style.transform = "translateX(4px)"; }}}
+                      onMouseLeave={e => { if (unlocked) { e.currentTarget.style.background = curr ? C.accentBg : done ? C.greenBg : "rgba(255,255,255,0.015)"; e.currentTarget.style.borderColor = curr ? C.accentBorder : done ? C.greenBorder : C.border; e.currentTarget.style.transform = "translateX(0)"; }}}
+                    >
+                      <div style={{
+                        width: 40, height: 40, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: 13, fontWeight: 700, flexShrink: 0,
+                        background: done ? "rgba(16,185,129,0.15)" : curr ? C.accentBg : "rgba(255,255,255,0.03)",
+                        color: done ? C.green : curr ? C.accent : C.textDim,
+                        border: `1px solid ${done ? C.greenBorder : curr ? C.accentBorder : "transparent"}`,
+                      }}>
+                        {done ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg> : unlocked ? l.id : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>}
+                      </div>
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <p style={{ fontSize: 13, fontWeight: 600, color: done ? C.greenLight : unlocked ? C.text : C.textDim, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.title}</p>
+                        <p style={{ fontSize: 11, color: C.accentTextDim, margin: "3px 0 0" }}>{l.subtitle}</p>
+                      </div>
+                      {l.tags.includes("boss") && <span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 20, background: C.amberBg, border: `1px solid ${C.amberBorder}`, color: C.amber, fontWeight: 700, letterSpacing: 0.5 }}>BOSS</span>}
+                      {curr && <div style={{ width: 6, height: 6, borderRadius: "50%", background: C.accent, boxShadow: `0 0 8px ${C.accentGlow}`, flexShrink: 0 }} />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
         <style>{globalStyles}</style>
       </div>
     );
   }
 
-  // ═══ MAIN GAME ═══
+  // ═══ RENDER: EDITOR PANEL ═══
+  const editorPanel = (
+    <div style={{ flex: 1, position: "relative", minHeight: 240, animation: shakeEditor ? "shake 0.4s ease-in-out" : "none" }}>
+      <div style={{
+        position: "absolute", inset: 0, background: C.bgCard, border: `1px solid ${C.border}`,
+        borderRadius: 14, overflow: "hidden", display: "flex", flexDirection: "column",
+        boxShadow: "0 8px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.03)",
+      }}>
+        {/* Filename bar */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: 8, padding: "8px 14px",
+          background: "rgba(255,255,255,0.02)", borderBottom: `1px solid ${C.borderLight}`,
+        }}>
+          <div style={{ display: "flex", gap: 5 }}>
+            <div style={{ width: 10, height: 10, borderRadius: "50%", background: "rgba(244,63,94,0.5)" }} />
+            <div style={{ width: 10, height: 10, borderRadius: "50%", background: "rgba(245,158,11,0.5)" }} />
+            <div style={{ width: 10, height: 10, borderRadius: "50%", background: "rgba(34,197,94,0.5)" }} />
+          </div>
+          <div style={{
+            display: "flex", alignItems: "center", gap: 6, marginLeft: 8,
+            padding: "3px 10px", borderRadius: 6, background: C.bgPanel,
+            border: `1px solid ${C.borderLight}`,
+          }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2" strokeLinecap="round"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+            <span style={{ fontSize: 11, color: C.accentText, fontWeight: 600 }}>{filename}</span>
+          </div>
+          <div style={{ flex: 1 }} />
+          <span style={{ fontSize: 10, color: C.textDim }}>Python 3</span>
+        </div>
+        {/* Editor body */}
+        <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+          <div style={{
+            width: 48, background: "rgba(255,255,255,0.015)", borderRight: `1px solid ${C.borderLight}`,
+            paddingTop: 14, display: "flex", flexDirection: "column", alignItems: "center",
+          }}>
+            {code.split("\n").map((_, i) => (
+              <span key={i} style={{ fontSize: 11, color: C.lineNum, lineHeight: "1.75rem", userSelect: "none", fontWeight: 500 }}>{i + 1}</span>
+            ))}
+          </div>
+          <textarea ref={editorRef} value={code} onChange={e => setCode(e.target.value)} spellCheck={false}
+            style={{
+              flex: 1, background: "transparent", color: C.codeText, padding: "14px 16px",
+              fontSize: 14, resize: "none", outline: "none", lineHeight: "1.75rem",
+              fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace",
+              tabSize: 4, border: "none", caretColor: C.accent,
+            }}
+            placeholder="# Write your Python code here..."
+            onKeyDown={e => {
+              if (e.key === "Tab") {
+                e.preventDefault();
+                const s = e.target.selectionStart, end = e.target.selectionEnd;
+                setCode(code.substring(0,s)+"    "+code.substring(end));
+                setTimeout(() => { e.target.selectionStart = e.target.selectionEnd = s+4; }, 0);
+              }
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+
+  // ═══ RENDER: OUTPUT PANEL ═══
+  const outputPanel = (
+    <div style={{ flex: 1, minHeight: 200 }}>
+      {isEvaluating ? (
+        <div style={{
+          height: "100%", borderRadius: 14, border: `1px solid ${C.accentBorder}`,
+          background: C.accentBg, display: "flex", flexDirection: "column",
+          alignItems: "center", justifyContent: "center", gap: 16,
+        }}>
+          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+            <span style={{ fontSize: 24, color: C.accent, animation: "bracketPulse 1.2s ease-in-out infinite", display: "inline-block" }}>{`{`}</span>
+            <div style={{ display: "flex", gap: 4 }}>
+              {[0, 1, 2].map(i => (
+                <div key={i} style={{
+                  width: 6, height: 6, borderRadius: "50%", background: C.accent,
+                  animation: "dotBounce 1.4s ease-in-out infinite",
+                  animationDelay: `${i * 0.2}s`,
+                }} />
+              ))}
+            </div>
+            <span style={{ fontSize: 24, color: C.accent, animation: "bracketPulse 1.2s ease-in-out infinite 0.1s", display: "inline-block" }}>{`}`}</span>
+          </div>
+          <p style={{ color: C.accentTextDim, fontSize: 13, fontWeight: 600, margin: 0, letterSpacing: 0.5 }}>Claude is evaluating...</p>
+        </div>
+      ) : feedback ? (
+        <div style={{
+          height: "100%", borderRadius: 14, padding: 20, overflowY: "auto",
+          border: `1px solid ${feedback.correct ? C.greenBorder : C.redBorder}`,
+          background: feedback.correct ? C.greenBg : C.redBg,
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+            <div style={{
+              width: 32, height: 32, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center",
+              background: feedback.correct ? "rgba(16,185,129,0.15)" : "rgba(244,63,94,0.15)",
+              border: `1px solid ${feedback.correct ? C.greenBorder : C.redBorder}`,
+            }}>
+              {feedback.correct
+                ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.red} strokeWidth="3" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              }
+            </div>
+            <div style={{ flex: 1 }}>
+              <span style={{ fontSize: 14, fontWeight: 700, color: feedback.correct ? C.greenLight : "#fca5a5" }}>{feedback.message}</span>
+            </div>
+            {feedback.correct && <span style={{ fontSize: 13, color: C.amber, fontWeight: 700, background: C.amberBg, padding: "4px 10px", borderRadius: 8, border: `1px solid ${C.amberBorder}` }}>+100 XP</span>}
+          </div>
+
+          {feedback.aiExplanation && (
+            <div style={{
+              marginBottom: 16, borderRadius: 12, padding: 16, position: "relative", overflow: "hidden",
+              background: `linear-gradient(135deg, rgba(79,70,229,0.1), rgba(99,102,241,0.05))`,
+              border: `1px solid ${C.accentBorder}`,
+            }}>
+              <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: 2, background: `linear-gradient(90deg, ${C.accentDeep}, ${C.accent}, transparent)` }} />
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                <div style={{ width: 20, height: 20, borderRadius: 6, background: C.accentBg, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill={C.accent}><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-2h2v2h-2zm0-4V7h2v6h-2z"/></svg>
+                </div>
+                <span style={{ fontSize: 11, fontWeight: 700, color: C.accent, textTransform: "uppercase", letterSpacing: 1.5 }}>Claude says</span>
+              </div>
+              <p style={{ color: C.accentText, fontSize: 13, lineHeight: 1.7, margin: 0 }}>{feedback.aiExplanation}</p>
+            </div>
+          )}
+
+          <div style={{ marginBottom: 16 }}>
+            <p style={{ fontSize: 10, fontWeight: 700, color: C.accentTextDim, textTransform: "uppercase", letterSpacing: 1.5, margin: "0 0 8px" }}>Expected Output</p>
+            <pre style={{
+              background: C.codeBg, borderRadius: 10, padding: 14, color: C.codeText, fontSize: 12,
+              overflowX: "auto", fontFamily: "'JetBrains Mono', monospace", margin: 0, whiteSpace: "pre-wrap",
+              border: `1px solid ${C.borderLight}`,
+            }}>{feedback.expected}</pre>
+          </div>
+
+          <div style={{ paddingTop: 16, borderTop: `1px solid ${C.border}` }}>
+            <p style={{ fontSize: 10, fontWeight: 700, color: C.accentTextDim, textTransform: "uppercase", letterSpacing: 1.5, margin: "0 0 6px" }}>Concept</p>
+            <p style={{ color: "rgba(165,180,252,0.6)", fontSize: 12, lineHeight: 1.7, margin: 0 }}>{level.explanation}</p>
+          </div>
+        </div>
+      ) : (
+        <div style={{
+          height: "100%", borderRadius: 14, border: `1px solid ${C.border}`,
+          background: "rgba(255,255,255,0.015)", display: "flex", flexDirection: "column",
+          alignItems: "center", justifyContent: "center", gap: 8,
+        }}>
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={C.textDim} strokeWidth="1.5" strokeLinecap="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+          <p style={{ color: C.textDim, fontSize: 13 }}>Run your code to see output</p>
+        </div>
+      )}
+    </div>
+  );
+
+  // ═══ RENDER: MAIN GAME ═══
   return (
-    <div style={{ ...pageStyle, display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" }}>
+    <div style={{ ...pageStyle, display: "flex", flexDirection: "column", position: "relative", overflow: "hidden", height: "100vh" }}>
+      {/* Confetti */}
       {showConfetti && <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 50, overflow: "hidden" }}>
-        {Array.from({ length: 40 }).map((_, i) => <div key={i} style={{ position: "absolute", width: 8, height: 8, borderRadius: "50%", left: `${Math.random()*100}%`, top: "-5%", backgroundColor: ["#a855f7","#22c55e","#3b82f6","#f59e0b","#ec4899"][i%5], animation: `confettiFall ${1.5+Math.random()}s ease-out forwards`, animationDelay: `${Math.random()*0.5}s` }} />)}
+        {confettiParticles.map(p => (
+          <div key={p.key} style={{
+            position: "absolute",
+            width: p.shape === "rect" ? p.size * 0.6 : p.size,
+            height: p.size,
+            borderRadius: p.shape === "circle" ? "50%" : p.shape === "diamond" ? "2px" : "1px",
+            left: `${p.left}%`, top: "-3%",
+            backgroundColor: p.color,
+            transform: p.shape === "diamond" ? "rotate(45deg)" : "none",
+            animation: `confettiFall ${p.duration}s cubic-bezier(0.25,0.46,0.45,0.94) forwards`,
+            animationDelay: `${p.delay}s`,
+            opacity: 0.9,
+            ["--drift"]: `${p.drift}px`,
+            ["--rotation"]: `${p.rotation}deg`,
+          }} />
+        ))}
       </div>}
 
-      <header style={{ position: "sticky", top: 0, zIndex: 40, background: "rgba(10,10,20,0.92)", backdropFilter: "blur(20px)", borderBottom: `1px solid ${C.border}` }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px" }}>
-          <button onClick={() => setShowLevelSelect(true)} style={{ color: C.purpleText, background: "none", border: "none", cursor: "pointer", padding: 4 }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      {/* Header */}
+      <header style={{
+        position: "sticky", top: 0, zIndex: 40,
+        background: C.bgGlassStrong, backdropFilter: "blur(24px)",
+        borderBottom: `1px solid ${C.border}`,
+      }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 20px" }}>
+          <button onClick={() => setShowLevelSelect(true)} style={{
+            color: C.accentText, background: "rgba(255,255,255,0.03)", border: `1px solid ${C.border}`,
+            cursor: "pointer", padding: "7px 10px", borderRadius: 10, transition: "all 0.2s",
+            display: "flex", alignItems: "center", gap: 6,
+          }}
+            onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.borderColor = C.borderFocus; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.borderColor = C.border; }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+            <span style={{ fontSize: 11, fontWeight: 600 }}>Levels</span>
           </button>
-          <div style={{ flex: 1, margin: "0 16px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-              <span style={{ fontSize: 11, color: C.purpleTextDim, fontWeight: 600 }}>Lv.{level.id}</span>
-              <span style={{ fontSize: 11, color: C.purpleTextDim }}>{completedLevels.size}/{LEVELS.length}</span>
+
+          <div style={{ flex: 1, margin: "0 20px", maxWidth: 280 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
+              <span style={{ fontSize: 11, color: C.accentTextDim, fontWeight: 600 }}>Level {level.id}</span>
+              <span style={{ fontSize: 11, color: C.accentTextDim }}>{completedLevels.size}/{LEVELS.length}</span>
             </div>
-            <div style={{ height: 6, background: "rgba(255,255,255,0.06)", borderRadius: 8, overflow: "hidden" }}>
-              <div style={{ height: "100%", borderRadius: 8, transition: "width 0.7s ease-out", width: `${progressPercent}%`, background: "linear-gradient(90deg, #7c3aed, #a855f7, #c084fc)" }} />
+            <div style={{ height: 5, background: "rgba(255,255,255,0.04)", borderRadius: 8, overflow: "hidden" }}>
+              <div style={{
+                height: "100%", borderRadius: 8, transition: "width 0.7s ease-out",
+                width: `${progressPercent}%`,
+                background: `linear-gradient(90deg, ${C.accentDeep}, ${C.accent}, ${C.accentLight})`,
+                boxShadow: `0 0 12px ${C.accentGlow}`,
+              }} />
             </div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            {streak > 0 && <div style={{ display: "flex", alignItems: "center", gap: 4, color: C.amber }}><span style={{ fontSize: 14 }}>🔥</span><span style={{ fontSize: 12, fontWeight: 700 }}>{streak}</span></div>}
-            <div style={{ display: "flex", alignItems: "center", gap: 4, color: C.purpleText }}><span style={{ fontSize: 14 }}>⚡</span><span style={{ fontSize: 12, fontWeight: 700 }}>{totalXP}</span></div>
-            <button onClick={() => setShowApiSetup(true)} style={{ color: C.purpleTextDim, background: "none", border: "none", cursor: "pointer", fontSize: 14, padding: 4 }}>⚙️</button>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            {streak > 0 && <div style={{
+              display: "flex", alignItems: "center", gap: 5, color: C.amber,
+              background: C.amberBg, padding: "4px 10px", borderRadius: 8,
+              border: `1px solid ${C.amberBorder}`,
+            }}>
+              <span style={{ fontSize: 13 }}>&#x1F525;</span>
+              <span style={{ fontSize: 12, fontWeight: 700 }}>{streak}</span>
+            </div>}
+            <div style={{
+              display: "flex", alignItems: "center", gap: 5, color: C.accentText,
+              background: C.accentBg, padding: "4px 10px", borderRadius: 8,
+              border: `1px solid ${C.accentBorder}`,
+            }}>
+              <span style={{ fontSize: 13 }}>&#x26A1;</span>
+              <span style={{ fontSize: 12, fontWeight: 700 }}>{totalXP}</span>
+            </div>
+            <button onClick={() => setShowApiSetup(true)} style={{
+              color: C.textDim, background: "none", border: "none", cursor: "pointer",
+              fontSize: 14, padding: 4, transition: "color 0.2s",
+            }}
+              onMouseEnter={e => e.target.style.color = C.accentText}
+              onMouseLeave={e => e.target.style.color = C.textDim}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+            </button>
           </div>
         </div>
       </header>
 
-      <div style={{ padding: "16px 16px 12px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-          <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: PHASE_GRADIENTS[level.phase], color: C.text }}>P{level.phase}</span>
-          <span style={{ color: C.purpleTextDim, fontSize: 10 }}>Day {level.day}</span>
-          {level.tags.includes("boss") && <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 20, background: "rgba(245,158,11,0.2)", color: C.amber, fontWeight: 700 }}>BOSS</span>}
-        </div>
-        <h1 style={{ fontSize: 20, fontWeight: 700, color: C.text, margin: "0 0 4px", letterSpacing: -0.5 }}>{level.title}</h1>
-        <p style={{ color: C.purpleTextDim, fontSize: 12, margin: "0 0 12px" }}>{level.subtitle}</p>
-        <div style={{ background: C.purpleBg, border: `1px solid ${C.purpleBorder}`, borderRadius: 12, padding: 12, marginBottom: 12 }}>
-          <p style={{ color: C.purpleText, fontSize: 13, lineHeight: 1.6, margin: 0 }}>{level.concept}</p>
-        </div>
-        <div style={{ background: C.bgSubtle, border: `1px solid ${C.border}`, borderRadius: 12, padding: 12 }}>
-          <p style={{ fontSize: 10, fontWeight: 700, color: C.purple, textTransform: "uppercase", letterSpacing: 1, margin: "0 0 6px" }}>Task</p>
-          <p style={{ color: C.textMuted, fontSize: 13, lineHeight: 1.6, margin: 0 }}>{level.task}</p>
-        </div>
-      </div>
+      {/* Main content with level transition */}
+      <div style={{
+        flex: 1, display: "flex", flexDirection: "column", minHeight: 0, overflow: "auto",
+        animation: levelTransition ? "levelEnter 0.4s ease-out" : "none",
+      }}>
+        {/* Level info */}
+        <div style={{ padding: "16px 20px 12px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+            <div style={{
+              fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 20,
+              background: `linear-gradient(135deg, ${PHASE_COLORS[level.phase][0]}, ${PHASE_COLORS[level.phase][1]})`,
+              color: C.text, letterSpacing: 0.5,
+            }}>Phase {level.phase}</div>
+            <span style={{ color: C.textDim, fontSize: 11 }}>Day {level.day}</span>
+            {level.tags.includes("boss") && <span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 20, background: C.amberBg, border: `1px solid ${C.amberBorder}`, color: C.amber, fontWeight: 700 }}>BOSS</span>}
+          </div>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: C.text, margin: "0 0 4px", letterSpacing: -0.5 }}>{level.title}</h1>
+          <p style={{ color: C.accentTextDim, fontSize: 12, margin: "0 0 14px" }}>{level.subtitle}</p>
 
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "0 16px 16px", minHeight: 0 }}>
-        <div style={{ display: "flex", gap: 4, marginBottom: 8 }}>
-          {["editor", "output"].map(t => (
-            <button key={t} onClick={() => setTab(t)} style={{ padding: "6px 16px", borderRadius: 8, fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer", fontFamily: "inherit", background: tab === t ? "rgba(88,28,135,0.3)" : "transparent", color: tab === t ? C.purpleText : C.purpleTextDim }}>
-              {t === "editor" ? "Editor" : `Output ${isEvaluating ? "⏳" : feedback ? (feedback.correct ? "✓" : "✗") : ""}`}
-            </button>
-          ))}
-        </div>
-
-        {tab === "editor" ? (
-          <div style={{ flex: 1, position: "relative", minHeight: 200, animation: shakeEditor ? "shake 0.4s ease-in-out" : "none" }}>
-            <div style={{ position: "absolute", inset: 0, background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 12, overflow: "hidden", boxShadow: "0 8px 32px rgba(0,0,0,0.3)", display: "flex" }}>
-              <div style={{ width: 40, background: "rgba(255,255,255,0.02)", borderRight: `1px solid ${C.borderLight}`, paddingTop: 12, display: "flex", flexDirection: "column", alignItems: "center" }}>
-                {code.split("\n").map((_, i) => <span key={i} style={{ fontSize: 10, color: "rgba(139,92,246,0.25)", lineHeight: "1.7rem", userSelect: "none" }}>{i + 1}</span>)}
-              </div>
-              <textarea ref={editorRef} value={code} onChange={e => setCode(e.target.value)} spellCheck={false}
-                style={{ flex: 1, background: "transparent", color: C.codeText, padding: 12, fontSize: 14, resize: "none", outline: "none", lineHeight: "1.7rem", fontFamily: "'JetBrains Mono', 'Fira Code', monospace", tabSize: 4, border: "none", caretColor: C.purple }}
-                placeholder="# Write your Python code here..."
-                onKeyDown={e => { if (e.key === "Tab") { e.preventDefault(); const s = e.target.selectionStart, end = e.target.selectionEnd; setCode(code.substring(0,s)+"    "+code.substring(end)); setTimeout(() => { e.target.selectionStart = e.target.selectionEnd = s+4; }, 0); }}}
-              />
+          {/* Collapsible concept */}
+          <button onClick={() => setConceptCollapsed(!conceptCollapsed)} style={{
+            width: "100%", background: C.accentBg, border: `1px solid ${C.accentBorder}`,
+            borderRadius: 12, padding: conceptCollapsed ? "10px 14px" : "14px 16px",
+            cursor: "pointer", fontFamily: "inherit", textAlign: "left",
+            transition: "all 0.3s ease", marginBottom: 10,
+          }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span style={{ fontSize: 10, fontWeight: 700, color: C.accent, textTransform: "uppercase", letterSpacing: 1.5 }}>Concept</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.accentTextDim} strokeWidth="2" strokeLinecap="round" style={{ transition: "transform 0.3s", transform: conceptCollapsed ? "rotate(0deg)" : "rotate(180deg)" }}><polyline points="6 9 12 15 18 9"/></svg>
             </div>
-          </div>
-        ) : (
-          <div style={{ flex: 1, minHeight: 200 }}>
-            {isEvaluating ? (
-              <div style={{ height: "100%", borderRadius: 12, border: `1px solid ${C.purpleBorder}`, background: "rgba(88,28,135,0.1)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12 }}>
-                <div style={{ width: 40, height: 40, position: "relative" }}>
-                  <div style={{ position: "absolute", inset: 0, borderRadius: "50%", border: "2px solid rgba(139,92,246,0.2)" }} />
-                  <div style={{ position: "absolute", inset: 0, borderRadius: "50%", border: "2px solid transparent", borderTopColor: C.purple, animation: "spin 1s linear infinite" }} />
-                </div>
-                <p style={{ color: C.purpleTextDim, fontSize: 14, fontWeight: 600, margin: 0 }}>Evaluating your code...</p>
-              </div>
-            ) : feedback ? (
-              <div style={{ height: "100%", borderRadius: 12, padding: 16, overflowY: "auto", border: `1px solid ${feedback.correct ? C.greenBorder : C.redBorder}`, background: feedback.correct ? C.greenBg : C.redBg }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                  <span style={{ fontSize: 18, color: feedback.correct ? C.green : C.red }}>{feedback.correct ? "✓" : "✗"}</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: feedback.correct ? "#86efac" : "#fca5a5" }}>{feedback.message}</span>
-                  {feedback.correct && <span style={{ fontSize: 13, color: C.amber }}>+100 XP</span>}
-                </div>
-                {feedback.aiExplanation && (
-                  <div style={{ marginBottom: 12, background: C.bgSubtle, borderRadius: 8, padding: 10, border: `1px solid ${C.borderLight}` }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                      <span style={{ fontSize: 10 }}>🤖</span>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: C.purple, textTransform: "uppercase", letterSpacing: 1 }}>Claude says</span>
-                    </div>
-                    <p style={{ color: C.purpleText, fontSize: 12, lineHeight: 1.5, margin: 0 }}>{feedback.aiExplanation}</p>
-                  </div>
-                )}
-                <div style={{ marginBottom: 12 }}>
-                  <p style={{ fontSize: 10, fontWeight: 700, color: C.purpleTextDim, textTransform: "uppercase", letterSpacing: 1, margin: "0 0 4px" }}>Expected Output</p>
-                  <pre style={{ background: C.codeBg, borderRadius: 8, padding: 10, color: C.codeText, fontSize: 12, overflowX: "auto", fontFamily: "'JetBrains Mono', monospace", margin: 0, whiteSpace: "pre-wrap" }}>{feedback.expected}</pre>
-                </div>
-                <div style={{ paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
-                  <p style={{ fontSize: 10, fontWeight: 700, color: C.purpleTextDim, textTransform: "uppercase", letterSpacing: 1, margin: "0 0 4px" }}>Concept</p>
-                  <p style={{ color: "rgba(196,167,255,0.6)", fontSize: 12, lineHeight: 1.6, margin: 0 }}>{level.explanation}</p>
-                </div>
-              </div>
-            ) : (
-              <div style={{ height: "100%", borderRadius: 12, border: `1px solid ${C.border}`, background: C.bgSubtle, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <p style={{ color: C.purpleTextDim, fontSize: 13 }}>Submit your code to see results</p>
-              </div>
-            )}
-          </div>
-        )}
+            {!conceptCollapsed && <p style={{ color: C.accentText, fontSize: 13, lineHeight: 1.7, margin: "8px 0 0" }}>{level.concept}</p>}
+          </button>
 
-        {showHint && (
-          <div style={{ marginTop: 8, background: C.amberBg, border: `1px solid ${C.amberBorder}`, borderRadius: 12, padding: 12 }}>
-            <p style={{ color: C.amberText, fontSize: 12, lineHeight: 1.6, margin: 0, whiteSpace: "pre-wrap" }}>💡 {level.hint}</p>
+          <div style={{ background: "rgba(255,255,255,0.015)", border: `1px solid ${C.border}`, borderRadius: 12, padding: "12px 16px" }}>
+            <p style={{ fontSize: 10, fontWeight: 700, color: C.accent, textTransform: "uppercase", letterSpacing: 1.5, margin: "0 0 6px" }}>Task</p>
+            <p style={{ color: C.textMuted, fontSize: 13, lineHeight: 1.7, margin: 0 }}>{level.task}</p>
           </div>
-        )}
+        </div>
+
+        {/* Editor + Output area */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "0 20px 16px", minHeight: 0 }}>
+          {isWide ? (
+            /* Desktop: side-by-side */
+            <div style={{ flex: 1, display: "flex", gap: 12, minHeight: 280 }}>
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+                {editorPanel}
+              </div>
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+                {outputPanel}
+              </div>
+            </div>
+          ) : (
+            /* Mobile: tabs */
+            <>
+              <div style={{ display: "flex", gap: 4, marginBottom: 10 }}>
+                {["editor", "output"].map(t => (
+                  <button key={t} onClick={() => setTab(t)} style={{
+                    padding: "8px 20px", borderRadius: 10, fontSize: 12, fontWeight: 600,
+                    border: `1px solid ${tab === t ? C.accentBorder : "transparent"}`,
+                    cursor: "pointer", fontFamily: "inherit", transition: "all 0.2s",
+                    background: tab === t ? C.accentBg : "transparent",
+                    color: tab === t ? C.accentText : C.accentTextDim,
+                  }}
+                    onMouseEnter={e => { if (tab !== t) e.target.style.color = C.accentText; }}
+                    onMouseLeave={e => { if (tab !== t) e.target.style.color = C.accentTextDim; }}
+                  >
+                    {t === "editor" ? "Editor" : `Output ${isEvaluating ? "" : feedback ? (feedback.correct ? " \u2713" : " \u2717") : ""}`}
+                    {t === "output" && isEvaluating && <span style={{ display: "inline-block", marginLeft: 6, width: 6, height: 6, borderRadius: "50%", background: C.accent, animation: "dotBounce 1.4s ease-in-out infinite" }} />}
+                  </button>
+                ))}
+              </div>
+              {tab === "editor" ? editorPanel : outputPanel}
+            </>
+          )}
+
+          {showHint && (
+            <div style={{
+              marginTop: 10, background: C.amberBg, border: `1px solid ${C.amberBorder}`,
+              borderRadius: 12, padding: "12px 16px",
+              animation: "fadeSlideUp 0.3s ease-out",
+            }}>
+              <p style={{ color: C.amberText, fontSize: 12, lineHeight: 1.7, margin: 0, whiteSpace: "pre-wrap" }}>
+                <span style={{ fontWeight: 700, marginRight: 6 }}>Hint:</span>{level.hint}
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
-      <div style={{ position: "sticky", bottom: 0, background: "rgba(10,10,20,0.95)", backdropFilter: "blur(20px)", borderTop: `1px solid ${C.border}`, padding: "12px 16px", display: "flex", alignItems: "center", gap: 8, zIndex: 30 }}>
-        <button onClick={() => setShowHint(!showHint)} style={{ padding: "10px 12px", borderRadius: 12, fontSize: 12, fontWeight: 600, background: "rgba(245,158,11,0.1)", color: C.amber, border: `1px solid rgba(180,83,9,0.3)`, cursor: "pointer", fontFamily: "inherit" }}>{showHint ? "Hide" : "Hint"}</button>
-        <button onClick={handleReset} style={{ padding: "10px 12px", borderRadius: 12, fontSize: 12, fontWeight: 600, background: "rgba(255,255,255,0.04)", color: C.purpleTextDim, border: `1px solid ${C.border}`, cursor: "pointer", fontFamily: "inherit" }}>Reset</button>
-        <button onClick={handleSubmit} disabled={isEvaluating} style={{ flex: 1, padding: "10px 0", borderRadius: 12, fontSize: 14, fontWeight: 700, color: C.text, border: "none", cursor: isEvaluating ? "not-allowed" : "pointer", background: "linear-gradient(135deg, #7c3aed, #a855f7)", boxShadow: "0 4px 20px rgba(88,28,135,0.3)", opacity: isEvaluating ? 0.6 : 1, fontFamily: "inherit" }}>
-          {isEvaluating ? "⏳ Evaluating..." : "Run Code ▶"}
+      {/* Bottom action bar */}
+      <div style={{
+        position: "sticky", bottom: 0,
+        background: C.bgGlassStrong, backdropFilter: "blur(24px)",
+        borderTop: `1px solid ${C.border}`, padding: "12px 20px",
+        display: "flex", alignItems: "center", gap: 8, zIndex: 30,
+      }}>
+        <button onClick={() => setShowHint(!showHint)} style={{
+          padding: "10px 16px", borderRadius: 12, fontSize: 12, fontWeight: 600,
+          background: C.amberBg, color: C.amber,
+          border: `1px solid ${C.amberBorder}`, cursor: "pointer", fontFamily: "inherit",
+          transition: "all 0.2s",
+        }}
+          onMouseEnter={e => { e.target.style.background = "rgba(245,158,11,0.15)"; e.target.style.transform = "translateY(-1px)"; }}
+          onMouseLeave={e => { e.target.style.background = C.amberBg; e.target.style.transform = "translateY(0)"; }}
+        >{showHint ? "Hide Hint" : "Hint"}</button>
+
+        <button onClick={handleReset} style={{
+          padding: "10px 16px", borderRadius: 12, fontSize: 12, fontWeight: 600,
+          background: "rgba(255,255,255,0.03)", color: C.accentTextDim,
+          border: `1px solid ${C.border}`, cursor: "pointer", fontFamily: "inherit",
+          transition: "all 0.2s",
+        }}
+          onMouseEnter={e => { e.target.style.background = "rgba(255,255,255,0.06)"; e.target.style.borderColor = C.borderFocus; e.target.style.transform = "translateY(-1px)"; }}
+          onMouseLeave={e => { e.target.style.background = "rgba(255,255,255,0.03)"; e.target.style.borderColor = C.border; e.target.style.transform = "translateY(0)"; }}
+        >Reset</button>
+
+        <button onClick={handleSubmit} disabled={isEvaluating} style={{
+          flex: 1, padding: "12px 0", borderRadius: 12, fontSize: 14, fontWeight: 700,
+          color: C.text, border: "none", fontFamily: "inherit",
+          cursor: isEvaluating ? "not-allowed" : "pointer",
+          background: `linear-gradient(135deg, ${C.accentDeep}, ${C.accent})`,
+          boxShadow: `0 4px 24px ${C.accentGlow}`,
+          opacity: isEvaluating ? 0.6 : 1, transition: "all 0.2s",
+        }}
+          onMouseEnter={e => { if (!isEvaluating) { e.target.style.transform = "translateY(-1px)"; e.target.style.boxShadow = `0 6px 32px ${C.accentGlow}`; }}}
+          onMouseLeave={e => { e.target.style.transform = "translateY(0)"; e.target.style.boxShadow = `0 4px 24px ${C.accentGlow}`; }}
+        >
+          {isEvaluating ? "Evaluating..." : "Run Code \u25B6"}
         </button>
+
         {feedback?.correct && currentLevel < LEVELS.length - 1 && (
-          <button onClick={() => setCurrentLevel(prev => Math.min(prev + 1, LEVELS.length - 1))} style={{ padding: "10px 16px", borderRadius: 12, fontSize: 12, fontWeight: 700, background: "rgba(34,197,94,0.15)", color: C.green, border: `1px solid rgba(22,101,52,0.4)`, cursor: "pointer", fontFamily: "inherit" }}>Next →</button>
+          <button onClick={() => setCurrentLevel(prev => Math.min(prev + 1, LEVELS.length - 1))} style={{
+            padding: "12px 20px", borderRadius: 12, fontSize: 13, fontWeight: 700,
+            background: C.greenBg, color: C.green,
+            border: `1px solid ${C.greenBorder}`, cursor: "pointer", fontFamily: "inherit",
+            transition: "all 0.2s", animation: "fadeSlideUp 0.3s ease-out",
+          }}
+            onMouseEnter={e => { e.target.style.background = "rgba(16,185,129,0.15)"; e.target.style.transform = "translateY(-1px)"; }}
+            onMouseLeave={e => { e.target.style.background = C.greenBg; e.target.style.transform = "translateY(0)"; }}
+          >Next &rarr;</button>
         )}
       </div>
       <style>{globalStyles}</style>
@@ -432,13 +837,49 @@ export default function PyithonApp() {
 }
 
 const globalStyles = `
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&display=swap');
+
   *, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { margin: 0; padding: 0; background: ${C.bg} !important; color-scheme: dark; }
-  @keyframes confettiFall { 0% { transform: translateY(0) rotate(0deg) scale(1); opacity:1; } 100% { transform: translateY(100vh) rotate(720deg) scale(0); opacity:0; } }
-  @keyframes shake { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-4px); } 40% { transform: translateX(4px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(3px); } }
+  html { height: 100%; }
+  body { min-height: 100%; }
+  #root { min-height: 100vh; }
+
+  @keyframes confettiFall {
+    0% { transform: translateY(0) translateX(0) rotate(0deg) scale(1); opacity: 1; }
+    100% { transform: translateY(100vh) translateX(var(--drift, 0px)) rotate(var(--rotation, 720deg)) scale(0.3); opacity: 0; }
+  }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+  }
   @keyframes spin { to { transform: rotate(360deg); } }
-  textarea::placeholder { color: rgba(139,92,246,0.25) !important; }
-  textarea::-webkit-scrollbar { width: 4px; }
+  @keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes levelEnter {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes bracketPulse {
+    0%, 100% { opacity: 0.4; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.15); }
+  }
+  @keyframes dotBounce {
+    0%, 80%, 100% { transform: scale(0.6); opacity: 0.3; }
+    40% { transform: scale(1.2); opacity: 1; }
+  }
+  textarea::placeholder { color: rgba(129,140,248,0.2) !important; }
+  textarea::-webkit-scrollbar { width: 5px; }
   textarea::-webkit-scrollbar-track { background: transparent; }
-  textarea::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.2); border-radius: 4px; }
+  textarea::-webkit-scrollbar-thumb { background: rgba(129,140,248,0.15); border-radius: 4px; }
+  textarea::-webkit-scrollbar-thumb:hover { background: rgba(129,140,248,0.3); }
+
+  button { transition: all 0.2s ease; }
+
+  ::selection { background: rgba(99,102,241,0.3); }
 `;
