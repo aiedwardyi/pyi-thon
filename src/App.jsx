@@ -47,6 +47,106 @@ const LIGHT = {
 // Mutable theme reference — updated by component
 let C = { ...DARK };
 
+// ─── TRANSLATIONS ───
+const STRINGS = {
+  en: {
+    levels: "Levels",
+    allLevels: "All Levels",
+    phase: "Phase",
+    day: "Day",
+    concept: "Concept",
+    task: "Task",
+    hint: "Hint",
+    hideHint: "Hide Hint",
+    reset: "Reset",
+    runCode: "Run Code",
+    evaluating: "Evaluating...",
+    next: "Next",
+    tryAgain: "Try Again",
+    correct: "Correct!",
+    notQuite: "Not quite",
+    expectedOutput: "Expected Output",
+    boss: "BOSS",
+    editor: "Editor",
+    output: "Output",
+    runToSee: "Run your code to see output",
+    writeCodeFirst: "Write some code first!",
+    claudeEvaluating: "Claude is evaluating...",
+    startLearning: "Start Learning",
+    configureApiKey: "Configure API Key",
+    tagline: "Master Python from scratch.\nNo AI. No autocomplete. Just you.",
+    subtitle: "30 levels \u00b7 3 phases \u00b7 Local Edition",
+    settings: "Settings",
+    darkMode: "Dark",
+    lightMode: "Light",
+    modeSuffix: "Mode",
+    switchAppearance: "Switch appearance",
+    offlineMode: "Offline Mode",
+    offlineDesc: "Runs Python in your browser",
+    onlineDesc: "Claude evaluates your code",
+    loading: "loading...",
+    ready: "ready",
+    apiKey: "API Key",
+    apiKeyDesc: "Get a key at",
+    saveKey: "Save Key",
+    language: "Language",
+    langDesc: "Interface language",
+    python3: "Python 3",
+    xp: "XP",
+    phaseName1: "Foundations",
+    phaseName2: "Real Skills",
+    phaseName3: "Beyond",
+  },
+  ko: {
+    levels: "\ub808\ubca8",
+    allLevels: "\ubaa8\ub4e0 \ub808\ubca8",
+    phase: "\ub2e8\uacc4",
+    day: "\uc77c\ucc28",
+    concept: "\uac1c\ub150",
+    task: "\uacfc\uc81c",
+    hint: "\ud78c\ud2b8",
+    hideHint: "\ud78c\ud2b8 \uc228\uae30\uae30",
+    reset: "\ucd08\uae30\ud654",
+    runCode: "\ucf54\ub4dc \uc2e4\ud589",
+    evaluating: "\ud3c9\uac00 \uc911...",
+    next: "\ub2e4\uc74c",
+    tryAgain: "\ub2e4\uc2dc \uc2dc\ub3c4",
+    correct: "\uc815\ub2f5!",
+    notQuite: "\uc544\uc26c\uc6cc\uc694",
+    expectedOutput: "\uc608\uc0c1 \ucd9c\ub825",
+    boss: "\ubcf4\uc2a4",
+    editor: "\uc5d0\ub514\ud130",
+    output: "\ucd9c\ub825",
+    runToSee: "\ucf54\ub4dc\ub97c \uc2e4\ud589\ud558\uba74 \uacb0\uacfc\uac00 \uc5ec\uae30\uc5d0 \ud45c\uc2dc\ub429\ub2c8\ub2e4",
+    writeCodeFirst: "\uba3c\uc800 \ucf54\ub4dc\ub97c \uc791\uc131\ud558\uc138\uc694!",
+    claudeEvaluating: "Claude\uac00 \ud3c9\uac00 \uc911\uc785\ub2c8\ub2e4...",
+    startLearning: "\ud559\uc2b5 \uc2dc\uc791",
+    configureApiKey: "API \ud0a4 \uc124\uc815",
+    tagline: "\ud30c\uc774\uc36c\uc744 \ucc98\uc74c\ubd80\ud130 \ub9c8\uc2a4\ud130\ud558\uc138\uc694.\nAI \uc5c6\uc774. \uc790\ub3d9\uc644\uc131 \uc5c6\uc774. \uc624\uc9c1 \ub2f9\uc2e0\uc758 \ud798\uc73c\ub85c.",
+    subtitle: "30 \ub808\ubca8 \u00b7 3 \ub2e8\uacc4 \u00b7 \ub85c\uceec \uc5d0\ub514\uc158",
+    settings: "\uc124\uc815",
+    darkMode: "\ub2e4\ud06c",
+    lightMode: "\ub77c\uc774\ud2b8",
+    modeSuffix: "\ubaa8\ub4dc",
+    switchAppearance: "\ud14c\ub9c8 \ubcc0\uacbd",
+    offlineMode: "\uc624\ud504\ub77c\uc778 \ubaa8\ub4dc",
+    offlineDesc: "\ube0c\ub77c\uc6b0\uc800\uc5d0\uc11c Python \uc2e4\ud589",
+    onlineDesc: "Claude\uac00 \ucf54\ub4dc\ub97c \ud3c9\uac00\ud569\ub2c8\ub2e4",
+    loading: "\ub85c\ub529 \uc911...",
+    ready: "\uc900\ube44 \uc644\ub8cc",
+    apiKey: "API \ud0a4",
+    apiKeyDesc: "\ud0a4 \ubc1c\uae09:",
+    saveKey: "\ud0a4 \uc800\uc7a5",
+    language: "\uc5b8\uc5b4",
+    langDesc: "\uc778\ud130\ud398\uc774\uc2a4 \uc5b8\uc5b4",
+    python3: "Python 3",
+    xp: "XP",
+    phaseName1: "\uae30\ucd08",
+    phaseName2: "\uc2e4\uc804 \uc2a4\ud0ac",
+    phaseName3: "\uadf8 \ub108\uba38",
+  }
+};
+
 // ─── PYODIDE PYTHON RUNTIME ───
 let _pyodide = null;
 let _pyodideLoading = false;
@@ -251,6 +351,39 @@ const LEVELS = [
 
 const PHASE_NAMES = { 1: "Foundations", 2: "Real Skills", 3: "Beyond" };
 const PHASE_ICONS = { 1: "01", 2: "02", 3: "03" };
+
+const LEVELS_KO = {
+  1: { title: "Hello, World!", subtitle: "\uccab \ubc88\uc9f8 print \ubb38", concept: "print() \ud568\uc218\ub294 \ud14d\uc2a4\ud2b8\ub97c \ud654\uba74\uc5d0 \ucd9c\ub825\ud569\ub2c8\ub2e4. \ud14d\uc2a4\ud2b8\ub294 \ub530\uc634\ud45c\ub85c \uac10\uc2f8\uc57c \ud569\ub2c8\ub2e4.", task: 'print()\ub97c \uc0ac\uc6a9\ud558\uc5ec \uc815\ud655\ud788 \ub2e4\uc74c\uc744 \ucd9c\ub825\ud558\uc138\uc694: Hello, World!', hint: '\uae30\uc5b5\ud558\uc138\uc694: print("\ud14d\uc2a4\ud2b8\ub97c \uc5ec\uae30\uc5d0")', explanation: 'print()\ub294 Python\uc758 \ub0b4\uc7a5 \ucd9c\ub825 \ud568\uc218\uc785\ub2c8\ub2e4. \ubb38\uc790\uc5f4(\ud14d\uc2a4\ud2b8)\uc740 \ub530\uc634\ud45c\ub85c \uac10\uc2f8\uc57c \ud569\ub2c8\ub2e4 \u2014 \uc791\uc740\ub530\uc634\ud45c\ub4e0 \ud070\ub530\uc634\ud45c\ub4e0 \uc0c1\uad00\uc5c6\uc2b5\ub2c8\ub2e4.' },
+  2: { title: "\ubcc0\uc218\uc640 \ud560\ub2f9", subtitle: "\uc774\ub984\uc774 \uc788\ub294 \uc800\uc7a5 \uacf5\uac04\uc5d0 \uac12 \uc800\uc7a5\ud558\uae30", concept: "\ubcc0\uc218\ub294 \ub370\uc774\ud130\ub97c \uc800\uc7a5\ud569\ub2c8\ub2e4. =\ub97c \uc0ac\uc6a9\ud558\uc5ec \uac12\uc744 \ud560\ub2f9\ud569\ub2c8\ub2e4. Python\uc740 \uc790\ub3d9\uc73c\ub85c \ud0c0\uc785\uc744 \uacb0\uc815\ud569\ub2c8\ub2e4.", task: 'name\uc774\ub77c\ub294 \ubcc0\uc218\ub97c \ub9cc\ub4e4\uc5b4 "Alice"\ub97c \uc800\uc7a5\ud558\uace0 \ucd9c\ub825\ud558\uc138\uc694.', hint: '\ub450 \uc904: \ubcc0\uc218\uc5d0 \ud560\ub2f9\ud55c \ud6c4 print(\ubcc0\uc218\uc774\ub984)', explanation: '\ubcc0\uc218\ub294 \ub77c\ubca8\uc774 \ubd99\uc740 \uc0c1\uc790\uc640 \uac19\uc2b5\ub2c8\ub2e4. name = "Alice"\ub294 "name"\uc774\ub77c\ub294 \ub77c\ubca8\uc774 \ubd99\uc740 \uc0c1\uc790\uc5d0 "Alice"\ub77c\ub294 \ud14d\uc2a4\ud2b8\ub97c \ub2f4\ub294 \uac83\uc785\ub2c8\ub2e4.' },
+  3: { title: "\ubb38\uc790\uc5f4 \uc5f0\uacb0", subtitle: "+\ub85c \ubb38\uc790\uc5f4 \ud569\uce58\uae30", concept: "+ \uc5f0\uc0b0\uc790\ub294 \ubb38\uc790\uc5f4\uc744 \ud569\uce69\ub2c8\ub2e4. \uc22b\uc790\ub294 \uba3c\uc800 str()\ub85c \ubcc0\ud658\ud574\uc57c \ud569\ub2c8\ub2e4.", task: 'name = "Alice"\uc640 age = 25\ub97c \ub9cc\ub4e4\uace0 "Alice is 25"\ub97c \ucd9c\ub825\ud558\uc138\uc694', hint: "+\ub97c \uc0ac\uc6a9\ud558\uc5ec \ubb38\uc790\uc5f4\uc744 \ud569\uce58\uc138\uc694. \uc815\uc218\ub97c \ubcc0\ud658\ud558\ub824\uba74 str(age)\ub97c \uae30\uc5b5\ud558\uc138\uc694!", explanation: '\ubb38\uc790\uc5f4\uacfc \uc815\uc218\ub294 \uc9c1\uc811 \uc5f0\uacb0\ud560 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4. str()\uc740 \uc22b\uc790\ub97c \ubb38\uc790\uc5f4\ub85c \ubcc0\ud658\ud558\uc5ec +\ub85c \ud569\uce60 \uc218 \uc788\uac8c \ud569\ub2c8\ub2e4.' },
+  4: { title: "\uc0ac\uc6a9\uc790 \uc785\ub825", subtitle: "\uc0ac\uc6a9\uc790\ub85c\ubd80\ud130 \ub370\uc774\ud130 \ubc1b\uae30", concept: "input()\uc740 \ud504\ub85c\uadf8\ub7a8\uc744 \uba48\ucd94\uace0 \uc0ac\uc6a9\uc790\uac00 \uc785\ub825\ud560 \ub54c\uae4c\uc9c0 \uae30\ub2e4\ub9bd\ub2c8\ub2e4. \ud56d\uc0c1 \ubb38\uc790\uc5f4\uc744 \ubc18\ud658\ud569\ub2c8\ub2e4.", task: '"What is your name? "\uc774\ub77c\uace0 \ubb3c\uc5b4\ubcf4\uace0 Hello, <\uc774\ub984>\uc744 \ucd9c\ub825\ud558\uc138\uc694', hint: 'name = input("\uc9c8\ubb38") \ud6c4 print("Hello, " + name)', explanation: 'input("\ud504\ub86c\ud504\ud2b8")\ub294 \ud504\ub86c\ud504\ud2b8\ub97c \ud45c\uc2dc\ud558\uace0 \uae30\ub2e4\ub9bd\ub2c8\ub2e4. \ubc18\ud658\ub418\ub294 \uac12\uc740 \ud56d\uc0c1 \ubb38\uc790\uc5f4\uc785\ub2c8\ub2e4.' },
+  5: { title: "If/Else \ub17c\ub9ac", subtitle: "\ucf54\ub4dc\uc5d0\uc11c \uacb0\uc815 \ub0b4\ub9ac\uae30", concept: "if\ub294 \uc870\uac74\uc744 \ud655\uc778\ud569\ub2c8\ub2e4. True\uc774\uba74 \ub4e4\uc5ec\uc4f0\uae30\ub41c \ube14\ub85d\uc774 \uc2e4\ud589\ub429\ub2c8\ub2e4. else\ub294 \uc870\uac74\uc774 False\uc77c \ub54c \uc2e4\ud589\ub429\ub2c8\ub2e4.", task: 'score = 85\ub85c \uc124\uc815\ud558\uc138\uc694. score >= 70\uc774\uba74 "pass"\ub97c, \uc544\ub2c8\uba74 "fail"\uc744 \ucd9c\ub825\ud558\uc138\uc694.', hint: "if score >= 70:\\n    print(...)\\nelse:\\n    print(...)", explanation: 'if/else\ub294 \ubd84\uae30\ub97c \ub9cc\ub4ed\ub2c8\ub2e4 \u2014 \ud504\ub85c\uadf8\ub7a8\uc740 \uc870\uac74\uc5d0 \ub530\ub77c \ud55c \uacbd\ub85c\ub97c \uc120\ud0dd\ud569\ub2c8\ub2e4.' },
+  6: { title: "Elif \uccb4\uc778", subtitle: "\uc5ec\ub7ec \uc870\uac74 \ucc98\ub9ac", concept: "elif(else-if)\ub294 \ucd94\uac00 \uc870\uac74\uc744 \ud655\uc778\ud569\ub2c8\ub2e4. Python\uc740 \uc704\uc5d0\uc11c \uc544\ub798\ub85c \ud655\uc778\ud558\uba70 \uccab \ubc88\uc9f8 \uc77c\uce58\ub97c \uc2e4\ud589\ud569\ub2c8\ub2e4.", task: 'grade = 82\ub85c \uc124\uc815\ud558\uc138\uc694. >= 90\uc774\uba74 "A", >= 80\uc774\uba74 "B", >= 70\uc774\uba74 "C", \uc544\ub2c8\uba74 "F"\ub97c \ucd9c\ub825\ud558\uc138\uc694.', hint: "if grade >= 90:\\n    ...\\nelif grade >= 80:\\n    ...\\nelif ...", explanation: 'elif \uccb4\uc778\uc740 \uc870\uac74\uc744 \uc21c\uc11c\ub300\ub85c \ud655\uc778\ud569\ub2c8\ub2e4. \uc77c\uce58\ud558\ub294 \uac83\uc744 \ucc3e\uc73c\uba74 \ub098\uba38\uc9c0\ub294 \uac74\ub108\ub5db\ub2c8\ub2e4.' },
+  7: { title: "For \ubc18\ubcf5\ubb38", subtitle: "range()\ub85c \ubc18\ubcf5\ud558\uae30", concept: "for i in range(n)\uc740 \ube14\ub85d\uc744 n\ubc88 \ubc18\ubcf5\ud569\ub2c8\ub2e4. i\ub294 0\uc5d0\uc11c \uc2dc\uc791\ud558\uc5ec n-1\uae4c\uc9c0 \uac11\ub2c8\ub2e4.", task: "0\ubd80\ud130 4\uae4c\uc9c0\uc758 \uc22b\uc790\ub97c \ud55c \uc904\uc5d0 \ud558\ub098\uc529 \ucd9c\ub825\ud558\uc138\uc694.", hint: "for i in range(5):\\n    print(i)", explanation: 'range(5)\ub294 0, 1, 2, 3, 4\ub97c \uc0dd\uc131\ud569\ub2c8\ub2e4.' },
+  8: { title: "While \ubc18\ubcf5\ubb38", subtitle: "\uc870\uac74\uc774 \uac70\uc9d3\uc774 \ub420 \ub54c\uae4c\uc9c0 \ubc18\ubcf5", concept: "while \uc870\uac74:\uc740 \uc870\uac74\uc774 True\uc778 \ub3d9\uc548 \uacc4\uc18d \ubc18\ubcf5\ud569\ub2c8\ub2e4. \ubc18\ubcf5\ubb38 \uc548\uc5d0\uc11c \uc870\uac74\uc744 \ubcc0\uacbd\ud574\uc57c \ud569\ub2c8\ub2e4!", task: "while \ubc18\ubcf5\ubb38\uc744 \uc0ac\uc6a9\ud558\uc5ec 1\ubd80\ud130 5\uae4c\uc9c0 \ucd9c\ub825\ud558\uc138\uc694.", hint: "count = 1\\nwhile count <= 5:\\n    print(count)\\n    count = count + 1", explanation: 'while \ubc18\ubcf5\ubb38\uc740 \uac01 \ubc18\ubcf5 \uc804\uc5d0 \uc870\uac74\uc744 \ud655\uc778\ud569\ub2c8\ub2e4.' },
+  9: { title: "\ub300\ud654\ud615 \ubc18\ubcf5\ubb38", subtitle: "input()\uacfc while \uacb0\ud569\ud558\uae30", concept: "while \ubc18\ubcf5\ubb38 \uc548\uc5d0\uc11c input()\uc744 \uc0ac\uc6a9\ud558\uc5ec \uc0ac\uc6a9\uc790\uc5d0\uac8c \ubc18\ubcf5\uc801\uc73c\ub85c \ub370\uc774\ud130\ub97c \uc694\uccad\ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4.", task: '\uc0ac\uc6a9\uc790\uc5d0\uac8c 3\ubc88 \uc22b\uc790\ub97c \ubb3c\uc5b4\ubcf4\uace0 \uac01\uac01 \ucd9c\ub825\ud558\uc138\uc694.', hint: "count = 0\\nwhile count < 3:\\n    num = input(...)\\n    print(num)\\n    count = count + 1", explanation: '\ubc18\ubcf5\ubb38\uacfc input()\uc744 \uacb0\ud569\ud558\uba74 \ub300\ud654\ud615 \ud504\ub85c\uadf8\ub7a8\uc744 \ub9cc\ub4e4 \uc218 \uc788\uc2b5\ub2c8\ub2e4.' },
+  10: { title: "\ub204\uc801 \ud569\uacc4", subtitle: "\ub204\uc801\uae30 \ud328\ud134", concept: "\ubc18\ubcf5\ubb38 \uc804\uc5d0 \ubcc0\uc218\ub97c 0\uc73c\ub85c \ucd08\uae30\ud654\ud558\uc138\uc694. \ub9e4 \ubc18\ubcf5\ub9c8\ub2e4 \ub354\ud558\uc138\uc694. \uc774\uac83\uc774 \ub204\uc801\uae30 \ud328\ud134\uc785\ub2c8\ub2e4.", task: "\ubc18\ubcf5\ubb38\uc744 \uc0ac\uc6a9\ud558\uc5ec 1\ubd80\ud130 5\uae4c\uc9c0\uc758 \ud569\uc744 \uacc4\uc0b0\ud558\uc138\uc694. \ud569\uacc4\ub97c \ucd9c\ub825\ud558\uc138\uc694.", hint: "total = 0\\nfor i in range(1, 6):\\n    total = total + i\\nprint(total)", explanation: '\ub204\uc801\uae30 \ud328\ud134: (1) total = 0 \ucd08\uae30\ud654, (2) \ubc18\ubcf5\ud558\uba70 \ub354\ud558\uae30, (3) \ubc18\ubcf5\ubb38 \ud6c4 total \uc0ac\uc6a9.' },
+  11: { title: "\ud3c9\uade0", subtitle: "\ud569\uacc4\ub97c \uac1c\uc218\ub85c \ub098\ub204\uae30", concept: "\ud3c9\uade0 = \ud569\uacc4 / \uac1c\uc218. / \uc5f0\uc0b0\uc790\ub294 float(\uc18c\uc218)\ub97c \ubc18\ud658\ud569\ub2c8\ub2e4.", task: "10, 20, 30\uc758 \ud3c9\uade0\uc744 \uacc4\uc0b0\ud558\uc138\uc694. \uacb0\uacfc\ub97c \ucd9c\ub825\ud558\uc138\uc694.", hint: "total = 10 + 20 + 30\\naverage = total / 3\\nprint(average)", explanation: 'Python 3\uc5d0\uc11c /\ub294 \ud56d\uc0c1 float\ub97c \ubc18\ud658\ud569\ub2c8\ub2e4 (20\uc774 \uc544\ub2cc 20.0).' },
+  12: { title: "\uac10\uc2dc \ubc18\ubcf5\ubb38", subtitle: '"done"\uc73c\ub85c \uc0ac\uc6a9\uc790\uac00 \uc885\ub8cc \uc81c\uc5b4', concept: '\uac10\uc2dc \ubc18\ubcf5\ubb38\uc740 \uc0ac\uc6a9\uc790\uac00 \ud2b9\ubcc4\ud55c \ud0a4\uc6cc\ub4dc(\uc608: "done")\ub97c \uc785\ub825\ud560 \ub54c\uae4c\uc9c0 \uc2e4\ud589\ub429\ub2c8\ub2e4.', task: '"done"\uc774 \uc785\ub825\ub420 \ub54c\uae4c\uc9c0 \uc22b\uc790\ub97c \uc77d\uace0 \ud569\uc744 \ucd9c\ub825\ud558\uc138\uc694. \uc785\ub825: 5, 10, 15, done.', hint: 'total = 0\\nwhile True:\\n    val = input(...)\\n    if val == "done":\\n        break\\n    total = total + int(val)\\nprint(total)', explanation: '"while True" + "break"\uac00 \uac10\uc2dc \ud328\ud134\uc785\ub2c8\ub2e4.' },
+  13: { title: "\ud568\uc218: def\uc640 return", subtitle: "\uc7ac\uc0ac\uc6a9 \uac00\ub2a5\ud55c \ube14\ub85d \ub9cc\ub4e4\uae30", concept: "def\ub294 \ud568\uc218\ub97c \ub9cc\ub4ed\ub2c8\ub2e4. return\uc740 \uac12\uc744 \ub3cc\ub824\ubcf4\ub0c5\ub2c8\ub2e4.", task: "\uc22b\uc790\ub97c \ubc1b\uc544 2\ubc30\ub97c \ubc18\ud658\ud558\ub294 double \ud568\uc218\ub97c \uc791\uc131\ud558\uc138\uc694. double(7)\uc744 \ucd9c\ub825\ud558\uc138\uc694.", hint: "def double(n):\\n    return n * 2\\nprint(double(7))", explanation: '"def"\ub85c \uc815\uc758\ud558\uace0, \ub9e4\uac1c\ubcc0\uc218\ub294 \uad04\ud638 \uc548\uc5d0, "return"\uc73c\ub85c \uacb0\uacfc\ub97c \ubc18\ud658\ud569\ub2c8\ub2e4.' },
+  14: { title: "\uc5ec\ub7ec \ub9e4\uac1c\ubcc0\uc218", subtitle: "\uc5ec\ub7ec \uc785\ub825\uc744 \ubc1b\ub294 \ud568\uc218", concept: "\ud568\uc218\ub294 \uc27c\ud45c\ub85c \uad6c\ubd84\ub41c \uc5ec\ub7ec \ub9e4\uac1c\ubcc0\uc218\ub97c \ubc1b\uc744 \uc218 \uc788\uc2b5\ub2c8\ub2e4.", task: 'greet(name, greeting)\uc774 greeting + ", " + name\uc744 \ubc18\ud658\ud558\ub3c4\ub85d \uc791\uc131\ud558\uc138\uc694. greet("Alice", "Hello")\ub97c \ucd9c\ub825\ud558\uc138\uc694.', hint: 'def greet(name, greeting):\\n    return greeting + ", " + name', explanation: '\ub9e4\uac1c\ubcc0\uc218\ub294 \uc815\uc758\uc5d0\uc11c\uc758 \ubcc0\uc218 \uc774\ub984\uc785\ub2c8\ub2e4. \uc778\uc218\ub294 \uc804\ub2ec\ud558\ub294 \uc2e4\uc81c \uac12\uc785\ub2c8\ub2e4.' },
+  15: { title: "\ub9ac\uc2a4\ud2b8: \uc0dd\uc131\uacfc \uc811\uadfc", subtitle: "\uc21c\uc11c\uac00 \uc788\ub294 \ud56d\ubaa9 \ubaa8\uc74c", concept: "\ub9ac\uc2a4\ud2b8\ub294 \uc5ec\ub7ec \uac12\uc744 \uc21c\uc11c\ub300\ub85c \uc800\uc7a5\ud569\ub2c8\ub2e4. \uc778\ub371\uc2a4 0\ubd80\ud130 \uc2dc\uc791\ud558\uc5ec \ud56d\ubaa9\uc5d0 \uc811\uadfc\ud569\ub2c8\ub2e4.", task: 'fruits = ["apple", "banana", "cherry"]\ub97c \ub9cc\ub4dc\uc138\uc694. \ub450 \ubc88\uc9f8 \ud56d\ubaa9\uc744 \ucd9c\ub825\ud558\uc138\uc694.', hint: "\uc778\ub371\uc2a4 0\uc774 \uccab \ubc88\uc9f8, \uc778\ub371\uc2a4 1\uc774 \ub450 \ubc88\uc9f8\uc785\ub2c8\ub2e4.", explanation: '\ub9ac\uc2a4\ud2b8\ub294 \uc778\ub371\uc2a4 0\ubd80\ud130 \uc2dc\uc791\ud569\ub2c8\ub2e4.' },
+  16: { title: "\ub9ac\uc2a4\ud2b8 \uba54\uc11c\ub4dc", subtitle: "append, pop, len", concept: ".append(\ud56d\ubaa9)\uc740 \ub05d\uc5d0 \ucd94\uac00\ud569\ub2c8\ub2e4. len()\uc740 \uae38\uc774\ub97c \ubc18\ud658\ud569\ub2c8\ub2e4.", task: 'nums = [1, 2, 3]\uc73c\ub85c \uc2dc\uc791\ud558\uc138\uc694. 4\ub97c \ucd94\uac00\ud558\uace0 \uae38\uc774\ub97c \ucd9c\ub825\ud558\uc138\uc694.', hint: "nums.append(4)\\nprint(len(nums))", explanation: '.append()\ub294 \ub9ac\uc2a4\ud2b8\ub97c \uc9c1\uc811 \uc218\uc815\ud569\ub2c8\ub2e4. len()\uc740 \ub0b4\uc7a5 \ud568\uc218\uc785\ub2c8\ub2e4.' },
+  17: { title: "\ub515\uc154\ub108\ub9ac", subtitle: "\ud0a4-\uac12 \uc30d", concept: "\ub515\uc154\ub108\ub9ac\ub294 {} \uc548\uc5d0 \ud0a4: \uac12 \uc30d\uc744 \uc800\uc7a5\ud569\ub2c8\ub2e4. \ud0a4 \uc774\ub984\uc73c\ub85c \uac12\uc5d0 \uc811\uadfc\ud569\ub2c8\ub2e4.", task: 'person = {"name": "Alice", "age": 25}\ub97c \ub9cc\ub4dc\uc138\uc694. person["name"]\uc744 \ucd9c\ub825\ud558\uc138\uc694.', hint: '\uc911\uad04\ud638\uc640 "\ud0a4": \uac12 \uad6c\ubb38\uc744 \uc0ac\uc6a9\ud558\uc138\uc694.', explanation: '\ub515\uc154\ub108\ub9ac\ub294 \ud0a4\ub97c \uac12\uc5d0 \ub9e4\ud551\ud569\ub2c8\ub2e4. JSON\uc740 \ubcf8\uc9c8\uc801\uc73c\ub85c \uc911\ucca9\ub41c \ub515\uc154\ub108\ub9ac\uc785\ub2c8\ub2e4.' },
+  18: { title: "\ub515\uc154\ub108\ub9ac \ubc18\ubcf5", subtitle: "\ud0a4\uc640 \uac12 \uc21c\ud68c\ud558\uae30", concept: ".items()\ub294 \ubc18\ubcf5\ud560 \uc218 \uc788\ub294 \ud0a4-\uac12 \uc30d\uc744 \ubc18\ud658\ud569\ub2c8\ub2e4.", task: 'scores = {"math": 90, "science": 85}\ub97c \ub9cc\ub4dc\uc138\uc694. \uac01\uac01 math: 90 \ud615\uc2dd\uc73c\ub85c \ucd9c\ub825\ud558\uc138\uc694', hint: 'for subject, score in scores.items():\\n    print(subject + ": " + str(score))', explanation: '.items()\ub294 \uac01 \uc30d\uc744 \ub450 \ubcc0\uc218\ub85c \ud480\uc5b4\uc90d\ub2c8\ub2e4.' },
+  19: { title: "\ubbf8\ub2c8 \uc571: \ud560 \uc77c \ubaa9\ub85d", subtitle: "1\ub2e8\uacc4\uc758 \ubaa8\ub4e0 \uac83\uc744 \uacb0\ud569", concept: "\uc2e4\uc81c \ud504\ub85c\uadf8\ub7a8\uc740 \ub9ac\uc2a4\ud2b8, \ubc18\ubcf5\ubb38, \uc785\ub825, \ud568\uc218\ub97c \uacb0\ud569\ud569\ub2c8\ub2e4.", task: '\ud560 \uc77c \uc571\uc744 \ub9cc\ub4dc\uc138\uc694: \ub9ac\uc2a4\ud2b8\ub97c \ub9cc\ub4e4\uace0, \uc791\uc5c5\uc744 \ubb3c\uc5b4\ubcf4\uba70 "done"\uae4c\uc9c0 \ucd94\uac00\ud55c \ud6c4, \ubaa8\ub4e0 \uc791\uc5c5\uc744 \ucd9c\ub825\ud558\uc138\uc694.', hint: 'todos = []\\nwhile True:\\n    task = input(...)\\n    if task == "done": break\\n    todos.append(task)\\nfor t in todos: print(t)', explanation: '\uac10\uc2dc \ubc18\ubcf5\ubb38, \ub9ac\uc2a4\ud2b8, append, \ubc18\ubcf5\uc744 \uacb0\ud569\ud569\ub2c8\ub2e4.' },
+  20: { title: "\ud30c\uc77c I/O: \uc4f0\uae30", subtitle: "\ud30c\uc77c\uc5d0 \ub370\uc774\ud130 \uc800\uc7a5\ud558\uae30", concept: 'open("\ud30c\uc77c", "w")\uc740 \ud30c\uc77c\uc744 \uc0dd\uc131/\ub36e\uc5b4\uc501\ub2c8\ub2e4. "with"\ub97c \uc0ac\uc6a9\ud558\uba74 \uc790\ub3d9\uc73c\ub85c \ub2eb\ud799\ub2c8\ub2e4.', task: 'output.txt\uc5d0 "Hello from Python"\uc744 \uc4f0\uace0, \ub2e4\uc2dc \uc77d\uc5b4\uc11c \ub0b4\uc6a9\uc744 \ucd9c\ub825\ud558\uc138\uc694.', hint: 'with open("output.txt", "w") as f:\\n    f.write(...)\\nwith open("output.txt", "r") as f:\\n    print(f.read())', explanation: '"with"\ub294 \ud30c\uc77c \uc5f4\uae30\uc640 \ub2eb\uae30\ub97c \uc790\ub3d9\uc73c\ub85c \ucc98\ub9ac\ud569\ub2c8\ub2e4.' },
+  21: { title: "Try/Except", subtitle: "\uc5d0\ub7ec\ub97c \uc6b0\uc544\ud558\uac8c \ucc98\ub9ac\ud558\uae30", concept: "try/except\ub294 \uc5d0\ub7ec\ub97c \uc7a1\uc544\uc11c \ud504\ub85c\uadf8\ub7a8\uc774 \uba48\ucd94\uc9c0 \uc54a\uac8c \ud569\ub2c8\ub2e4.", task: '"hello"\ub97c int\ub85c \ubcc0\ud658\ud558\uc138\uc694. ValueError\ub97c \uc7a1\uc544\uc11c "Not a number"\ub97c \ucd9c\ub825\ud558\uc138\uc694.', hint: 'try:\\n    int("hello")\\nexcept ValueError:\\n    print("Not a number")', explanation: 'try/except\ub294 \uc704\ud5d8\ud55c \uc791\uc5c5\uc744 \uac10\uc2f8\uc11c \uc5d0\ub7ec\ub97c \uc6b0\uc544\ud558\uac8c \ucc98\ub9ac\ud569\ub2c8\ub2e4.' },
+  22: { title: "\ud074\ub798\uc2a4: \uae30\ucd08", subtitle: "__init__\uc73c\ub85c \uac1d\uccb4 \ub9cc\ub4e4\uae30", concept: "\ud074\ub798\uc2a4\ub294 \uac1d\uccb4\uc758 \uc124\uacc4\ub3c4\uc785\ub2c8\ub2e4. __init__\uc740 \uc0dd\uc131 \uc2dc \uc2e4\ud589\ub429\ub2c8\ub2e4. self\ub294 \uc778\uc2a4\ud134\uc2a4\ub97c \uac00\ub9ac\ud0b5\ub2c8\ub2e4.", task: 'Dog \ud074\ub798\uc2a4\ub97c \ub9cc\ub4dc\uc138\uc694. __init__(self, name)\uacfc bark()\uac00 name + " says woof!"\ub97c \ubc18\ud658\ud558\ub3c4\ub85d. Dog("Rex").bark()\ub97c \ucd9c\ub825\ud558\uc138\uc694.', hint: 'class Dog:\\n    def __init__(self, name):\\n        self.name = name\\n    def bark(self):\\n        return self.name + " says woof!"', explanation: '\ud074\ub798\uc2a4\ub294 \ucf54\ub4dc\ub97c \uc870\uc9c1\ud569\ub2c8\ub2e4 \u2014 __init__\uc740 \uc124\uc815, \uba54\uc11c\ub4dc\ub294 \ub3d9\uc791\uc744 \ub2f4\ub2f9\ud569\ub2c8\ub2e4.' },
+  23: { title: "JSON \ub2e4\ub8e8\uae30", subtitle: "JSON \ub370\uc774\ud130 \ud30c\uc2f1\uacfc \uc0dd\uc131", concept: "json \ubaa8\ub4c8\uc740 JSON \ubb38\uc790\uc5f4\uacfc Python \ub515\uc154\ub108\ub9ac\ub97c \uc0c1\ud638 \ubcc0\ud658\ud569\ub2c8\ub2e4.", task: 'json\uc744 \uc784\ud3ec\ud2b8\ud558\uc138\uc694. data = {"app": "MyApp", "version": 2}\ub97c \ub9cc\ub4dc\uc138\uc694. JSON \ubb38\uc790\uc5f4\ub85c \ubcc0\ud658\ud588\ub2e4\uac00 \ub2e4\uc2dc \ud30c\uc2f1\ud558\uace0 data["app"]\uc744 \ucd9c\ub825\ud558\uc138\uc694.', hint: 'import json\\ndata = {...}\\njson_str = json.dumps(data)\\nparsed = json.loads(json_str)\\nprint(parsed["app"])', explanation: 'json.dumps() = \ub515\uc154\ub108\ub9ac\ub97c \ubb38\uc790\uc5f4\ub85c. json.loads() = \ubb38\uc790\uc5f4\uc744 \ub515\uc154\ub108\ub9ac\ub85c.' },
+  24: { title: "\uc784\ud3ec\ud2b8\uc640 \uad6c\uc870", subtitle: "\uc2e4\uc81c Python \ucf54\ub4dc \uc77d\uae30", concept: "\uc2e4\uc81c Python \ud30c\uc77c\uc740 \ud328\ud134\uc744 \ub530\ub985\ub2c8\ub2e4: \uc784\ud3ec\ud2b8, \uc815\uc758, \uc2e4\ud589 \uc21c\uc11c.", task: 'math\ub97c \uc784\ud3ec\ud2b8\ud558\uace0, circle_area(r)\ub97c math.pi * r * r\ub85c \uc815\uc758\ud558\uc138\uc694. r=5\ub85c \uc18c\uc218\uc810 2\uc790\ub9ac\uae4c\uc9c0 \ucd9c\ub825\ud558\uc138\uc694.', hint: 'import math\\ndef circle_area(r):\\n    return math.pi * r * r\\nprint(round(circle_area(5), 2))', explanation: '\ud45c\uc900 \ud328\ud134: \uc784\ud3ec\ud2b8 \u2192 \ud568\uc218 \uc815\uc758 \u2192 \uc2e4\ud589 \ucf54\ub4dc.' },
+  25: { title: "\uc878\uc5c5: \uc810\uc218 \ucd94\uc801\uae30", subtitle: "\ubc30\uc6b4 \ubaa8\ub4e0 \uac83\uc744 \uacb0\ud569\ud558\uae30", concept: "\uc774 \uc878\uc5c5 \uacfc\uc81c\ub294 \ub515\uc154\ub108\ub9ac, \ud568\uc218, \ub0b4\uc7a5 \uc5f0\uc0b0\uc744 \uc5f0\uacb0\ud569\ub2c8\ub2e4.", task: 'scores = {"python": 85, "git": 90}\uc744 \ub9cc\ub4dc\uc138\uc694. get_average(scores_dict)\ub85c \ud3c9\uade0\uc744 \ubc18\ud658\ud558\uc138\uc694. \uc18c\uc218\uc810 1\uc790\ub9ac\ub85c \ucd9c\ub825\ud558\uc138\uc694.', hint: 'def get_average(d):\\n    return sum(d.values()) / len(d)\\nscores = {...}\\nprint(round(get_average(scores), 1))', explanation: '\ub515\uc154\ub108\ub9ac, \ub0b4\uc7a5 \ud568\uc218(sum, len, round), \ucee4\uc2a4\ud140 \ud568\uc218\ub97c \uacb0\ud569\ud569\ub2c8\ub2e4.' },
+  26: { title: "\ub9ac\uc2a4\ud2b8 \ucef4\ud504\ub9ac\ud5e8\uc158", subtitle: "\ud30c\uc774\uc36c\ub2e4\uc6b4 \ud55c \uc904 \ucf54\ub4dc", concept: "[\ud45c\ud604\uc2dd for \ud56d\ubaa9 in \ubc18\ubcf5\uac00\ub2a5] \ud615\ud0dc\ub85c \ud55c \uc904\uc5d0 \uc0c8 \ub9ac\uc2a4\ud2b8\ub97c \ub9cc\ub4ed\ub2c8\ub2e4.", task: "\ub9ac\uc2a4\ud2b8 \ucef4\ud504\ub9ac\ud5e8\uc158\uc744 \uc0ac\uc6a9\ud558\uc5ec 1-5\uc758 \uc81c\uacf1 \ub9ac\uc2a4\ud2b8\ub97c \ub9cc\ub4dc\uc138\uc694. \ucd9c\ub825\ud558\uc138\uc694.", hint: "squares = [x * x for x in range(1, 6)]\\nprint(squares)", explanation: '\ub9ac\uc2a4\ud2b8 \ucef4\ud504\ub9ac\ud5e8\uc158\uc740 4\uc904\uc758 \ubc18\ubcf5\ubb38 \ucf54\ub4dc\ub97c \uc6b0\uc544\ud55c 1\uc904\ub85c \ubc14\uafb8\ub2c8\ub2e4.' },
+  27: { title: "\ubb38\uc790\uc5f4 \uba54\uc11c\ub4dc", subtitle: "split, join, strip, replace", concept: "\ubb38\uc790\uc5f4\uc5d0\ub294 \uac15\ub825\ud55c \ub0b4\uc7a5 \uc870\uc791 \uba54\uc11c\ub4dc\uac00 \uc788\uc2b5\ub2c8\ub2e4.", task: 'text = "hello world python"\uc744 \uc124\uc815\ud558\uc138\uc694. \uacf5\ubc31\uc73c\ub85c \ubd84\ub9ac\ud558\uace0 \ud558\uc774\ud508\uc73c\ub85c \ud569\uccd0\uc11c \ucd9c\ub825\ud558\uc138\uc694.', hint: 'words = text.split(" ")\\nresult = "-".join(words)\\nprint(result)', explanation: '.split()\uc740 \ubb38\uc790\uc5f4\uc744 \ub9ac\uc2a4\ud2b8\ub85c \ubd84\ub9ac\ud569\ub2c8\ub2e4. .join()\uc740 \ub9ac\uc2a4\ud2b8\ub97c \ubb38\uc790\uc5f4\ub85c \ud569\uce69\ub2c8\ub2e4.' },
+  28: { title: "F-String", subtitle: "\ud604\ub300\uc801 \ubb38\uc790\uc5f4 \ud3ec\ub9e4\ud305", concept: 'f"...{\ubcc0\uc218}..."\ub85c \ubcc0\uc218\ub97c \ubb38\uc790\uc5f4\uc5d0 \uc9c1\uc811 \ud3ec\ud568\ud569\ub2c8\ub2e4. \uc5f0\uacb0\ubcf4\ub2e4 \ud6e8\uc52c \uae54\ub054\ud569\ub2c8\ub2e4.', task: 'language = "Python"\uacfc version = 3\uc744 \uc124\uc815\ud558\uc138\uc694. "Python version 3 is awesome!"\uc744 \ucd9c\ub825\ud558\uc138\uc694.', hint: 'print(f"{language} version {version} is awesome!")', explanation: 'F-string(Python 3.6+)\uc740 \ud604\ub300\uc801\uc774\uace0 \uc120\ud638\ub418\ub294 \ubb38\uc790\uc5f4 \ud3ec\ub9e4\ud305 \ubc29\ubc95\uc785\ub2c8\ub2e4.' },
+  29: { title: "Lambda\uc640 Map", subtitle: "\uc778\ub77c\uc778 \ud568\uc218\uc640 \ubcc0\ud658", concept: "lambda\ub294 \uc791\uc740 \uc775\uba85 \ud568\uc218\ub97c \ub9cc\ub4ed\ub2c8\ub2e4. map()\uc740 \ub9ac\uc2a4\ud2b8\uc758 \ubaa8\ub4e0 \ud56d\ubaa9\uc5d0 \ud568\uc218\ub97c \uc801\uc6a9\ud569\ub2c8\ub2e4.", task: "map\uacfc lambda\ub97c \uc0ac\uc6a9\ud558\uc5ec [1, 2, 3, 4, 5]\uc758 \ubaa8\ub4e0 \uc22b\uc790\ub97c 3\ubc30\ub85c \ub9cc\ub4dc\uc138\uc694. \uacb0\uacfc \ub9ac\uc2a4\ud2b8\ub97c \ucd9c\ub825\ud558\uc138\uc694.", hint: "result = list(map(lambda x: x * 3, [1, 2, 3, 4, 5]))\\nprint(result)", explanation: 'lambda x: x * 3\uc740 \uac04\uacb0\ud55c \ud55c \uc904 \ud568\uc218\uc785\ub2c8\ub2e4.' },
+  30: { title: "\ucd5c\uc885 \ubcf4\uc2a4: \ub370\uc774\ud130 \ud30c\uc774\ud504\ub77c\uc778", subtitle: "\ucc98\ub9ac, \ubcc0\ud658, \ucd9c\ub825", concept: "\uc2e4\uc81c \ud504\ub85c\uadf8\ub7a8\uc740 \ud328\ud134\uc744 \ub530\ub985\ub2c8\ub2e4: \uc785\ub825 \ud30c\uc2f1, \ub370\uc774\ud130 \ubcc0\ud658, \ucd9c\ub825 \uc0dd\uc131.", task: '\ud559\uc0dd \ub515\uc154\ub108\ub9ac \ub9ac\uc2a4\ud2b8(name/score)\uc5d0\uc11c \uc810\uc218\uac00 80 \uc774\uc0c1\uc778 \ud559\uc0dd\uc758 \uc774\ub984\ub9cc \ucd9c\ub825\ud558\uc138\uc694.', hint: 'for s in students:\\n    if s["score"] >= 80:\\n        print(s["name"])', explanation: '\ubc18\ubcf5, \ud544\ud130, \ucd94\ucd9c \u2014 \ubaa8\ub4e0 \uc5b8\uc5b4\uc5d0\uc11c\uc758 \ub370\uc774\ud130 \ucc98\ub9ac\uc758 \ubcf8\uc9c8\uc785\ub2c8\ub2e4.' },
+};
 const PHASE_COLORS = { 1: [C.accentDark, C.accent], 2: ["#0ea5e9", "#38bdf8"], 3: ["#f59e0b", "#fbbf24"] };
 
 // ─── LOCAL STORAGE ───
@@ -263,7 +396,7 @@ function saveProgress(data) {
 }
 
 // ─── CLAUDE API EVALUATOR (with timeout + error handling) ───
-async function evaluateWithClaude(userCode, level, apiKey) {
+async function evaluateWithClaude(userCode, level, apiKey, lang) {
   const prompt = `You are a Python code evaluator for an educational platform. Evaluate if the student's code is correct AND uses the concept being taught.
 
 CRITICAL RULES:
@@ -288,7 +421,7 @@ ${userCode}
 \`\`\`
 
 Does this code use the required concept AND produce the correct output? Respond ONLY with JSON, no markdown fences:
-{"correct": true/false, "feedback": "brief encouraging message", "explanation": "1-2 sentences explaining why correct/incorrect, focusing on whether they used the concept"}`;
+{"correct": true/false, "feedback": "brief encouraging message", "explanation": "1-2 sentences explaining why correct/incorrect, focusing on whether they used the concept"}${lang === "ko" ? "\nRespond in Korean." : ""}`;
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 30000);
@@ -383,8 +516,12 @@ export default function PyithonApp() {
   const [typedChars, setTypedChars] = useState(0);
   const [editorGlow, setEditorGlow] = useState(false);
   const [showXPFloat, setShowXPFloat] = useState(false);
+  const [lang, setLang] = useState(() => localStorage.getItem("pyithon-lang") || "en");
+
+  const t = (key) => STRINGS[lang]?.[key] || STRINGS.en[key] || key;
 
   const level = LEVELS[currentLevel];
+  const levelT = lang === "ko" && LEVELS_KO[level.id] ? { ...level, ...LEVELS_KO[level.id] } : level;
   const unlockedUpTo = Math.max(...completedLevels, 0) + 1;
   const progressPercent = (completedLevels.size / LEVELS.length) * 100;
 
@@ -430,15 +567,18 @@ export default function PyithonApp() {
     }
   }, [offlineMode, pyodideStatus]);
   useEffect(() => { localStorage.setItem("pyithon-theme", darkMode ? "dark" : "light"); }, [darkMode]);
+  useEffect(() => { localStorage.setItem("pyithon-lang", lang); }, [lang]);
 
   // Welcome typing animation
+  const tagline = t("tagline");
   useEffect(() => {
     if (!showWelcome) return;
-    const tagline = "Master Python from scratch.\nNo AI. No autocomplete. Just you.";
     if (typedChars >= tagline.length) return;
-    const t = setInterval(() => setTypedChars(c => { if (c >= tagline.length) { clearInterval(t); return c; } return c + 1; }), 45);
-    return () => clearInterval(t);
-  }, [showWelcome, typedChars]);
+    const timer = setInterval(() => setTypedChars(c => { if (c >= tagline.length) { clearInterval(timer); return c; } return c + 1; }), 45);
+    return () => clearInterval(timer);
+  }, [showWelcome, typedChars, tagline]);
+  // Reset typing animation when language changes
+  useEffect(() => { setTypedChars(0); }, [lang]);
 
   // Sound helper
   const playTone = useCallback((frequency, duration, type = "sine", volume = 0.12) => {
@@ -472,7 +612,7 @@ export default function PyithonApp() {
     if (!offlineMode && !apiKey) { setShowApiSetup(true); return; }
     const userCode = code.trim();
     if (!userCode || userCode === level.starterCode.trim()) {
-      setFeedback({ correct: false, message: "Write some code first!", expected: level.expectedOutput });
+      setFeedback({ correct: false, message: t("writeCodeFirst"), expected: level.expectedOutput });
       setShakeEditor(true); setTimeout(() => setShakeEditor(false), 500);
       playTone(330, 0.15, "triangle");
       return;
@@ -480,7 +620,7 @@ export default function PyithonApp() {
     const expected = level.expectedOutput.trim();
     setIsEvaluating(true); setFeedback(null); setTab("output");
     try {
-      const result = offlineMode ? await evaluateOffline(userCode, level) : await evaluateWithClaude(userCode, level, apiKey);
+      const result = offlineMode ? await evaluateOffline(userCode, level) : await evaluateWithClaude(userCode, level, apiKey, lang);
       if (result.correct) {
         setFeedback({ correct: true, message: result.feedback || "Correct!", expected, aiExplanation: result.explanation });
         const isNew = !completedLevels.has(level.id);
@@ -501,7 +641,7 @@ export default function PyithonApp() {
     } catch (err) {
       setFeedback({ correct: false, message: "Error: " + err.message, expected });
     } finally { setIsEvaluating(false); }
-  }, [code, level, completedLevels, bestStreak, streak, apiKey, isEvaluating, playTone, offlineMode]);
+  }, [code, level, completedLevels, bestStreak, streak, apiKey, isEvaluating, playTone, offlineMode, lang]);
 
   // Ctrl+Enter to run
   useEffect(() => {
@@ -559,7 +699,7 @@ export default function PyithonApp() {
           position: "relative", zIndex: 1,
         }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
-            <h2 style={{ color: C.text, fontSize: 20, fontWeight: 700, margin: 0, letterSpacing: -0.5 }}>Settings</h2>
+            <h2 style={{ color: C.text, fontSize: 20, fontWeight: 700, margin: 0, letterSpacing: -0.5 }}>{t("settings")}</h2>
             <button onClick={() => setShowApiSetup(false)} style={{ color: C.textDim, background: "none", border: "none", cursor: "pointer", padding: 4 }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
@@ -568,19 +708,38 @@ export default function PyithonApp() {
           {/* Theme toggle */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 0", borderBottom: `1px solid ${C.border}` }}>
             <div>
-              <p style={{ color: C.text, fontSize: 14, fontWeight: 600, margin: 0 }}>{darkMode ? "Dark" : "Light"} Mode</p>
-              <p style={{ color: C.textDim, fontSize: 12, margin: "2px 0 0" }}>Switch appearance</p>
+              <p style={{ color: C.text, fontSize: 14, fontWeight: 600, margin: 0 }}>{t(darkMode ? "darkMode" : "lightMode")} {t("modeSuffix")}</p>
+              <p style={{ color: C.textDim, fontSize: 12, margin: "2px 0 0" }}>{t("switchAppearance")}</p>
             </div>
             <button onClick={() => setDarkMode(!darkMode)} style={toggleStyle(!darkMode)}>
               <div style={{ width: 20, height: 20, borderRadius: "50%", background: "#fff", transition: "all 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }} />
             </button>
           </div>
 
+          {/* Language toggle */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 0", borderBottom: `1px solid ${C.border}` }}>
+            <div>
+              <p style={{ color: C.text, fontSize: 14, fontWeight: 600, margin: 0 }}>{t("language")}</p>
+              <p style={{ color: C.textDim, fontSize: 12, margin: "2px 0 0" }}>{t("langDesc")}</p>
+            </div>
+            <div style={{ display: "flex", gap: 4 }}>
+              {[["en", "EN"], ["ko", "\ud55c\uad6d\uc5b4"]].map(([code, label]) => (
+                <button key={code} onClick={() => setLang(code)} style={{
+                  padding: "6px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600,
+                  border: `1px solid ${lang === code ? C.accentBorder : C.border}`,
+                  background: lang === code ? C.accentBg : "transparent",
+                  color: lang === code ? C.accentText : C.textDim,
+                  cursor: "pointer", fontFamily: "inherit", transition: "all 0.2s",
+                }}>{label}</button>
+              ))}
+            </div>
+          </div>
+
           {/* Offline mode toggle */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 0", borderBottom: `1px solid ${C.border}` }}>
             <div>
-              <p style={{ color: C.text, fontSize: 14, fontWeight: 600, margin: 0 }}>Offline Mode</p>
-              <p style={{ color: C.textDim, fontSize: 12, margin: "2px 0 0" }}>{offlineMode ? `Runs Python in your browser${pyodideStatus === "loading" ? " (loading...)" : pyodideStatus === "ready" ? " (ready)" : ""}` : "Claude evaluates your code"}</p>
+              <p style={{ color: C.text, fontSize: 14, fontWeight: 600, margin: 0 }}>{t("offlineMode")}</p>
+              <p style={{ color: C.textDim, fontSize: 12, margin: "2px 0 0" }}>{offlineMode ? `${t("offlineDesc")}${pyodideStatus === "loading" ? ` (${t("loading")})` : pyodideStatus === "ready" ? ` (${t("ready")})` : ""}` : t("onlineDesc")}</p>
             </div>
             <button onClick={() => setOfflineMode(!offlineMode)} style={toggleStyle(offlineMode)}>
               <div style={{ width: 20, height: 20, borderRadius: "50%", background: "#fff", transition: "all 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }} />
@@ -590,9 +749,9 @@ export default function PyithonApp() {
           {/* API Key */}
           {!offlineMode && (
             <div style={{ paddingTop: 16 }}>
-              <p style={{ color: C.text, fontSize: 14, fontWeight: 600, margin: "0 0 4px" }}>API Key</p>
+              <p style={{ color: C.text, fontSize: 14, fontWeight: 600, margin: "0 0 4px" }}>{t("apiKey")}</p>
               <p style={{ color: C.textDim, fontSize: 12, lineHeight: 1.6, margin: "0 0 12px" }}>
-                Get a key at <span style={{ color: C.accent }}>console.anthropic.com</span>
+                {t("apiKeyDesc")} <span style={{ color: C.accent }}>console.anthropic.com</span>
               </p>
               <input type="password" value={apiKeyInput} onChange={e => setApiKeyInput(e.target.value)} placeholder={apiKey ? "••••••••" : "sk-ant-..."}
                 style={{
@@ -610,7 +769,7 @@ export default function PyithonApp() {
                 color: "#fff", border: "none", cursor: "pointer", fontFamily: "inherit",
                 fontSize: 13, fontWeight: 700, transition: "all 0.2s",
                 boxShadow: `0 4px 16px ${C.accentGlow}`,
-              }}>Save Key</button>
+              }}>{t("saveKey")}</button>
             </div>
           )}
         </div>
@@ -639,10 +798,10 @@ export default function PyithonApp() {
             Pyi-thon
           </h1>
           <p style={{ color: C.accentText, textAlign: "center", maxWidth: 320, marginBottom: 8, fontSize: 15, lineHeight: 1.6, fontWeight: 500, minHeight: 48, fontFamily: monoFont }}>
-            {"Master Python from scratch.\nNo AI. No autocomplete. Just you.".substring(0, typedChars).split("\n").map((line, i, arr) => <span key={i}>{line}{i < arr.length - 1 && <br />}</span>)}
+            {tagline.substring(0, typedChars).split("\n").map((line, i, arr) => <span key={i}>{line}{i < arr.length - 1 && <br />}</span>)}
             <span style={{ display: "inline-block", width: 2, height: "1em", background: C.accent, marginLeft: 2, animation: "blink 1s step-end infinite", verticalAlign: "text-bottom" }} />
           </p>
-          <p style={{ color: C.accentTextDim, fontSize: 12, marginBottom: 48, letterSpacing: 2, textTransform: "uppercase" }}>30 levels &middot; 3 phases &middot; Local Edition</p>
+          <p style={{ color: C.accentTextDim, fontSize: 12, marginBottom: 48, letterSpacing: 2, textTransform: "uppercase" }}>{t("subtitle")}</p>
 
           <button onClick={() => setShowWelcome(false)} style={{
             padding: "16px 52px", borderRadius: 14, fontWeight: 700, color: C.btnText, fontSize: 16,
@@ -653,7 +812,7 @@ export default function PyithonApp() {
           }}
             onMouseEnter={e => { e.target.style.transform = "translateY(-2px) scale(1.02)"; e.target.style.boxShadow = `0 12px 48px ${C.accentGlow}, inset 0 1px 0 rgba(255,255,255,0.15)`; }}
             onMouseLeave={e => { e.target.style.transform = "translateY(0) scale(1)"; e.target.style.boxShadow = `0 8px 40px ${C.accentGlow}, inset 0 1px 0 rgba(255,255,255,0.1)`; }}
-          >Start Learning</button>
+          >{t("startLearning")}</button>
 
           <button onClick={() => { setShowWelcome(false); setShowApiSetup(true); }} style={{
             marginTop: 16, color: C.accentTextDim, fontSize: 13, background: "none",
@@ -661,7 +820,7 @@ export default function PyithonApp() {
           }}
             onMouseEnter={e => e.target.style.color = C.accentText}
             onMouseLeave={e => e.target.style.color = C.accentTextDim}
-          >Configure API Key</button>
+          >{t("configureApiKey")}</button>
         </div>
         <style>{getGlobalStyles(C)}</style>
       </div>
@@ -684,7 +843,7 @@ export default function PyithonApp() {
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
             </button>
-            <h2 style={{ color: C.text, fontSize: 20, fontWeight: 700, letterSpacing: -0.5 }}>All Levels</h2>
+            <h2 style={{ color: C.text, fontSize: 20, fontWeight: 700, letterSpacing: -0.5 }}>{t("allLevels")}</h2>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <span style={{ fontSize: 12, color: C.accentTextDim }}>{completedLevels.size}/{LEVELS.length}</span>
               <div style={{ width: 60, height: 4, background: "rgba(255,255,255,0.06)", borderRadius: 4, overflow: "hidden" }}>
@@ -702,7 +861,7 @@ export default function PyithonApp() {
                   background: `linear-gradient(135deg, ${PHASE_COLORS[phase][0]}, ${PHASE_COLORS[phase][1]})`,
                   color: C.btnText,
                 }}>{PHASE_ICONS[phase]}</div>
-                <span style={{ fontSize: 14, fontWeight: 700, color: C.text, letterSpacing: -0.3 }}>{PHASE_NAMES[phase]}</span>
+                <span style={{ fontSize: 14, fontWeight: 700, color: C.text, letterSpacing: -0.3 }}>{t("phaseName" + phase)}</span>
                 <div style={{ flex: 1, height: 1, background: C.border }} />
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -711,6 +870,7 @@ export default function PyithonApp() {
                   const done = completedLevels.has(l.id);
                   const unlocked = idx < unlockedUpTo || done;
                   const curr = idx === currentLevel;
+                  const lT = lang === "ko" && LEVELS_KO[l.id] ? { ...l, ...LEVELS_KO[l.id] } : l;
                   return (
                     <button key={l.id} onClick={() => unlocked && goToLevel(idx)} disabled={!unlocked} style={{
                       display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderRadius: 14, textAlign: "left", fontFamily: "inherit",
@@ -733,10 +893,10 @@ export default function PyithonApp() {
                         {done ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg> : unlocked ? l.id : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>}
                       </div>
                       <div style={{ minWidth: 0, flex: 1 }}>
-                        <p style={{ fontSize: 13, fontWeight: 600, color: done ? C.greenLight : unlocked ? C.text : C.textDim, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.title}</p>
-                        <p style={{ fontSize: 11, color: C.accentTextDim, margin: "3px 0 0" }}>{l.subtitle}</p>
+                        <p style={{ fontSize: 13, fontWeight: 600, color: done ? C.greenLight : unlocked ? C.text : C.textDim, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lT.title}</p>
+                        <p style={{ fontSize: 11, color: C.accentTextDim, margin: "3px 0 0" }}>{lT.subtitle}</p>
                       </div>
-                      {l.tags.includes("boss") && <span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 20, background: C.amberBg, border: `1px solid ${C.amberBorder}`, color: C.amber, fontWeight: 700, letterSpacing: 0.5 }}>BOSS</span>}
+                      {l.tags.includes("boss") && <span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 20, background: C.amberBg, border: `1px solid ${C.amberBorder}`, color: C.amber, fontWeight: 700, letterSpacing: 0.5 }}>{t("boss")}</span>}
                       {curr && <div style={{ width: 6, height: 6, borderRadius: "50%", background: C.accent, boxShadow: `0 0 8px ${C.accentGlow}`, flexShrink: 0 }} />}
                     </button>
                   );
@@ -787,7 +947,7 @@ export default function PyithonApp() {
             <span style={{ fontSize: 11, color: C.accentText, fontWeight: 600, fontFamily: monoFont }}>{filename}</span>
           </div>
           <div style={{ flex: 1 }} />
-          <span style={{ fontSize: 10, color: C.textDim }}>Python 3</span>
+          <span style={{ fontSize: 10, color: C.textDim }}>{t("python3")}</span>
         </div>
         {/* Editor body */}
         <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
@@ -853,7 +1013,7 @@ export default function PyithonApp() {
             </div>
             <span style={{ fontSize: 24, color: C.accent, animation: "bracketPulse 1.2s ease-in-out infinite 0.1s", display: "inline-block" }}>{`}`}</span>
           </div>
-          <p style={{ color: C.accentTextDim, fontSize: 13, fontWeight: 600, margin: 0, letterSpacing: 0.5 }}>Claude is evaluating...</p>
+          <p style={{ color: C.accentTextDim, fontSize: 13, fontWeight: 600, margin: 0, letterSpacing: 0.5 }}>{t("claudeEvaluating")}</p>
         </div>
       ) : feedback ? (
         <div style={{
@@ -878,7 +1038,7 @@ export default function PyithonApp() {
               }
             </div>
             <div style={{ flex: 1 }}>
-              <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{feedback.correct ? "Correct!" : "Not quite"}</span>
+              <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{feedback.correct ? t("correct") : t("notQuite")}</span>
               <p style={{ fontSize: 13, color: C.textMuted, margin: "4px 0 0", lineHeight: 1.6 }}>{feedback.aiExplanation || feedback.message}</p>
             </div>
             {feedback.correct && <span style={{ fontSize: 12, color: C.amber, fontWeight: 700, background: C.amberBg, padding: "4px 10px", borderRadius: 8, border: `1px solid ${C.amberBorder}`, flexShrink: 0 }}>+100 XP</span>}
@@ -886,7 +1046,7 @@ export default function PyithonApp() {
 
           {/* Expected output */}
           <div style={{ marginBottom: 16 }}>
-            <p style={{ fontSize: 10, fontWeight: 700, color: C.textDim, textTransform: "uppercase", letterSpacing: 1.5, margin: "0 0 8px" }}>Expected Output</p>
+            <p style={{ fontSize: 10, fontWeight: 700, color: C.textDim, textTransform: "uppercase", letterSpacing: 1.5, margin: "0 0 8px" }}>{t("expectedOutput")}</p>
             <pre style={{
               background: C.codeBg, borderRadius: 10, padding: 14, color: C.codeText, fontSize: 12,
               overflowX: "auto", fontFamily: monoFont, margin: 0, whiteSpace: "pre-wrap",
@@ -896,8 +1056,8 @@ export default function PyithonApp() {
 
           {/* Concept */}
           <div style={{ paddingTop: 16, borderTop: `1px solid ${C.border}` }}>
-            <p style={{ fontSize: 10, fontWeight: 700, color: C.textDim, textTransform: "uppercase", letterSpacing: 1.5, margin: "0 0 6px" }}>Concept</p>
-            <p style={{ color: C.textDim, fontSize: 12, lineHeight: 1.7, margin: 0 }}>{level.explanation}</p>
+            <p style={{ fontSize: 10, fontWeight: 700, color: C.textDim, textTransform: "uppercase", letterSpacing: 1.5, margin: "0 0 6px" }}>{t("concept")}</p>
+            <p style={{ color: C.textDim, fontSize: 12, lineHeight: 1.7, margin: 0 }}>{levelT.explanation}</p>
           </div>
 
           {/* Try Again button — wrong answers only */}
@@ -910,7 +1070,7 @@ export default function PyithonApp() {
             }}
               onMouseEnter={e => { e.target.style.background = C.accentBorder; }}
               onMouseLeave={e => { e.target.style.background = C.accentBg; }}
-            >Try Again</button>
+            >{t("tryAgain")}</button>
           )}
         </div>
       ) : (
@@ -920,7 +1080,7 @@ export default function PyithonApp() {
           alignItems: "center", justifyContent: "center", gap: 8,
         }}>
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={C.textDim} strokeWidth="1.5" strokeLinecap="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
-          <p style={{ color: C.textDim, fontSize: 13 }}>Run your code to see output</p>
+          <p style={{ color: C.textDim, fontSize: 13 }}>{t("runToSee")}</p>
         </div>
       )}
     </div>
@@ -965,13 +1125,13 @@ export default function PyithonApp() {
             onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.borderColor = C.border; }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
-            <span style={{ fontSize: 11, fontWeight: 600 }}>Levels</span>
+            <span style={{ fontSize: 11, fontWeight: 600 }}>{t("levels")}</span>
           </button>
           <span style={{ fontSize: 14, fontWeight: 800, color: C.accent, letterSpacing: -0.5, marginLeft: 8, display: isWide ? "inline" : "none" }}>Pyi-thon</span>
 
           <div style={{ flex: 1, margin: "0 20px", maxWidth: 280 }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
-              <span style={{ fontSize: 11, color: C.accentTextDim, fontWeight: 600 }}>Level {level.id}</span>
+              <span style={{ fontSize: 11, color: C.accentTextDim, fontWeight: 600 }}>{t("levels")} {level.id}</span>
               <span style={{ fontSize: 11, color: C.accentTextDim }}>{completedLevels.size}/{LEVELS.length}</span>
             </div>
             <div style={{ height: 5, background: "rgba(255,255,255,0.04)", borderRadius: 8, overflow: "hidden" }}>
@@ -1035,12 +1195,12 @@ export default function PyithonApp() {
               fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 20,
               background: `linear-gradient(135deg, ${PHASE_COLORS[level.phase][0]}, ${PHASE_COLORS[level.phase][1]})`,
               color: C.btnText, letterSpacing: 0.5,
-            }}>Phase {level.phase}</div>
-            <span style={{ color: C.textDim, fontSize: 11 }}>Day {level.day}</span>
-            {level.tags.includes("boss") && <span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 20, background: C.amberBg, border: `1px solid ${C.amberBorder}`, color: C.amber, fontWeight: 700 }}>BOSS</span>}
+            }}>{t("phase")} {level.phase}</div>
+            <span style={{ color: C.textDim, fontSize: 11 }}>{t("day")} {level.day}</span>
+            {level.tags.includes("boss") && <span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 20, background: C.amberBg, border: `1px solid ${C.amberBorder}`, color: C.amber, fontWeight: 700 }}>{t("boss")}</span>}
           </div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: C.text, margin: "0 0 4px", letterSpacing: -0.5 }}>{level.title}</h1>
-          <p style={{ color: C.accentTextDim, fontSize: 12, margin: "0 0 14px" }}>{level.subtitle}</p>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: C.text, margin: "0 0 4px", letterSpacing: -0.5 }}>{levelT.title}</h1>
+          <p style={{ color: C.accentTextDim, fontSize: 12, margin: "0 0 14px" }}>{levelT.subtitle}</p>
 
           {/* Collapsible concept */}
           <button onClick={() => setConceptCollapsed(!conceptCollapsed)} style={{
@@ -1050,17 +1210,17 @@ export default function PyithonApp() {
             transition: "all 0.3s ease", marginBottom: 10,
           }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <span style={{ fontSize: 10, fontWeight: 700, color: C.accent, textTransform: "uppercase", letterSpacing: 1.5 }}>Concept</span>
+              <span style={{ fontSize: 10, fontWeight: 700, color: C.accent, textTransform: "uppercase", letterSpacing: 1.5 }}>{t("concept")}</span>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.accentTextDim} strokeWidth="2" strokeLinecap="round" style={{ transition: "transform 0.3s", transform: conceptCollapsed ? "rotate(0deg)" : "rotate(180deg)" }}><polyline points="6 9 12 15 18 9"/></svg>
             </div>
             <div style={{ overflow: "hidden", maxHeight: conceptCollapsed ? 0 : 200, opacity: conceptCollapsed ? 0 : 1, transition: "max-height 0.3s ease-in-out, opacity 0.3s ease-in-out" }}>
-              <p style={{ color: C.accentText, fontSize: 13, lineHeight: 1.7, margin: "8px 0 0" }}>{level.concept}</p>
+              <p style={{ color: C.accentText, fontSize: 13, lineHeight: 1.7, margin: "8px 0 0" }}>{levelT.concept}</p>
             </div>
           </button>
 
           <div style={{ background: "rgba(255,255,255,0.015)", border: `1px solid ${C.border}`, borderRadius: 12, padding: "12px 16px" }}>
-            <p style={{ fontSize: 10, fontWeight: 700, color: C.accent, textTransform: "uppercase", letterSpacing: 1.5, margin: "0 0 6px" }}>Task</p>
-            <p style={{ color: C.textMuted, fontSize: 13, lineHeight: 1.7, margin: 0 }}>{level.task}</p>
+            <p style={{ fontSize: 10, fontWeight: 700, color: C.accent, textTransform: "uppercase", letterSpacing: 1.5, margin: "0 0 6px" }}>{t("task")}</p>
+            <p style={{ color: C.textMuted, fontSize: 13, lineHeight: 1.7, margin: 0 }}>{levelT.task}</p>
           </div>
         </div>
 
@@ -1080,19 +1240,19 @@ export default function PyithonApp() {
             /* Mobile: tabs */
             <>
               <div style={{ display: "flex", gap: 4, marginBottom: 10 }}>
-                {["editor", "output"].map(t => (
-                  <button key={t} onClick={() => setTab(t)} style={{
+                {["editor", "output"].map(tb => (
+                  <button key={tb} onClick={() => setTab(tb)} style={{
                     padding: "8px 20px", borderRadius: 10, fontSize: 12, fontWeight: 600,
-                    border: `1px solid ${tab === t ? C.accentBorder : "transparent"}`,
+                    border: `1px solid ${tab === tb ? C.accentBorder : "transparent"}`,
                     cursor: "pointer", fontFamily: "inherit", transition: "all 0.2s",
-                    background: tab === t ? C.accentBg : "transparent",
-                    color: tab === t ? C.accentText : C.accentTextDim,
+                    background: tab === tb ? C.accentBg : "transparent",
+                    color: tab === tb ? C.accentText : C.accentTextDim,
                   }}
-                    onMouseEnter={e => { if (tab !== t) e.target.style.color = C.accentText; }}
-                    onMouseLeave={e => { if (tab !== t) e.target.style.color = C.accentTextDim; }}
+                    onMouseEnter={e => { if (tab !== tb) e.target.style.color = C.accentText; }}
+                    onMouseLeave={e => { if (tab !== tb) e.target.style.color = C.accentTextDim; }}
                   >
-                    {t === "editor" ? "Editor" : `Output ${isEvaluating ? "" : feedback ? (feedback.correct ? " \u2713" : " \u2717") : ""}`}
-                    {t === "output" && isEvaluating && <span style={{ display: "inline-block", marginLeft: 6, width: 6, height: 6, borderRadius: "50%", background: C.accent, animation: "dotBounce 1.4s ease-in-out infinite" }} />}
+                    {tb === "editor" ? t("editor") : `${t("output")} ${isEvaluating ? "" : feedback ? (feedback.correct ? " \u2713" : " \u2717") : ""}`}
+                    {tb === "output" && isEvaluating && <span style={{ display: "inline-block", marginLeft: 6, width: 6, height: 6, borderRadius: "50%", background: C.accent, animation: "dotBounce 1.4s ease-in-out infinite" }} />}
                   </button>
                 ))}
               </div>
@@ -1107,7 +1267,7 @@ export default function PyithonApp() {
               animation: "fadeSlideUp 0.3s ease-out",
             }}>
               <p style={{ color: C.amberText, fontSize: 12, lineHeight: 1.7, margin: 0, whiteSpace: "pre-wrap" }}>
-                <span style={{ fontWeight: 700, marginRight: 6 }}>Hint:</span>{level.hint}
+                <span style={{ fontWeight: 700, marginRight: 6 }}>{t("hint")}:</span>{levelT.hint}
               </p>
             </div>
           )}
@@ -1129,7 +1289,7 @@ export default function PyithonApp() {
         }}
           onMouseEnter={e => { e.target.style.background = "rgba(245,158,11,0.15)"; e.target.style.transform = "translateY(-1px)"; }}
           onMouseLeave={e => { e.target.style.background = C.amberBg; e.target.style.transform = "translateY(0)"; }}
-        >{showHint ? "Hide Hint" : "Hint"}</button>
+        >{showHint ? t("hideHint") : t("hint")}</button>
 
         <button onClick={handleReset} style={{
           padding: "10px 16px", borderRadius: 12, fontSize: 12, fontWeight: 600,
@@ -1139,7 +1299,7 @@ export default function PyithonApp() {
         }}
           onMouseEnter={e => { e.target.style.background = "rgba(255,255,255,0.06)"; e.target.style.borderColor = C.borderFocus; e.target.style.transform = "translateY(-1px)"; }}
           onMouseLeave={e => { e.target.style.background = "rgba(255,255,255,0.03)"; e.target.style.borderColor = C.border; e.target.style.transform = "translateY(0)"; }}
-        >Reset</button>
+        >{t("reset")}</button>
 
         <button onClick={handleSubmit} disabled={isEvaluating} style={{
           flex: 1, padding: "12px 0", borderRadius: 12, fontSize: 14, fontWeight: 700,
@@ -1152,7 +1312,7 @@ export default function PyithonApp() {
           onMouseEnter={e => { if (!isEvaluating) { e.target.style.transform = "translateY(-1px)"; e.target.style.boxShadow = `0 6px 32px ${C.accentGlow}`; }}}
           onMouseLeave={e => { e.target.style.transform = "translateY(0)"; e.target.style.boxShadow = `0 4px 24px ${C.accentGlow}`; }}
         >
-          {isEvaluating ? "Evaluating..." : <>{`Run Code \u25B6`}<span style={{ fontSize: 10, opacity: 0.45, marginLeft: 10 }}>{isMac ? "\u2318" : "Ctrl"}+Enter</span></>}
+          {isEvaluating ? t("evaluating") : <>{`${t("runCode")} \u25B6`}<span style={{ fontSize: 10, opacity: 0.45, marginLeft: 10 }}>{isMac ? "\u2318" : "Ctrl"}+Enter</span></>}
         </button>
 
         {feedback?.correct && currentLevel < LEVELS.length - 1 && (
@@ -1164,7 +1324,7 @@ export default function PyithonApp() {
           }}
             onMouseEnter={e => { e.target.style.background = "rgba(16,185,129,0.15)"; e.target.style.transform = "translateY(-1px)"; }}
             onMouseLeave={e => { e.target.style.background = C.greenBg; e.target.style.transform = "translateY(0)"; }}
-          >Next &rarr;</button>
+          >{t("next")} &rarr;</button>
         )}
       </div>
       <style>{getGlobalStyles(C)}</style>
