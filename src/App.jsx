@@ -1224,18 +1224,18 @@ export default function PyithonApp() {
         borderBottom: `1px solid ${C.border}`,
       }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 20px" }}>
-          <button onClick={() => setShowLevelSelect(true)} style={{
-            color: C.accentText, background: "rgba(255,255,255,0.03)", border: `1px solid ${C.border}`,
-            cursor: "pointer", padding: "7px 10px", borderRadius: 10, transition: "all 0.2s",
-            display: "flex", alignItems: "center", gap: 6,
-          }}
-            onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.borderColor = C.borderFocus; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.borderColor = C.border; }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
-            <span style={{ fontSize: 11, fontWeight: 600 }}>{t("levels")}</span>
-          </button>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, marginLeft: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <button onClick={() => setShowLevelSelect(true)} style={{
+              color: C.accentText, background: "rgba(255,255,255,0.03)", border: `1px solid ${C.border}`,
+              cursor: "pointer", padding: "7px 10px", borderRadius: 10, transition: "all 0.2s",
+              display: "flex", alignItems: "center", gap: 6,
+            }}
+              onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.borderColor = C.borderFocus; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.borderColor = C.border; }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+              <span style={{ fontSize: 11, fontWeight: 600 }}>{t("levels")}</span>
+            </button>
             <svg viewBox="0 0 200 200" style={{ width: 20, height: 20, flexShrink: 0, filter: `drop-shadow(0 0 6px ${C.accentGlow})` }}>
               <defs><linearGradient id="hG" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stopColor={C.accentDeep} /><stop offset="100%" stopColor={C.accentLight} /></linearGradient></defs>
               <path d="M60 160 L60 60 L30 90" fill="none" stroke="url(#hG)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
