@@ -418,19 +418,24 @@ Is this functionally correct? Respond ONLY with JSON, no markdown fences:
     clearTimeout(timeout);
 
     if (!response.ok) {
-      const errText = await response.text();
-      return { correct: false, feedback: `API error (${response.status}): ${errText.substring(0, 150)}`, explanation: "" };
+      const status = response.status;
+      if (status === 401) return { correct: false, feedback: "Your API key is invalid or expired. Go to Settings to enter a new key, or switch to Offline mode.", explanation: "" };
+      if (status === 429) return { correct: false, feedback: "Rate limit reached. Wait a moment and try again, or switch to Offline mode.", explanation: "" };
+      if (status === 529 || status === 503) return { correct: false, feedback: "The Claude API is temporarily overloaded. Try again in a minute, or switch to Offline mode.", explanation: "" };
+      return { correct: false, feedback: `Something went wrong (error ${status}). Check your API key in Settings, or switch to Offline mode.`, explanation: "" };
     }
 
     const data = await response.json();
 
     if (data.error) {
-      return { correct: false, feedback: "API error: " + (data.error.message || JSON.stringify(data.error)), explanation: "" };
+      const msg = data.error.message || "";
+      if (msg.includes("invalid") || msg.includes("auth")) return { correct: false, feedback: "Your API key is invalid. Go to Settings to update it, or switch to Offline mode.", explanation: "" };
+      return { correct: false, feedback: "Something went wrong with the API. Try again, or switch to Offline mode.", explanation: "" };
     }
 
     const text = (data.content || []).map(b => b.text || "").join("").trim();
     if (!text) {
-      return { correct: false, feedback: "Empty response from Claude. Check your API key.", explanation: "" };
+      return { correct: false, feedback: "Got an empty response from Claude. Check your API key in Settings.", explanation: "" };
     }
 
     const clean = text.replace(/```json|```/g, "").trim();
@@ -445,9 +450,9 @@ Is this functionally correct? Respond ONLY with JSON, no markdown fences:
   } catch (err) {
     clearTimeout(timeout);
     if (err.name === "AbortError") {
-      return { correct: false, feedback: "Request timed out after 30s. Check your internet connection.", explanation: "" };
+      return { correct: false, feedback: "Request timed out. Check your internet connection, or switch to Offline mode.", explanation: "" };
     }
-    return { correct: false, feedback: "Network error: " + err.message, explanation: "" };
+    return { correct: false, feedback: "Couldn't connect to Claude. Check your internet connection, or switch to Offline mode.", explanation: "" };
   }
 }
 
