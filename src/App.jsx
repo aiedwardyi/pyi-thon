@@ -99,6 +99,10 @@ const STRINGS = {
     phaseName1: "Foundations",
     phaseName2: "Real Skills",
     phaseName3: "Beyond",
+    offlineCorrect: "Correct! Your code runs perfectly.",
+    offlinePyError: "Python error: ",
+    offlineWrongOutput: 'Your code outputs "{actual}" but the expected output is "{expected}".',
+    offlineRunError: "Couldn't run your code. Try again.",
   },
   ko: {
     levels: "\ub808\ubca8",
@@ -150,6 +154,10 @@ const STRINGS = {
     phaseName1: "\uae30\ucd08",
     phaseName2: "\uc2e4\uc804 \uc2a4\ud0ac",
     phaseName3: "\uadf8 \ub108\uba38",
+    offlineCorrect: "\uc815\ub2f5! \ucf54\ub4dc\uac00 \uc644\ubcbd\ud558\uac8c \uc2e4\ud589\ub418\uc5c8\uc2b5\ub2c8\ub2e4.",
+    offlinePyError: "Python \uc624\ub958: ",
+    offlineWrongOutput: '\ucd9c\ub825\uc774 "{actual}"\uc774\uc9c0\ub9cc \uc608\uc0c1 \ucd9c\ub825\uc740 "{expected}"\uc785\ub2c8\ub2e4.',
+    offlineRunError: "\ucf54\ub4dc\ub97c \uc2e4\ud589\ud560 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4. \ub2e4\uc2dc \uc2dc\ub3c4\ud558\uc138\uc694.",
   }
 };
 
@@ -275,9 +283,10 @@ const CONSTRUCT_CHECKS = {
   30: (c, lc) => { if (!_has(lc, "for ")) return "Use a for loop."; if (!_has(lc, "if ")) return "Use an if statement to filter."; },
 };
 
-async function evaluateOffline(userCode, level) {
+async function evaluateOffline(userCode, level, lang) {
+  const _t = (key) => STRINGS[lang]?.[key] || STRINGS.en[key] || key;
   const code = userCode.trim();
-  if (!code || code === level.starterCode.trim()) return _fail("Write some code first!");
+  if (!code || code === level.starterCode.trim()) return _fail(_t("writeCodeFirst"));
 
   // Step 1: Check construct requirements (does the code use the right concept?)
   const check = CONSTRUCT_CHECKS[level.id];
@@ -290,17 +299,17 @@ async function evaluateOffline(userCode, level) {
   try {
     const result = await runPython(code, level.simulatedInput || "");
     if (!result.success) {
-      return { correct: false, feedback: `Python error: ${result.error}`, explanation: "" };
+      return { correct: false, feedback: `${_t("offlinePyError")}${result.error}`, explanation: "" };
     }
     const actual = result.output.trim();
     const expected = level.expectedOutput.trim();
     if (actual === expected) {
-      return { correct: true, feedback: "Correct! Your code runs perfectly.", explanation: "" };
+      return { correct: true, feedback: _t("offlineCorrect"), explanation: "" };
     }
     // Show what they got vs what was expected
-    return { correct: false, feedback: `Your code outputs "${actual}" but the expected output is "${expected}".`, explanation: "" };
+    return { correct: false, feedback: _t("offlineWrongOutput").replace("{actual}", actual).replace("{expected}", expected), explanation: "" };
   } catch (err) {
-    return { correct: false, feedback: "Couldn't run your code. Try again.", explanation: "" };
+    return { correct: false, feedback: _t("offlineRunError"), explanation: "" };
   }
 }
 
@@ -707,7 +716,7 @@ export default function PyithonApp() {
     const expected = level.expectedOutput.trim();
     setIsEvaluating(true); setFeedback(null); setTab("output");
     try {
-      const result = offlineMode ? await evaluateOffline(userCode, level) : await evaluateWithAI(userCode, level, apiKey, lang, provider);
+      const result = offlineMode ? await evaluateOffline(userCode, level, lang) : await evaluateWithAI(userCode, level, apiKey, lang, provider);
       if (result.correct) {
         setFeedback({ correct: true, message: result.feedback || "Correct!", expected, aiExplanation: result.explanation });
         const isNew = !completedLevels.has(level.id);
