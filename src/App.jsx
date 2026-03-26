@@ -965,10 +965,15 @@ export default function PyithonApp() {
         }}>
           {/* Result header — colored accent only on icon */}
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16, paddingBottom: 16, borderBottom: `1px solid ${C.border}` }}>
-            <div style={{
+            <div onClick={() => { if (!feedback.correct) setTab("editor"); }} style={{
               width: 36, height: 36, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
               background: feedback.correct ? C.green : C.red,
-            }}>
+              cursor: feedback.correct ? "default" : "pointer",
+              transition: "transform 0.2s",
+            }}
+              onMouseEnter={e => { if (!feedback.correct) e.currentTarget.style.transform = "scale(1.1)"; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; }}
+            >
               {feedback.correct
                 ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                 : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -996,6 +1001,19 @@ export default function PyithonApp() {
             <p style={{ fontSize: 10, fontWeight: 700, color: C.textDim, textTransform: "uppercase", letterSpacing: 1.5, margin: "0 0 6px" }}>Concept</p>
             <p style={{ color: C.textDim, fontSize: 12, lineHeight: 1.7, margin: 0 }}>{level.explanation}</p>
           </div>
+
+          {/* Try Again button — wrong answers only */}
+          {!feedback.correct && (
+            <button onClick={() => setTab("editor")} style={{
+              width: "100%", marginTop: 16, padding: "12px 0", borderRadius: 10,
+              background: C.accentBg, border: `1px solid ${C.accentBorder}`,
+              color: C.accentText, fontSize: 13, fontWeight: 600, cursor: "pointer",
+              fontFamily: "inherit", transition: "all 0.2s",
+            }}
+              onMouseEnter={e => { e.target.style.background = C.accentBorder; }}
+              onMouseLeave={e => { e.target.style.background = C.accentBg; }}
+            >Try Again</button>
+          )}
         </div>
       ) : (
         <div style={{
