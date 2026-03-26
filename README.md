@@ -67,8 +67,8 @@ Most Python tutorials make you read. Pyi-thon makes you **write**.
 
 ## Features
 
-| | Feature | Details |
-|---|---------|---------|
+| Feature | Description |
+|---------|-------------|
 | **30 Progressive Levels** | From `print("Hello")` to data pipelines across 3 phases |
 | **Real Python in Browser** | Pyodide (WebAssembly) runs actual Python 3 — no server needed |
 | **AI-Powered Evaluation** | Claude, OpenAI, or Gemini analyze your code and accept creative solutions |
@@ -135,7 +135,7 @@ You write Python  →  Submit  →  AI or Pyodide evaluates  →  Feedback + XP
 pyi-thon/
 ├── index.html          # Entry point + font imports
 ├── package.json        # Dependencies (React + Vite only)
-├── vite.config.js      # Dev server + Claude API proxy
+├── vite.config.js      # Dev server config
 ├── .env.example        # API key template (all providers)
 └── src/
     ├── main.jsx        # React mount point
@@ -149,7 +149,7 @@ The whole application lives in one file. Colors, levels, translations, evaluator
 | Technology | Purpose |
 |-----------|---------|
 | **React 18** | UI rendering |
-| **Vite 5** | Dev server, API proxy, build |
+| **Vite 5** | Dev server, build |
 | **Pyodide** | Python 3 in the browser (WebAssembly) |
 | **Claude / OpenAI / Gemini** | AI code evaluation |
 | **Web Audio API** | Sound effects |
@@ -165,9 +165,7 @@ Pyi-thon is a static site — deploy it anywhere:
 npm run build    # Outputs to dist/
 ```
 
-Works with **Vercel**, **Netlify**, **AWS Amplify**, **GitHub Pages**, **Cloudflare Pages**, or any static host. The Pyodide runtime loads from CDN at runtime.
-
-> **Note:** The Claude API proxy in `vite.config.js` only works in dev mode. In production, OpenAI and Gemini work directly (CORS-enabled). For Claude in production, you'd need your own proxy or use one of the other providers.
+Works with **Vercel**, **Netlify**, **AWS Amplify**, **GitHub Pages**, **Cloudflare Pages**, or any static host. The Pyodide runtime loads from CDN at runtime. All AI providers (Claude, OpenAI, Gemini) work directly from the browser.
 
 ## Contributing
 
