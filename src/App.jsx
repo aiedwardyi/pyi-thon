@@ -72,6 +72,9 @@ const STRINGS = {
     runToSee: "Run your code to see output",
     writeCodeFirst: "Write some code first!",
     claudeEvaluating: "Claude is evaluating...",
+    isEvaluatingMsg: "is evaluating...",
+    provider: "AI Provider",
+    providerDesc: "Select AI evaluator",
     startLearning: "Start Learning",
     configureApiKey: "Configure API Key",
     tagline: "Master Python from scratch.\nNo AI. No autocomplete. Just you.",
@@ -83,7 +86,7 @@ const STRINGS = {
     switchAppearance: "Switch appearance",
     offlineMode: "Offline Mode",
     offlineDesc: "Runs Python in your browser",
-    onlineDesc: "Claude evaluates your code",
+    onlineDesc: "AI evaluates your code",
     loading: "loading...",
     ready: "ready",
     apiKey: "API Key",
@@ -120,6 +123,9 @@ const STRINGS = {
     runToSee: "\ucf54\ub4dc\ub97c \uc2e4\ud589\ud558\uba74 \uacb0\uacfc\uac00 \uc5ec\uae30\uc5d0 \ud45c\uc2dc\ub429\ub2c8\ub2e4",
     writeCodeFirst: "\uba3c\uc800 \ucf54\ub4dc\ub97c \uc791\uc131\ud558\uc138\uc694!",
     claudeEvaluating: "Claude\uac00 \ud3c9\uac00 \uc911\uc785\ub2c8\ub2e4...",
+    isEvaluatingMsg: "\uac00 \ud3c9\uac00 \uc911\uc785\ub2c8\ub2e4...",
+    provider: "AI \uc81c\uacf5\uc790",
+    providerDesc: "AI \ud3c9\uac00\uae30 \uc120\ud0dd",
     startLearning: "\ud559\uc2b5 \uc2dc\uc791",
     configureApiKey: "API \ud0a4 \uc124\uc815",
     tagline: "\ud30c\uc774\uc36c\uc744 \ucc98\uc74c\ubd80\ud130 \ub9c8\uc2a4\ud130\ud558\uc138\uc694.\nAI \uc5c6\uc774. \uc790\ub3d9\uc644\uc131 \uc5c6\uc774. \uc624\uc9c1 \ub2f9\uc2e0\uc758 \ud798\uc73c\ub85c.",
@@ -131,7 +137,7 @@ const STRINGS = {
     switchAppearance: "\ud14c\ub9c8 \ubcc0\uacbd",
     offlineMode: "\uc624\ud504\ub77c\uc778 \ubaa8\ub4dc",
     offlineDesc: "\ube0c\ub77c\uc6b0\uc800\uc5d0\uc11c Python \uc2e4\ud589",
-    onlineDesc: "Claude\uac00 \ucf54\ub4dc\ub97c \ud3c9\uac00\ud569\ub2c8\ub2e4",
+    onlineDesc: "AI\uac00 \ucf54\ub4dc\ub97c \ud3c9\uac00\ud569\ub2c8\ub2e4",
     loading: "\ub85c\ub529 \uc911...",
     ready: "\uc900\ube44 \uc644\ub8cc",
     apiKey: "API \ud0a4",
@@ -145,6 +151,34 @@ const STRINGS = {
     phaseName2: "\uc2e4\uc804 \uc2a4\ud0ac",
     phaseName3: "\uadf8 \ub108\uba38",
   }
+};
+
+// ─── AI PROVIDER CONFIGURATIONS ───
+const AI_PROVIDERS = {
+  claude: {
+    name: "Claude",
+    endpoint: "/api/claude/v1/messages",
+    model: "claude-sonnet-4-20250514",
+    keyPrefix: "sk-ant-",
+    keyPlaceholder: "sk-ant-...",
+    keyUrl: "console.anthropic.com",
+  },
+  openai: {
+    name: "OpenAI",
+    endpoint: "https://api.openai.com/v1/chat/completions",
+    model: "gpt-4o-mini",
+    keyPrefix: "sk-",
+    keyPlaceholder: "sk-...",
+    keyUrl: "platform.openai.com",
+  },
+  gemini: {
+    name: "Gemini",
+    endpoint: "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+    model: "gemini-2.0-flash",
+    keyPrefix: "AI",
+    keyPlaceholder: "AIza...",
+    keyUrl: "aistudio.google.com",
+  },
 };
 
 // ─── PYODIDE PYTHON RUNTIME ───
@@ -395,8 +429,10 @@ function saveProgress(data) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (e) { console.error("Save failed:", e); }
 }
 
-// ─── CLAUDE API EVALUATOR (with timeout + error handling) ───
-async function evaluateWithClaude(userCode, level, apiKey, lang) {
+// ─── AI EVALUATOR (multi-provider, with timeout + error handling) ───
+async function evaluateWithAI(userCode, level, apiKey, lang, provider) {
+  const providerConfig = AI_PROVIDERS[provider];
+
   const prompt = `You are a Python code evaluator for an educational platform. Evaluate if the student's code is correct AND uses the concept being taught.
 
 CRITICAL RULES:
@@ -427,21 +463,50 @@ Does this code use the required concept AND produce the correct output? Respond 
   const timeout = setTimeout(() => controller.abort(), 30000);
 
   try {
-    const response = await fetch("/api/claude/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-        "anthropic-dangerous-direct-browser-access": "true",
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 500,
-        messages: [{ role: "user", content: prompt }],
-      }),
-      signal: controller.signal,
-    });
+    let response;
+
+    if (provider === "claude") {
+      response = await fetch(providerConfig.endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true",
+        },
+        body: JSON.stringify({
+          model: providerConfig.model,
+          max_tokens: 500,
+          messages: [{ role: "user", content: prompt }],
+        }),
+        signal: controller.signal,
+      });
+    } else if (provider === "openai") {
+      response = await fetch(providerConfig.endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: providerConfig.model,
+          max_tokens: 500,
+          messages: [{ role: "user", content: prompt }],
+        }),
+        signal: controller.signal,
+      });
+    } else if (provider === "gemini") {
+      const url = `${providerConfig.endpoint}?key=${apiKey}`;
+      response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { maxOutputTokens: 500 },
+        }),
+        signal: controller.signal,
+      });
+    }
 
     clearTimeout(timeout);
 
@@ -449,21 +514,35 @@ Does this code use the required concept AND produce the correct output? Respond 
       const status = response.status;
       if (status === 401) return { correct: false, feedback: "Your API key is invalid or expired. Go to Settings to enter a new key, or switch to Offline mode.", explanation: "" };
       if (status === 429) return { correct: false, feedback: "Rate limit reached. Wait a moment and try again, or switch to Offline mode.", explanation: "" };
-      if (status === 529 || status === 503) return { correct: false, feedback: "The Claude API is temporarily overloaded. Try again in a minute, or switch to Offline mode.", explanation: "" };
+      if (status === 529 || status === 503) return { correct: false, feedback: `The ${providerConfig.name} API is temporarily overloaded. Try again in a minute, or switch to Offline mode.`, explanation: "" };
       return { correct: false, feedback: `Something went wrong (error ${status}). Check your API key in Settings, or switch to Offline mode.`, explanation: "" };
     }
 
     const data = await response.json();
 
-    if (data.error) {
-      const msg = data.error.message || "";
-      if (msg.includes("invalid") || msg.includes("auth")) return { correct: false, feedback: "Your API key is invalid. Go to Settings to update it, or switch to Offline mode.", explanation: "" };
-      return { correct: false, feedback: "Something went wrong with the API. Try again, or switch to Offline mode.", explanation: "" };
+    // Extract text based on provider
+    let text = "";
+    if (provider === "claude") {
+      if (data.error) {
+        const msg = data.error.message || "";
+        if (msg.includes("invalid") || msg.includes("auth")) return { correct: false, feedback: "Your API key is invalid. Go to Settings to update it, or switch to Offline mode.", explanation: "" };
+        return { correct: false, feedback: "Something went wrong with the API. Try again, or switch to Offline mode.", explanation: "" };
+      }
+      text = (data.content || []).map(b => b.text || "").join("").trim();
+    } else if (provider === "openai") {
+      if (data.error) {
+        return { correct: false, feedback: data.error.message || "Something went wrong with the API.", explanation: "" };
+      }
+      text = data.choices?.[0]?.message?.content?.trim() || "";
+    } else if (provider === "gemini") {
+      if (data.error) {
+        return { correct: false, feedback: data.error.message || "Something went wrong with the API.", explanation: "" };
+      }
+      text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
     }
 
-    const text = (data.content || []).map(b => b.text || "").join("").trim();
     if (!text) {
-      return { correct: false, feedback: "Got an empty response from Claude. Check your API key in Settings.", explanation: "" };
+      return { correct: false, feedback: `Got an empty response from ${providerConfig.name}. Check your API key in Settings.`, explanation: "" };
     }
 
     const clean = text.replace(/```json|```/g, "").trim();
@@ -480,7 +559,7 @@ Does this code use the required concept AND produce the correct output? Respond 
     if (err.name === "AbortError") {
       return { correct: false, feedback: "Request timed out. Check your internet connection, or switch to Offline mode.", explanation: "" };
     }
-    return { correct: false, feedback: "Couldn't connect to Claude. Check your internet connection, or switch to Offline mode.", explanation: "" };
+    return { correct: false, feedback: `Couldn't connect to ${providerConfig.name}. Check your internet connection, or switch to Offline mode.`, explanation: "" };
   }
 }
 
@@ -517,6 +596,7 @@ export default function PyithonApp() {
   const [editorGlow, setEditorGlow] = useState(false);
   const [showXPFloat, setShowXPFloat] = useState(false);
   const [lang, setLang] = useState(() => localStorage.getItem("pyithon-lang") || "en");
+  const [provider, setProvider] = useState(() => localStorage.getItem("pyithon-provider") || "claude");
 
   const t = (key) => STRINGS[lang]?.[key] || STRINGS.en[key] || key;
 
@@ -568,6 +648,13 @@ export default function PyithonApp() {
   }, [offlineMode, pyodideStatus]);
   useEffect(() => { localStorage.setItem("pyithon-theme", darkMode ? "dark" : "light"); }, [darkMode]);
   useEffect(() => { localStorage.setItem("pyithon-lang", lang); }, [lang]);
+  useEffect(() => { localStorage.setItem("pyithon-provider", provider); }, [provider]);
+  useEffect(() => {
+    const stored = localStorage.getItem(`pyithon-api-key-${provider}`) ||
+      (provider === "claude" ? (import.meta.env.VITE_ANTHROPIC_API_KEY || localStorage.getItem("pyithon-api-key") || "") : "");
+    setApiKey(stored);
+    setApiKeyInput("");
+  }, [provider]);
 
   // Welcome typing animation
   const tagline = t("tagline");
@@ -602,7 +689,7 @@ export default function PyithonApp() {
   const handleSaveApiKey = () => {
     if (apiKeyInput.trim()) {
       setApiKey(apiKeyInput.trim());
-      localStorage.setItem("pyithon-api-key", apiKeyInput.trim());
+      localStorage.setItem(`pyithon-api-key-${provider}`, apiKeyInput.trim());
       setShowApiSetup(false);
     }
   };
@@ -620,7 +707,7 @@ export default function PyithonApp() {
     const expected = level.expectedOutput.trim();
     setIsEvaluating(true); setFeedback(null); setTab("output");
     try {
-      const result = offlineMode ? await evaluateOffline(userCode, level) : await evaluateWithClaude(userCode, level, apiKey, lang);
+      const result = offlineMode ? await evaluateOffline(userCode, level) : await evaluateWithAI(userCode, level, apiKey, lang, provider);
       if (result.correct) {
         setFeedback({ correct: true, message: result.feedback || "Correct!", expected, aiExplanation: result.explanation });
         const isNew = !completedLevels.has(level.id);
@@ -641,7 +728,7 @@ export default function PyithonApp() {
     } catch (err) {
       setFeedback({ correct: false, message: "Error: " + err.message, expected });
     } finally { setIsEvaluating(false); }
-  }, [code, level, completedLevels, bestStreak, streak, apiKey, isEvaluating, playTone, offlineMode, lang]);
+  }, [code, level, completedLevels, bestStreak, streak, apiKey, isEvaluating, playTone, offlineMode, lang, provider]);
 
   // Ctrl+Enter to run
   useEffect(() => {
@@ -746,14 +833,35 @@ export default function PyithonApp() {
             </button>
           </div>
 
+          {/* AI Provider */}
+          {!offlineMode && (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 0", borderBottom: `1px solid ${C.border}` }}>
+              <div>
+                <p style={{ color: C.text, fontSize: 14, fontWeight: 600, margin: 0 }}>{t("provider")}</p>
+                <p style={{ color: C.textDim, fontSize: 12, margin: "2px 0 0" }}>{t("providerDesc")}</p>
+              </div>
+              <div style={{ display: "flex", gap: 4 }}>
+                {Object.entries(AI_PROVIDERS).map(([key, prov]) => (
+                  <button key={key} onClick={() => setProvider(key)} style={{
+                    padding: "6px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600,
+                    border: `1px solid ${provider === key ? C.accentBorder : C.border}`,
+                    background: provider === key ? C.accentBg : "transparent",
+                    color: provider === key ? C.accentText : C.textDim,
+                    cursor: "pointer", fontFamily: "inherit", transition: "all 0.2s",
+                  }}>{prov.name}</button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* API Key */}
           {!offlineMode && (
             <div style={{ paddingTop: 16 }}>
               <p style={{ color: C.text, fontSize: 14, fontWeight: 600, margin: "0 0 4px" }}>{t("apiKey")}</p>
               <p style={{ color: C.textDim, fontSize: 12, lineHeight: 1.6, margin: "0 0 12px" }}>
-                {t("apiKeyDesc")} <span style={{ color: C.accent }}>console.anthropic.com</span>
+                {t("apiKeyDesc")} <span style={{ color: C.accent }}>{AI_PROVIDERS[provider].keyUrl}</span>
               </p>
-              <input type="password" value={apiKeyInput} onChange={e => setApiKeyInput(e.target.value)} placeholder={apiKey ? "••••••••" : "sk-ant-..."}
+              <input type="password" value={apiKeyInput} onChange={e => setApiKeyInput(e.target.value)} placeholder={apiKey ? "••••••••" : AI_PROVIDERS[provider].keyPlaceholder}
                 style={{
                   width: "100%", padding: "12px 16px", borderRadius: 12, background: C.codeBg,
                   border: `1px solid ${C.border}`, color: C.text, fontSize: 13, outline: "none",
@@ -1013,7 +1121,7 @@ export default function PyithonApp() {
             </div>
             <span style={{ fontSize: 24, color: C.accent, animation: "bracketPulse 1.2s ease-in-out infinite 0.1s", display: "inline-block" }}>{`}`}</span>
           </div>
-          <p style={{ color: C.accentTextDim, fontSize: 13, fontWeight: 600, margin: 0, letterSpacing: 0.5 }}>{t("claudeEvaluating")}</p>
+          <p style={{ color: C.accentTextDim, fontSize: 13, fontWeight: 600, margin: 0, letterSpacing: 0.5 }}>{AI_PROVIDERS[provider].name} {t("isEvaluatingMsg")}</p>
         </div>
       ) : feedback ? (
         <div style={{
