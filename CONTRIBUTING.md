@@ -49,6 +49,17 @@ Each level is an object in the `LEVELS` array:
 }
 ```
 
+If you add a new level, also add the Korean translation in the `LEVELS_KO` object with the same `id` key.
+
+### Adding Translations
+
+The app uses a `STRINGS` object for UI text and `LEVELS_KO` for level content. To add a new language:
+
+1. Add a new key (e.g., `ja` for Japanese) to the `STRINGS` object with all translated UI strings
+2. Create a `LEVELS_JA` object with translations for each level's `title`, `subtitle`, `concept`, `task`, `hint`, and `explanation`
+3. Add the language option to the language toggle in the Settings panel
+4. Update the `t()` function and `levelT` logic to support the new language code
+
 ### Pull Requests
 
 - Keep PRs focused — one feature or fix per PR

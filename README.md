@@ -1,160 +1,204 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/Python-Learning-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python Learning" />
-  <img src="https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React 18" />
-  <img src="https://img.shields.io/badge/Vite-5-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite 5" />
-  <img src="https://img.shields.io/badge/Claude_AI-Powered-F97316?style=for-the-badge" alt="Claude AI Powered" />
+  <img src="screenshots/correct-dark.png" alt="Pyi-thon — Learn Python in Your Browser" width="800" />
 </p>
 
 <h1 align="center">Pyi-thon</h1>
 
 <p align="center">
-  <strong>A gamified Python learning platform with 30 levels, syntax highlighting, and AI-powered code evaluation.</strong>
+  <strong>Learn Python by writing real code. 30 levels. Zero setup. Completely free.</strong>
 </p>
 
 <p align="center">
-  Learn Python fundamentals by writing real code in the browser.<br />
-  No setup. No autocomplete. Just you and a code editor.
+  <a href="https://pyithon.com"><img src="https://img.shields.io/badge/%E2%96%B6%EF%B8%8F_Try_it_live-pyithon.com-6366f1?style=for-the-badge" alt="Try it live" /></a>
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/levels-30-6366f1" alt="30 Levels" />
   <img src="https://img.shields.io/badge/phases-3-34d399" alt="3 Phases" />
+  <img src="https://img.shields.io/badge/languages-EN%20%7C%20%ED%95%9C%EA%B5%AD%EC%96%B4-38bdf8" alt="EN | Korean" />
+  <img src="https://img.shields.io/badge/AI-Claude%20%7C%20OpenAI%20%7C%20Gemini-f59e0b" alt="Multi-AI" />
+  <img src="https://img.shields.io/badge/offline-Pyodide%20WASM-10b981" alt="Offline Ready" />
   <img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT License" />
-  <img src="https://img.shields.io/badge/PRs-welcome-brightgreen" alt="PRs Welcome" />
 </p>
 
 ---
 
-## What is Pyi-thon?
+Pyi-thon is a gamified Python learning platform that runs entirely in your browser. No Python installation, no terminal, no complex setup — just open the app and start writing code.
 
-Pyi-thon is an interactive Python learning app that runs entirely in your browser. Write Python code in a built-in editor with syntax highlighting, submit it, and get instant feedback — either from Claude AI or an offline pattern-matching evaluator.
+Built for **complete beginners** who want a structured, hands-on path from `print("Hello")` to data pipelines. Every level teaches one concept, gives you a real task, and evaluates your code instantly.
 
-**Who is this for?**
+<p align="center">
+  <a href="https://pyithon.com"><strong>Try it now &rarr;</strong></a>
+</p>
 
-- Complete beginners learning Python for the first time
-- Students who want structured, progressive exercises
-- Anyone who wants to practice fundamentals without installing Python
-- Developers curious about building educational tools with the Claude API
+## Why Pyi-thon?
+
+Most Python tutorials make you read. Pyi-thon makes you **write**.
+
+- **No copy-paste** — you type every line yourself
+- **No autocomplete** — you actually learn the syntax
+- **Instant feedback** — know if you're right in seconds
+- **Works offline** — Python runs in your browser via WebAssembly
+- **Gamified** — XP, streaks, confetti, sound effects keep you going
+- **Free and open source** — fork it, customize it, self-host it
+
+## Screenshots
+
+<table>
+  <tr>
+    <td align="center"><strong>Code Editor (Dark)</strong></td>
+    <td align="center"><strong>Korean + Light Mode</strong></td>
+  </tr>
+  <tr>
+    <td><img src="screenshots/correct-dark.png" width="400" /></td>
+    <td><img src="screenshots/korean-light.png" width="400" /></td>
+  </tr>
+  <tr>
+    <td align="center"><strong>Level Select</strong></td>
+    <td align="center"><strong>Settings &amp; AI Providers</strong></td>
+  </tr>
+  <tr>
+    <td><img src="screenshots/levels.png" width="400" /></td>
+    <td><img src="screenshots/settings.png" width="400" /></td>
+  </tr>
+  <tr>
+    <td align="center" colspan="2"><strong>Mobile</strong></td>
+  </tr>
+  <tr>
+    <td align="center" colspan="2"><img src="screenshots/mobile.png" width="250" /></td>
+  </tr>
+</table>
 
 ## Features
 
-| Feature | Description |
-|---------|-------------|
-| **30 Progressive Levels** | From `print("Hello")` to data pipelines, across 3 phases |
-| **Built-in Code Editor** | Syntax highlighting, line numbers, tab indentation |
-| **AI Evaluation** | Claude analyzes your code and accepts creative solutions |
-| **Offline Mode** | Pattern-matching evaluator when you don't have an API key |
-| **Dark & Light Themes** | Toggle between themes in settings |
-| **Gamification** | XP, streaks, confetti, and sound effects |
-| **Progress Saving** | Auto-saves to localStorage — pick up where you left off |
-| **Keyboard Shortcuts** | `Ctrl+Enter` / `Cmd+Enter` to submit code |
-| **Responsive Layout** | Side-by-side on desktop, tabbed on mobile |
-| **Zero Backend** | Runs entirely client-side with Vite dev server |
+| | Feature | Details |
+|---|---------|---------|
+| **30 Progressive Levels** | From `print("Hello")` to data pipelines across 3 phases |
+| **Real Python in Browser** | Pyodide (WebAssembly) runs actual Python 3 — no server needed |
+| **AI-Powered Evaluation** | Claude, OpenAI, or Gemini analyze your code and accept creative solutions |
+| **Offline Mode** | Works completely offline with Pyodide — no API key required |
+| **Bilingual** | Full English and Korean (한국어) interface and level content |
+| **Dark & Light Themes** | Beautiful, polished UI in both modes |
+| **Gamification** | XP system, streak counter, confetti celebrations, sound effects |
+| **Syntax Highlighting** | Full Python syntax highlighting in the built-in editor |
+| **Progress Saving** | Auto-saves to localStorage — close the tab, come back later |
+| **Responsive** | Side-by-side on desktop, tabbed layout on mobile |
+| **Zero Dependencies** | React + Vite only. No state library, no CSS framework, no bloat |
 
 ## Quick Start
 
-### Prerequisites
-
-- [Node.js](https://nodejs.org/) 18 or higher
-
-### Installation
-
 ```bash
-# Clone the repo
 git clone https://github.com/aiedwardyi/pyithon.git
 cd pyithon
-
-# Install dependencies
 npm install
-
-# Start the dev server
 npm run dev
 ```
 
-Opens at **http://localhost:3000**
+Opens at **http://localhost:3000**. That's it — start learning Python.
 
-### API Key (Optional)
+### AI Evaluation (Optional)
 
-Pyi-thon works in **offline mode** out of the box — no API key needed. For smarter AI-powered evaluation:
+Pyi-thon works fully **offline** out of the box. For smarter AI-powered evaluation, add any one of these:
 
-1. Get a free API key from [console.anthropic.com](https://console.anthropic.com)
-2. Either:
-   - Enter it in the app via the settings gear icon, or
-   - Create a `.env` file: `cp .env.example .env` and add your key
+| Provider | Get a key | Model used |
+|----------|-----------|------------|
+| **Claude** (default) | [console.anthropic.com](https://console.anthropic.com) | Claude Sonnet |
+| **OpenAI** | [platform.openai.com](https://platform.openai.com) | GPT-4o Mini |
+| **Google Gemini** | [aistudio.google.com](https://aistudio.google.com) | Gemini 2.0 Flash |
+
+Enter your key in the Settings panel (gear icon), or create a `.env` file:
+
+```bash
+cp .env.example .env
+# Edit .env with your preferred provider's key
+```
+
+## The 30 Levels
+
+| Phase | Levels | What You Learn |
+|-------|--------|---------------|
+| **01 — Foundations** | 1–18 | print, variables, strings, input, if/else, loops, functions, lists, dicts |
+| **02 — Real Skills** | 19–25 | mini apps, file I/O, error handling, classes, JSON, imports |
+| **03 — Beyond** | 26–30 | list comprehensions, string methods, f-strings, lambda/map, data pipelines |
+
+Each level has: a concept explanation, a task, a built-in hint, starter code, and a detailed explanation after you solve it.
 
 ## How It Works
 
 ```
-You write Python → Submit → Claude (or offline evaluator) checks it → Feedback + XP
+You write Python  →  Submit  →  AI or Pyodide evaluates  →  Feedback + XP
 ```
 
-### The 3 Phases
+**Offline mode** runs your code through Pyodide (real Python compiled to WebAssembly) and checks the output against expected results. It also verifies you used the right concept — no cheating with hardcoded answers.
 
-| Phase | Levels | Topics |
-|-------|--------|--------|
-| **Foundations** | 1–18 | print, variables, if/else, loops, functions, lists, dicts |
-| **Real Skills** | 19–25 | file I/O, error handling, classes, JSON, imports |
-| **Beyond** | 26–30 | comprehensions, f-strings, lambda/map, data pipelines |
-
-### Evaluation Modes
-
-- **Claude Mode** (default) — sends your code to Claude Sonnet for smart evaluation. Accepts creative solutions, different variable names, and alternative approaches.
-- **Offline Mode** — pattern-matching against expected output. Stricter, but works without an API key or internet connection.
-
-Toggle between modes in the settings panel (gear icon).
+**AI mode** sends your code to your chosen provider for nuanced evaluation. It accepts creative solutions, different variable names, and alternative approaches, as long as you use the concept being taught.
 
 ## Project Structure
 
 ```
 pyithon/
 ├── index.html          # Entry point + font imports
-├── package.json        # Dependencies (React, Vite only)
-├── vite.config.js      # Dev server + Anthropic API proxy
-├── .env.example        # API key template
+├── package.json        # Dependencies (React + Vite only)
+├── vite.config.js      # Dev server + Claude API proxy
+├── .env.example        # API key template (all providers)
 └── src/
     ├── main.jsx        # React mount point
-    └── App.jsx         # The entire app (single file)
+    └── App.jsx         # The entire app — single file, ~1400 lines
 ```
 
-The entire application lives in a single `App.jsx` file — colors, levels, evaluator, and all UI components.
+The whole application lives in one file. Colors, levels, translations, evaluator, syntax highlighter, and all UI components. Simple to understand, easy to fork.
 
 ## Tech Stack
 
 | Technology | Purpose |
 |-----------|---------|
 | **React 18** | UI rendering |
-| **Vite 5** | Dev server + API proxy + build |
-| **Claude API** | AI-powered code evaluation |
+| **Vite 5** | Dev server, API proxy, build |
+| **Pyodide** | Python 3 in the browser (WebAssembly) |
+| **Claude / OpenAI / Gemini** | AI code evaluation |
 | **Web Audio API** | Sound effects |
-| **localStorage** | Progress persistence |
-| **Inter + JetBrains Mono** | Typography |
+| **localStorage** | Progress + preferences |
 
-No other dependencies. No state management library, no CSS framework, no component library.
+No other dependencies. No state management library. No CSS framework. No component library. Just React and Vite.
+
+## Self-Hosting
+
+Pyi-thon is a static site — deploy it anywhere:
+
+```bash
+npm run build    # Outputs to dist/
+```
+
+Works with **Vercel**, **Netlify**, **AWS Amplify**, **GitHub Pages**, **Cloudflare Pages**, or any static host. The Pyodide runtime loads from CDN at runtime.
+
+> **Note:** The Claude API proxy in `vite.config.js` only works in dev mode. In production, OpenAI and Gemini work directly (CORS-enabled). For Claude in production, you'd need your own proxy or use one of the other providers.
 
 ## Contributing
 
-Contributions are welcome and encouraged! Whether you're fixing a bug, adding a level, improving the UI, or building a new feature — PRs are open.
+Contributions are welcome! Whether you're fixing a bug, adding a level, improving translations, or building new features.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-### Ideas for Contributions
+### Ideas
 
-- Add more levels (Phase 3 has room to grow)
-- Improve the offline evaluator with better pattern matching
-- Add new themes or color schemes
-- Accessibility improvements
-- Mobile UX enhancements
-- Internationalization (i18n)
-- Add a progress export/import feature
-- Leaderboard or challenge mode
+- **More levels** — Phase 3 has room to grow (regex, decorators, generators, async)
+- **More languages** — Japanese, Spanish, Chinese, etc.
+- **More AI providers** — Mistral, Groq, local models via Ollama
+- **Accessibility** — screen reader improvements, keyboard navigation
+- **Challenge mode** — timed levels, leaderboards
+- **Progress export** — share your progress, import on another device
 
 ## License
 
-[MIT](LICENSE) — use it, fork it, learn from it, build on it.
+[MIT](LICENSE) — use it, fork it, learn from it, teach with it.
 
 ---
 
 <p align="center">
-  Built with care for anyone learning to code.<br />
-  <strong>Star the repo if you find it useful!</strong>
+  <strong>If Pyi-thon helped you learn Python, give it a star!</strong><br />
+  It helps others find this project.
+</p>
+
+<p align="center">
+  Made by <a href="https://github.com/aiedwardyi">Eddie Yi</a>
 </p>
