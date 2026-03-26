@@ -47,240 +47,126 @@ const LIGHT = {
 // Mutable theme reference — updated by component
 let C = { ...DARK };
 
-// ─── OFFLINE EVALUATOR ───
-// Helpers
-function _extractStrings(code) {
-  const strs = [];
-  const re = /(?:f?)("""[\s\S]*?"""|'''[\s\S]*?'''|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g;
-  let m;
-  while ((m = re.exec(code)) !== null) {
-    let s = m[0];
-    if (s.startsWith("f")) s = s.slice(1);
-    if (s.startsWith('"""') || s.startsWith("'''")) s = s.slice(3, -3);
-    else s = s.slice(1, -1);
-    strs.push(s);
-  }
-  return strs;
-}
-function _stripStringsAndComments(code) {
-  return code.replace(/("""[\s\S]*?"""|'''[\s\S]*?'''|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g, '""').replace(/#.*/g, "");
-}
-function _has(code, ...words) { const lc = code.toLowerCase(); return words.every(w => lc.includes(w)); }
-function _hasAny(code, ...words) { const lc = code.toLowerCase(); return words.some(w => lc.includes(w)); }
-function _fail(msg) { return { correct: false, feedback: msg, explanation: "" }; }
-function _pass() { return { correct: true, feedback: "Looks correct! (Offline mode)", explanation: "" }; }
+// ─── PYODIDE PYTHON RUNTIME ───
+let _pyodide = null;
+let _pyodideLoading = false;
+let _pyodideReady = false;
+const _pyodideCallbacks = [];
 
-function evaluateOffline(userCode, level) {
+async function loadPyodideRuntime() {
+  if (_pyodideReady) return _pyodide;
+  if (_pyodideLoading) return new Promise(resolve => _pyodideCallbacks.push(resolve));
+  _pyodideLoading = true;
+  try {
+    _pyodide = await window.loadPyodide();
+    _pyodideReady = true;
+    _pyodideCallbacks.forEach(cb => cb(_pyodide));
+    _pyodideCallbacks.length = 0;
+    return _pyodide;
+  } catch (e) {
+    _pyodideLoading = false;
+    throw e;
+  }
+}
+
+async function runPython(code, simulatedInput) {
+  const pyodide = await loadPyodideRuntime();
+  // Set up input simulation
+  const inputs = simulatedInput ? simulatedInput.split("\n") : [];
+  pyodide.runPython(`
+import sys, io
+_captured_output = io.StringIO()
+sys.stdout = _captured_output
+_input_values = ${JSON.stringify(inputs)}
+_input_index = 0
+def input(prompt=""):
+    global _input_index
+    if _input_index < len(_input_values):
+        val = _input_values[_input_index]
+        _input_index += 1
+        return val
+    return ""
+__builtins__.input = input
+`);
+  try {
+    pyodide.runPython(code);
+    const output = pyodide.runPython("_captured_output.getvalue()");
+    // Reset stdout
+    pyodide.runPython("sys.stdout = sys.__stdout__");
+    return { success: true, output: output.trimEnd() };
+  } catch (err) {
+    pyodide.runPython("sys.stdout = sys.__stdout__");
+    const msg = err.message || String(err);
+    // Extract just the Python error line
+    const lines = msg.split("\n");
+    const pyErr = lines.filter(l => l.match(/Error:|error:/i)).pop() || lines[lines.length - 1] || msg;
+    return { success: false, output: "", error: pyErr.trim() };
+  }
+}
+
+// ─── CONSTRUCT CHECKS (ensure students use the right concept) ───
+function _has(code, ...words) { const lc = code.toLowerCase(); return words.every(w => lc.includes(w)); }
+function _fail(msg) { return { correct: false, feedback: msg, explanation: "" }; }
+
+// Construct requirements per level — what concept must the code use
+const CONSTRUCT_CHECKS = {
+  2: (c, lc) => { if (!/name\s*=/.test(c)) return "Create a variable called 'name' using = assignment."; if (/print\s*\(\s*["']/.test(c) && !/print\s*\(\s*\w+\s*\)/.test(c.replace(/"[^"]*"|'[^']*'/g, '""'))) return "Use print(name) to print the variable, not a hardcoded string."; },
+  3: (c, lc) => { if (!_has(lc, "str(") && !_has(lc, 'f"') && !_has(lc, "f'") && !_has(lc, "format")) return "Use str(), an f-string, or .format() to combine strings and numbers."; },
+  4: (c, lc) => { if (!_has(lc, "input(")) return "Use input() to ask the user for their name."; },
+  5: (c, lc) => { if (!_has(lc, "if ") || !_has(lc, "else")) return "Use both if and else for this task."; },
+  6: (c, lc) => { if (!_has(lc, "elif")) return "Use elif for multiple conditions."; },
+  7: (c, lc) => { if (!_has(lc, "for ") || !_has(lc, "range")) return "Use a for loop with range()."; },
+  8: (c, lc) => { if (!_has(lc, "while ")) return "Use a while loop for this task."; },
+  9: (c, lc) => { if (!_has(lc, "while ") || !_has(lc, "input(")) return "Use a while loop with input()."; },
+  10: (c, lc) => { if (!_has(lc, "for ") && !_has(lc, "while ")) return "Use a loop to calculate the sum."; },
+  11: (c, lc) => { if (!_has(c, "/")) return "Use / to divide for the average."; },
+  12: (c, lc) => { if (!_has(lc, "while") || !_has(lc, "break")) return 'Use "while True" with "break".'; if (!_has(lc, "input(")) return "Use input() to read values."; },
+  13: (c, lc) => { if (!_has(lc, "def ")) return "Define a function using def."; if (!_has(lc, "return")) return "Use return to send back the result."; },
+  14: (c, lc) => { if (!_has(lc, "def ")) return "Define a function using def."; if (!/def\s+greet\s*\(/.test(c)) return 'Name your function "greet".'; if (!_has(lc, "return")) return "Use return."; },
+  15: (c, lc) => { if (!_has(c, "[") || !_has(c, "]")) return "Create a list using [ ] brackets."; },
+  16: (c, lc) => { if (!_has(lc, "append")) return "Use .append()."; if (!_has(lc, "len(")) return "Use len()."; },
+  17: (c, lc) => { if ((!_has(c, "{") || !_has(c, "}")) && !_has(lc, "dict(")) return "Create a dictionary using { } or dict()."; },
+  18: (c, lc) => { if (!_has(lc, ".items()")) return "Use .items() to loop through key-value pairs."; if (!_has(lc, "for ")) return "Use a for loop."; },
+  19: (c, lc) => { if (!_has(lc, "while") || !_has(lc, "input(") || !_has(lc, "append")) return "Use a while loop with input() and .append()."; },
+  20: (c, lc) => { if (!_has(lc, "open(")) return "Use open() to work with files."; },
+  21: (c, lc) => { if (!_has(lc, "try") || !_has(lc, "except")) return "Use try/except to handle the error."; },
+  22: (c, lc) => { if (!_has(lc, "class ")) return "Use the class keyword."; if (!_has(lc, "__init__")) return "Add an __init__ method."; if (!_has(lc, "self")) return "Use self."; },
+  23: (c, lc) => { if (!_has(lc, "import json")) return "Import json first."; if (!_has(lc, "json.dumps") || !_has(lc, "json.loads")) return "Use json.dumps() and json.loads()."; },
+  24: (c, lc) => { if (!_has(lc, "import math")) return "Import math."; if (!_has(lc, "def ")) return "Define a function."; if (!_has(lc, "math.pi")) return "Use math.pi."; },
+  25: (c, lc) => { if (!_has(lc, "def ")) return "Define a function."; if (!_has(lc, "sum(") || !_has(lc, "len(")) return "Use sum() and len()."; },
+  26: (c, lc) => { if (!/\[.+for .+ in .+\]/.test(c)) return "Use a list comprehension: [expr for x in iterable]."; },
+  27: (c, lc) => { if (!_has(lc, ".split(") || !_has(lc, ".join(")) return "Use .split() and .join()."; },
+  28: (c, lc) => { if (!_has(lc, 'f"') && !_has(lc, "f'")) return 'Use an f-string: f"...{variable}..."'; },
+  29: (c, lc) => { if (!_has(lc, "lambda")) return "Use a lambda function."; if (!_has(lc, "map(")) return "Use map()."; },
+  30: (c, lc) => { if (!_has(lc, "for ")) return "Use a for loop."; if (!_has(lc, "if ")) return "Use an if statement to filter."; },
+};
+
+async function evaluateOffline(userCode, level) {
   const code = userCode.trim();
-  const lc = code.toLowerCase();
-  const expected = level.expectedOutput.trim();
   if (!code || code === level.starterCode.trim()) return _fail("Write some code first!");
 
-  // Basic syntax: catch garbage after statements
-  const stripped = _stripStringsAndComments(code);
-  for (const line of stripped.split("\n")) {
-    const t = line.trim();
-    if (!t) continue;
-    // Check for trailing garbage at end of line after any closing delimiter )] }
-    // Find the last significant closing delimiter and check what follows it
-    const endCheck = t.match(/^.*([)\]}])\s*(.+?)\s*$/);
-    if (endCheck) {
-      const trailing = endCheck[2];
-      if (!trailing.startsWith("#") && trailing !== ":") {
-        // Valid: operators, colons, another closer, opening paren/bracket
-        if (/^[+\-*/%<>=!&|^~:.,()\[\]{}]/.test(trailing) && !/^[!][^=]/.test(trailing) && trailing !== "!") { /* valid */ }
-        else {
-          const fw = trailing.split(/\s/)[0];
-          const ok = new Set(["if","else","elif","for","while","and","or","not","in","is","as","lambda","def","class","return","import","from","try","except","finally","with","break","continue","pass","raise","yield","del","assert","global","nonlocal"]);
-          if (!ok.has(fw)) return _fail(`This wouldn't run in Python — unexpected "${trailing}" after the statement.`);
-        }
-      }
-    }
+  // Step 1: Check construct requirements (does the code use the right concept?)
+  const check = CONSTRUCT_CHECKS[level.id];
+  if (check) {
+    const err = check(code, code.toLowerCase());
+    if (err) return _fail(err);
   }
 
-  // Check for bare undefined identifiers in assignments (e.g. name = eddiee without quotes)
-  const assignLines = stripped.split("\n").map(l => l.trim()).filter(l => l.match(/^\w+\s*=\s*[a-zA-Z]/));
-  const pyAll = new Set(["True","False","None","int","str","float","list","dict","set","tuple","type","len","range","print","input","sum","min","max","abs","round","sorted","enumerate","zip","map","filter","open","isinstance","bool","super","not"]);
-  for (const aline of assignLines) {
-    const rhsMatch = aline.match(/=\s*([a-zA-Z_]\w*)\s*$/);
-    if (rhsMatch) {
-      const rhs = rhsMatch[1];
-      if (!pyAll.has(rhs) && !aline.startsWith(rhs)) {
-        // Check if rhs was defined earlier in code
-        const defRegex = new RegExp(`^\\s*${rhs}\\s*=`, "m");
-        if (!defRegex.test(stripped.split(aline)[0] || "")) {
-          return _fail(`"${rhs}" is not defined. Did you forget to wrap it in quotes?`);
-        }
-      }
+  // Step 2: Actually run the code with Pyodide
+  try {
+    const result = await runPython(code, level.simulatedInput || "");
+    if (!result.success) {
+      return { correct: false, feedback: `Python error: ${result.error}`, explanation: "" };
     }
-  }
-
-  // Must have print() for levels expecting output
-  if (expected && !_has(code, "print")) return _fail("Don't forget to use print() to display your output.");
-
-  const strs = _extractStrings(code);
-  const id = level.id;
-
-  // ─── PER-LEVEL VALIDATION ───
-  switch (id) {
-    case 1: // Hello, World! — must print exact string
-      if (!strs.includes("Hello, World!")) return _fail('Your string must be exactly "Hello, World!" — check capitalization and punctuation.');
-      return _pass();
-
-    case 2: // Variables — must assign variable AND use it in print (not hardcode)
-      if (!strs.includes("Alice")) return _fail('Set name to "Alice" (with quotes).');
-      if (!stripped.includes("print") || stripped.match(/print\s*\(\s*""/)) {
-        // print("") means they're printing a hardcoded string — check if they used the variable
-        if (!stripped.match(/print\s*\(\s*\w+\s*\)/) && !_has(stripped, "print(name")) return _fail("Use print(name) to print the variable, not print(\"Alice\").");
-      }
-      if (!stripped.match(/name\s*=/)) return _fail('Create a variable called "name" using = assignment.');
-      return _pass();
-
-    case 3: // String concat — need name, age, str(), concatenation
-      if (!strs.includes("Alice")) return _fail('Set name to "Alice".');
-      if (!_has(code, "25") && !_has(code, "age")) return _fail("Set age = 25.");
-      if (!_has(lc, "str(") && !_has(lc, "f\"") && !_has(lc, "f'") && !_has(lc, "format")) return _fail("Convert age to string with str(age), an f-string, or .format().");
-      if (!strs.some(s => s.includes("Alice is 25") || s.includes("{") || s.includes("+"))) {
-        if (!_has(code, "+") && !_has(lc, "f\"") && !_has(lc, "f'")) return _fail('Use + to concatenate strings, or use an f-string.');
-      }
-      return _pass();
-
-    case 4: // Input — must use input()
-      if (!_has(lc, "input(")) return _fail("Use input() to ask the user for their name.");
-      if (!_has(lc, "hello")) return _fail('Your output should start with "Hello, ".');
-      return _pass();
-
-    case 5: // If/else — must use if and else
-      if (!_has(lc, "if ") || !_has(lc, "else")) return _fail("Use both if and else for this task.");
-      if (!strs.includes("pass")) return _fail('Print "pass" when score >= 70.');
-      return _pass();
-
-    case 6: // Elif — must use elif
-      if (!_has(lc, "elif")) return _fail("Use elif for multiple conditions.");
-      return _pass();
-
-    case 7: // For loop — must use for and range
-      if (!_has(lc, "for ") || !_has(lc, "range")) return _fail("Use a for loop with range().");
-      return _pass();
-
-    case 8: // While loop — must use while
-      if (!_has(lc, "while ")) return _fail("Use a while loop for this task.");
-      return _pass();
-
-    case 9: // Interactive loop — while + input
-      if (!_has(lc, "while ") || !_has(lc, "input(")) return _fail("Use a while loop with input().");
-      return _pass();
-
-    case 10: // Running total — for loop + accumulator
-      if (!_has(lc, "for ") && !_has(lc, "while ")) return _fail("Use a loop to calculate the sum.");
-      if (!_has(code, "total") && !_has(code, "sum") && !_has(code, "result")) return _fail("Use an accumulator variable (like total = 0) to track the sum.");
-      return _pass();
-
-    case 11: // Averages — division
-      if (!_has(code, "/")) return _fail("Use / to divide for the average.");
-      return _pass();
-
-    case 12: // Sentinel loop — while True + break
-      if (!_has(lc, "while") || !_has(lc, "break")) return _fail('Use "while True" with "break" for the sentinel pattern.');
-      if (!_has(lc, "input(")) return _fail("Use input() to read values.");
-      return _pass();
-
-    case 13: // Functions — def + return
-      if (!_has(lc, "def ")) return _fail("Define a function using def.");
-      if (!_has(lc, "return")) return _fail("Use return to send back the result.");
-      if (!_has(lc, "double")) return _fail('Name your function "double".');
-      return _pass();
-
-    case 14: // Multiple params — def with 2 params
-      if (!_has(lc, "def ")) return _fail("Define a function using def.");
-      if (!stripped.match(/def\s+greet\s*\(/)) return _fail('Name your function "greet".');
-      if (!_has(lc, "return")) return _fail("Use return to send back the result.");
-      return _pass();
-
-    case 15: // Lists — create + index
-      if (!_has(code, "[") || !_has(code, "]")) return _fail("Create a list using [ ] brackets.");
-      if (!_has(code, "[1]") && !_has(code, "[ 1]") && !_has(code, "[1 ]")) return _fail("Access the second item using index [1].");
-      return _pass();
-
-    case 16: // List methods — append + len
-      if (!_has(lc, "append")) return _fail("Use .append() to add an item.");
-      if (!_has(lc, "len(")) return _fail("Use len() to get the length.");
-      return _pass();
-
-    case 17: // Dicts — create + access
-      if ((!_has(code, "{") || !_has(code, "}")) && !_has(lc, "dict(")) return _fail("Create a dictionary using { } braces or dict().");
-      if (!strs.includes("Alice")) return _fail('Use "Alice" as the name value.');
-      return _pass();
-
-    case 18: // Dict loop — .items()
-      if (!_has(lc, ".items()")) return _fail("Use .items() to loop through key-value pairs.");
-      if (!_has(lc, "for ")) return _fail("Use a for loop.");
-      return _pass();
-
-    case 19: // Mini app — list + while + input + append
-      if (!_has(lc, "while") || !_has(lc, "input(") || !_has(lc, "append")) return _fail("Use a while loop with input() and .append().");
-      return _pass();
-
-    case 20: // File I/O — open + write + read
-      if (!_has(lc, "open(")) return _fail("Use open() to work with files.");
-      if (!_has(lc, '"w"') && !_has(lc, "'w'")) return _fail('Open the file in write mode with "w".');
-      return _pass();
-
-    case 21: // Try/except
-      if (!_has(lc, "try") || !_has(lc, "except")) return _fail("Use try/except to handle the error.");
-      if (!strs.includes("Not a number")) return _fail('Print "Not a number" in the except block.');
-      return _pass();
-
-    case 22: // Classes
-      if (!_has(lc, "class ")) return _fail("Define a class using the class keyword.");
-      if (!_has(lc, "__init__")) return _fail("Add an __init__ method.");
-      if (!_has(lc, "self")) return _fail("Use self to refer to the instance.");
-      return _pass();
-
-    case 23: // JSON
-      if (!_has(lc, "import json")) return _fail("Import the json module first.");
-      if (!_has(lc, "json.dumps") || !_has(lc, "json.loads")) return _fail("Use json.dumps() and json.loads().");
-      return _pass();
-
-    case 24: // Import + structure
-      if (!_has(lc, "import math")) return _fail("Import the math module.");
-      if (!_has(lc, "def ")) return _fail("Define a function for circle_area.");
-      if (!_has(lc, "math.pi")) return _fail("Use math.pi for the value of pi.");
-      return _pass();
-
-    case 25: // Graduation
-      if (!_has(lc, "def ")) return _fail("Define a get_average function.");
-      if (!_has(code, "{") || !_has(code, "}")) return _fail("Create a scores dictionary.");
-      if (!_has(lc, "sum(") || !_has(lc, "len(")) return _fail("Use sum() and len() to calculate the average.");
-      return _pass();
-
-    case 26: // List comprehension
-      if (!code.match(/\[.+for .+ in .+\]/)) return _fail("Use a list comprehension: [expr for x in iterable].");
-      return _pass();
-
-    case 27: // String methods
-      if (!_has(lc, ".split(") || !_has(lc, ".join(")) return _fail("Use .split() and .join().");
-      return _pass();
-
-    case 28: // F-strings
-      if (!_has(lc, 'f"') && !_has(lc, "f'")) return _fail("Use an f-string: f\"...{variable}...\"");
-      if (!_has(code, "{") || !_has(code, "}")) return _fail("Put variables inside { } in the f-string.");
-      return _pass();
-
-    case 29: // Lambda + map
-      if (!_has(lc, "lambda")) return _fail("Use a lambda function.");
-      if (!_has(lc, "map(")) return _fail("Use map() to apply the function.");
-      return _pass();
-
-    case 30: // Data pipeline
-      if (!_has(lc, "for ")) return _fail("Use a for loop to iterate through students.");
-      if (!_has(lc, "if ")) return _fail("Use an if statement to filter by score.");
-      if (!_has(code, '["score"]') && !_has(code, "['score']") && !_has(code, ".score")) return _fail('Access scores with student["score"].');
-      return _pass();
-
-    default:
-      // Generic fallback
-      return _pass();
+    const actual = result.output.trim();
+    const expected = level.expectedOutput.trim();
+    if (actual === expected) {
+      return { correct: true, feedback: "Correct! Your code runs perfectly.", explanation: "" };
+    }
+    // Show what they got vs what was expected
+    return { correct: false, feedback: `Your code outputs "${actual}" but the expected output is "${expected}".`, explanation: "" };
+  } catch (err) {
+    return { correct: false, feedback: "Couldn't run your code. Try again.", explanation: "" };
   }
 }
 
@@ -484,6 +370,7 @@ export default function PyithonApp() {
   const [showApiSetup, setShowApiSetup] = useState(false);
   const [apiKeyInput, setApiKeyInput] = useState("");
   const [offlineMode, setOfflineMode] = useState(() => localStorage.getItem("pyithon-offline") === "true");
+  const [pyodideStatus, setPyodideStatus] = useState("idle"); // idle, loading, ready, error
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem("pyithon-theme") !== "light");
   const editorRef = useRef(null);
   const highlightRef = useRef(null);
@@ -535,6 +422,13 @@ export default function PyithonApp() {
   Object.assign(C, darkMode ? DARK : LIGHT);
   useEffect(() => { localStorage.setItem("pyithon-sound", soundEnabled); }, [soundEnabled]);
   useEffect(() => { localStorage.setItem("pyithon-offline", offlineMode); }, [offlineMode]);
+  // Preload Pyodide when offline mode is enabled or on first submit
+  useEffect(() => {
+    if (offlineMode && pyodideStatus === "idle") {
+      setPyodideStatus("loading");
+      loadPyodideRuntime().then(() => setPyodideStatus("ready")).catch(() => setPyodideStatus("error"));
+    }
+  }, [offlineMode, pyodideStatus]);
   useEffect(() => { localStorage.setItem("pyithon-theme", darkMode ? "dark" : "light"); }, [darkMode]);
 
   // Welcome typing animation
@@ -586,7 +480,7 @@ export default function PyithonApp() {
     const expected = level.expectedOutput.trim();
     setIsEvaluating(true); setFeedback(null); setTab("output");
     try {
-      const result = offlineMode ? evaluateOffline(userCode, level) : await evaluateWithClaude(userCode, level, apiKey);
+      const result = offlineMode ? await evaluateOffline(userCode, level) : await evaluateWithClaude(userCode, level, apiKey);
       if (result.correct) {
         setFeedback({ correct: true, message: result.feedback || "Correct!", expected, aiExplanation: result.explanation });
         const isNew = !completedLevels.has(level.id);
@@ -686,7 +580,7 @@ export default function PyithonApp() {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 0", borderBottom: `1px solid ${C.border}` }}>
             <div>
               <p style={{ color: C.text, fontSize: 14, fontWeight: 600, margin: 0 }}>Offline Mode</p>
-              <p style={{ color: C.textDim, fontSize: 12, margin: "2px 0 0" }}>{offlineMode ? "Pattern matching (no API)" : "Claude evaluates your code"}</p>
+              <p style={{ color: C.textDim, fontSize: 12, margin: "2px 0 0" }}>{offlineMode ? `Runs Python in your browser${pyodideStatus === "loading" ? " (loading...)" : pyodideStatus === "ready" ? " (ready)" : ""}` : "Claude evaluates your code"}</p>
             </div>
             <button onClick={() => setOfflineMode(!offlineMode)} style={toggleStyle(offlineMode)}>
               <div style={{ width: 20, height: 20, borderRadius: "50%", background: "#fff", transition: "all 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }} />
@@ -1073,6 +967,7 @@ export default function PyithonApp() {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
             <span style={{ fontSize: 11, fontWeight: 600 }}>Levels</span>
           </button>
+          <span style={{ fontSize: 14, fontWeight: 800, color: C.accent, letterSpacing: -0.5, marginLeft: 8, display: isWide ? "inline" : "none" }}>Pyi-thon</span>
 
           <div style={{ flex: 1, margin: "0 20px", maxWidth: 280 }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
