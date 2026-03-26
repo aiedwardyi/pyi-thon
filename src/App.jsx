@@ -1541,6 +1541,13 @@ export default function PyithonApp() {
           {t("offlineFallback")}
         </div>
       )}
+      <footer style={{
+        textAlign: "center", padding: "16px 20px", fontSize: 12,
+        color: C.textDim, borderTop: `1px solid ${C.border}`,
+        flexShrink: 0,
+      }}>
+        &copy; 2026 Pyithon - an educational project by Edward Yi
+      </footer>
       <style>{getGlobalStyles(C)}</style>
     </div>
   );
