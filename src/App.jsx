@@ -251,37 +251,106 @@ function _has(code, ...words) { const lc = code.toLowerCase(); return words.ever
 function _fail(msg) { return { correct: false, feedback: msg, explanation: "" }; }
 
 // Construct requirements per level — what concept must the code use
-const CONSTRUCT_CHECKS = {
-  2: (c, lc) => { if (!/name\s*=/.test(c)) return "Create a variable called 'name' using = assignment."; if (/print\s*\(\s*["']/.test(c) && !/print\s*\(\s*\w+\s*\)/.test(c.replace(/"[^"]*"|'[^']*'/g, '""'))) return "Use print(name) to print the variable, not a hardcoded string."; },
-  3: (c, lc) => { if (!_has(lc, "str(") && !_has(lc, 'f"') && !_has(lc, "f'") && !_has(lc, "format")) return "Use str(), an f-string, or .format() to combine strings and numbers."; },
-  4: (c, lc) => { if (!_has(lc, "input(")) return "Use input() to ask the user for their name."; },
-  5: (c, lc) => { if (!_has(lc, "if ") || !_has(lc, "else")) return "Use both if and else for this task."; },
-  6: (c, lc) => { if (!_has(lc, "elif")) return "Use elif for multiple conditions."; },
-  7: (c, lc) => { if (!_has(lc, "for ") || !_has(lc, "range")) return "Use a for loop with range()."; },
-  8: (c, lc) => { if (!_has(lc, "while ")) return "Use a while loop for this task."; },
-  9: (c, lc) => { if (!_has(lc, "while ") || !_has(lc, "input(")) return "Use a while loop with input()."; },
-  10: (c, lc) => { if (!_has(lc, "for ") && !_has(lc, "while ")) return "Use a loop to calculate the sum."; },
-  11: (c, lc) => { if (!_has(c, "/")) return "Use / to divide for the average."; },
-  12: (c, lc) => { if (!_has(lc, "while") || !_has(lc, "break")) return 'Use "while True" with "break".'; if (!_has(lc, "input(")) return "Use input() to read values."; },
-  13: (c, lc) => { if (!_has(lc, "def ")) return "Define a function using def."; if (!_has(lc, "return")) return "Use return to send back the result."; },
-  14: (c, lc) => { if (!_has(lc, "def ")) return "Define a function using def."; if (!/def\s+greet\s*\(/.test(c)) return 'Name your function "greet".'; if (!_has(lc, "return")) return "Use return."; },
-  15: (c, lc) => { if (!_has(c, "[") || !_has(c, "]")) return "Create a list using [ ] brackets."; },
-  16: (c, lc) => { if (!_has(lc, "append")) return "Use .append()."; if (!_has(lc, "len(")) return "Use len()."; },
-  17: (c, lc) => { if ((!_has(c, "{") || !_has(c, "}")) && !_has(lc, "dict(")) return "Create a dictionary using { } or dict()."; },
-  18: (c, lc) => { if (!_has(lc, ".items()")) return "Use .items() to loop through key-value pairs."; if (!_has(lc, "for ")) return "Use a for loop."; },
-  19: (c, lc) => { if (!_has(lc, "while") || !_has(lc, "input(") || !_has(lc, "append")) return "Use a while loop with input() and .append()."; },
-  20: (c, lc) => { if (!_has(lc, "open(")) return "Use open() to work with files."; },
-  21: (c, lc) => { if (!_has(lc, "try") || !_has(lc, "except")) return "Use try/except to handle the error."; },
-  22: (c, lc) => { if (!_has(lc, "class ")) return "Use the class keyword."; if (!_has(lc, "__init__")) return "Add an __init__ method."; if (!_has(lc, "self")) return "Use self."; },
-  23: (c, lc) => { if (!_has(lc, "import json")) return "Import json first."; if (!_has(lc, "json.dumps") || !_has(lc, "json.loads")) return "Use json.dumps() and json.loads()."; },
-  24: (c, lc) => { if (!_has(lc, "import math")) return "Import math."; if (!_has(lc, "def ")) return "Define a function."; if (!_has(lc, "math.pi")) return "Use math.pi."; },
-  25: (c, lc) => { if (!_has(lc, "def ")) return "Define a function."; if (!_has(lc, "sum(") || !_has(lc, "len(")) return "Use sum() and len()."; },
-  26: (c, lc) => { if (!/\[.+for .+ in .+\]/.test(c)) return "Use a list comprehension: [expr for x in iterable]."; },
-  27: (c, lc) => { if (!_has(lc, ".split(") || !_has(lc, ".join(")) return "Use .split() and .join()."; },
-  28: (c, lc) => { if (!_has(lc, 'f"') && !_has(lc, "f'")) return 'Use an f-string: f"...{variable}..."'; },
-  29: (c, lc) => { if (!_has(lc, "lambda")) return "Use a lambda function."; if (!_has(lc, "map(")) return "Use map()."; },
-  30: (c, lc) => { if (!_has(lc, "for ")) return "Use a for loop."; if (!_has(lc, "if ")) return "Use an if statement to filter."; },
+const CONSTRUCT_CHECKS_MSGS = {
+  en: {
+    2: ["Create a variable called 'name' using = assignment.", "Use print(name) to print the variable, not a hardcoded string."],
+    3: ["Use str(), an f-string, or .format() to combine strings and numbers."],
+    4: ["Use input() to ask the user for their name."],
+    5: ["Use both if and else for this task."],
+    6: ["Use elif for multiple conditions."],
+    7: ["Use a for loop with range()."],
+    8: ["Use a while loop for this task."],
+    9: ["Use a while loop with input()."],
+    10: ["Use a loop to calculate the sum."],
+    11: ["Use / to divide for the average."],
+    12: ['Use "while True" with "break".', "Use input() to read values."],
+    13: ["Define a function using def.", "Use return to send back the result."],
+    14: ["Define a function using def.", 'Name your function "greet".', "Use return."],
+    15: ["Create a list using [ ] brackets."],
+    16: ["Use .append().", "Use len()."],
+    17: ["Create a dictionary using { } or dict()."],
+    18: ["Use .items() to loop through key-value pairs.", "Use a for loop."],
+    19: ["Use a while loop with input() and .append()."],
+    20: ["Use open() to work with files."],
+    21: ["Use try/except to handle the error."],
+    22: ["Use the class keyword.", "Add an __init__ method.", "Use self."],
+    23: ["Import json first.", "Use json.dumps() and json.loads()."],
+    24: ["Import math.", "Define a function.", "Use math.pi."],
+    25: ["Define a function.", "Use sum() and len()."],
+    26: ["Use a list comprehension: [expr for x in iterable]."],
+    27: ["Use .split() and .join()."],
+    28: ['Use an f-string: f"...{variable}..."'],
+    29: ["Use a lambda function.", "Use map()."],
+    30: ["Use a for loop.", "Use an if statement to filter."],
+  },
+  ko: {
+    2: ["= 할당을 사용하여 'name' 변수를 만드세요.", "하드코딩된 문자열이 아닌 print(name)으로 변수를 출력하세요."],
+    3: ["str(), f-string, 또는 .format()을 사용하여 문자열과 숫자를 결합하세요."],
+    4: ["input()을 사용하여 사용자의 이름을 물어보세요."],
+    5: ["이 과제에는 if와 else를 모두 사용하세요."],
+    6: ["여러 조건에는 elif를 사용하세요."],
+    7: ["range()와 함께 for 반복문을 사용하세요."],
+    8: ["이 과제에는 while 반복문을 사용하세요."],
+    9: ["input()과 함께 while 반복문을 사용하세요."],
+    10: ["합계를 계산하려면 반복문을 사용하세요."],
+    11: ["평균을 구하려면 /를 사용하세요."],
+    12: ['"while True"와 "break"를 사용하세요.', "input()을 사용하여 값을 읽으세요."],
+    13: ["def를 사용하여 함수를 정의하세요.", "return을 사용하여 결과를 반환하세요."],
+    14: ["def를 사용하여 함수를 정의하세요.", '함수 이름을 "greet"로 지정하세요.', "return을 사용하세요."],
+    15: ["[ ] 괄호를 사용하여 리스트를 만드세요."],
+    16: [".append()를 사용하세요.", "len()을 사용하세요."],
+    17: ["{ } 또는 dict()를 사용하여 딕셔너리를 만드세요."],
+    18: [".items()를 사용하여 키-값 쌍을 순회하세요.", "for 반복문을 사용하세요."],
+    19: ["while 반복문, input(), .append()를 사용하세요."],
+    20: ["open()을 사용하여 파일을 다루세요."],
+    21: ["try/except를 사용하여 에러를 처리하세요."],
+    22: ["class 키워드를 사용하세요.", "__init__ 메서드를 추가하세요.", "self를 사용하세요."],
+    23: ["먼저 json을 임포트하세요.", "json.dumps()와 json.loads()를 사용하세요."],
+    24: ["math를 임포트하세요.", "함수를 정의하세요.", "math.pi를 사용하세요."],
+    25: ["함수를 정의하세요.", "sum()과 len()을 사용하세요."],
+    26: ["리스트 컴프리헨션을 사용하세요: [표현식 for x in 반복가능]."],
+    27: [".split()과 .join()을 사용하세요."],
+    28: ['f-string을 사용하세요: f"...{변수}..."'],
+    29: ["lambda 함수를 사용하세요.", "map()을 사용하세요."],
+    30: ["for 반복문을 사용하세요.", "if문을 사용하여 필터링하세요."],
+  },
 };
+
+function _getChecks(lang) {
+  const m = CONSTRUCT_CHECKS_MSGS[lang] || CONSTRUCT_CHECKS_MSGS.en;
+  const me = CONSTRUCT_CHECKS_MSGS.en;
+  return {
+    2: (c, lc) => { if (!/name\s*=/.test(c)) return m[2][0]; if (/print\s*\(\s*["']/.test(c) && !/print\s*\(\s*\w+\s*\)/.test(c.replace(/"[^"]*"|'[^']*'/g, '""'))) return m[2][1]; },
+    3: (c, lc) => { if (!_has(lc, "str(") && !_has(lc, 'f"') && !_has(lc, "f'") && !_has(lc, "format")) return m[3][0]; },
+    4: (c, lc) => { if (!_has(lc, "input(")) return m[4][0]; },
+    5: (c, lc) => { if (!_has(lc, "if ") || !_has(lc, "else")) return m[5][0]; },
+    6: (c, lc) => { if (!_has(lc, "elif")) return m[6][0]; },
+    7: (c, lc) => { if (!_has(lc, "for ") || !_has(lc, "range")) return m[7][0]; },
+    8: (c, lc) => { if (!_has(lc, "while ")) return m[8][0]; },
+    9: (c, lc) => { if (!_has(lc, "while ") || !_has(lc, "input(")) return m[9][0]; },
+    10: (c, lc) => { if (!_has(lc, "for ") && !_has(lc, "while ")) return m[10][0]; },
+    11: (c, lc) => { if (!_has(c, "/")) return m[11][0]; },
+    12: (c, lc) => { if (!_has(lc, "while") || !_has(lc, "break")) return m[12][0]; if (!_has(lc, "input(")) return m[12][1]; },
+    13: (c, lc) => { if (!_has(lc, "def ")) return m[13][0]; if (!_has(lc, "return")) return m[13][1]; },
+    14: (c, lc) => { if (!_has(lc, "def ")) return m[14][0]; if (!/def\s+greet\s*\(/.test(c)) return m[14][1]; if (!_has(lc, "return")) return m[14][2]; },
+    15: (c, lc) => { if (!_has(c, "[") || !_has(c, "]")) return m[15][0]; },
+    16: (c, lc) => { if (!_has(lc, "append")) return m[16][0]; if (!_has(lc, "len(")) return m[16][1]; },
+    17: (c, lc) => { if ((!_has(c, "{") || !_has(c, "}")) && !_has(lc, "dict(")) return m[17][0]; },
+    18: (c, lc) => { if (!_has(lc, ".items()")) return m[18][0]; if (!_has(lc, "for ")) return m[18][1]; },
+    19: (c, lc) => { if (!_has(lc, "while") || !_has(lc, "input(") || !_has(lc, "append")) return m[19][0]; },
+    20: (c, lc) => { if (!_has(lc, "open(")) return m[20][0]; },
+    21: (c, lc) => { if (!_has(lc, "try") || !_has(lc, "except")) return m[21][0]; },
+    22: (c, lc) => { if (!_has(lc, "class ")) return m[22][0]; if (!_has(lc, "__init__")) return m[22][1]; if (!_has(lc, "self")) return m[22][2]; },
+    23: (c, lc) => { if (!_has(lc, "import json")) return m[23][0]; if (!_has(lc, "json.dumps") || !_has(lc, "json.loads")) return m[23][1]; },
+    24: (c, lc) => { if (!_has(lc, "import math")) return m[24][0]; if (!_has(lc, "def ")) return m[24][1]; if (!_has(lc, "math.pi")) return m[24][2]; },
+    25: (c, lc) => { if (!_has(lc, "def ")) return m[25][0]; if (!_has(lc, "sum(") || !_has(lc, "len(")) return m[25][1]; },
+    26: (c, lc) => { if (!/\[.+for .+ in .+\]/.test(c)) return m[26][0]; },
+    27: (c, lc) => { if (!_has(lc, ".split(") || !_has(lc, ".join(")) return m[27][0]; },
+    28: (c, lc) => { if (!_has(lc, 'f"') && !_has(lc, "f'")) return m[28][0]; },
+    29: (c, lc) => { if (!_has(lc, "lambda")) return m[29][0]; if (!_has(lc, "map(")) return m[29][1]; },
+    30: (c, lc) => { if (!_has(lc, "for ")) return m[30][0]; if (!_has(lc, "if ")) return m[30][1]; },
+  };
+}
 
 async function evaluateOffline(userCode, level, lang) {
   const _t = (key) => STRINGS[lang]?.[key] || STRINGS.en[key] || key;
@@ -289,7 +358,8 @@ async function evaluateOffline(userCode, level, lang) {
   if (!code || code === level.starterCode.trim()) return _fail(_t("writeCodeFirst"));
 
   // Step 1: Check construct requirements (does the code use the right concept?)
-  const check = CONSTRUCT_CHECKS[level.id];
+  const checks = _getChecks(lang);
+  const check = checks[level.id];
   if (check) {
     const err = check(code, code.toLowerCase());
     if (err) return _fail(err);
@@ -730,7 +800,7 @@ export default function PyithonApp() {
         setEditorGlow(true); setTimeout(() => setEditorGlow(false), 1500);
         playTone(523.25, 0.1); setTimeout(() => playTone(659.25, 0.1), 100); setTimeout(() => playTone(783.99, 0.15), 200);
       } else {
-        setFeedback({ correct: false, message: result.feedback || "Not quite right.", expected, aiExplanation: result.explanation });
+        setFeedback({ correct: false, message: result.feedback || t("notQuite"), expected, aiExplanation: result.explanation });
         setStreak(0); setShakeEditor(true); setTimeout(() => setShakeEditor(false), 500);
         playTone(330, 0.15, "triangle");
       }
