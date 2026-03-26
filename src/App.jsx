@@ -167,7 +167,7 @@ const STRINGS = {
 const AI_PROVIDERS = {
   claude: {
     name: "Claude",
-    endpoint: "/api/claude/v1/messages",
+    endpoint: "https://api.anthropic.com/v1/messages",
     model: "claude-sonnet-4-20250514",
     keyPrefix: "sk-ant-",
     keyPlaceholder: "sk-ant-...",
@@ -1256,7 +1256,7 @@ export default function PyithonApp() {
 
           {/* Try Again button — wrong answers only */}
           {!feedback.correct && (
-            <button onClick={() => setTab("editor")} style={{
+            <button onClick={() => { setFeedback(null); setTab("editor"); setTimeout(() => editorRef.current?.focus(), 50); }} style={{
               width: "100%", marginTop: 16, padding: "12px 0", borderRadius: 10,
               background: C.accentBg, border: `1px solid ${C.accentBorder}`,
               color: C.accentText, fontSize: 13, fontWeight: 600, cursor: "pointer",
