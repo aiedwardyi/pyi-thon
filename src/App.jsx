@@ -81,15 +81,20 @@ function evaluateOffline(userCode, level) {
   for (const line of stripped.split("\n")) {
     const t = line.trim();
     if (!t) continue;
-    const after = t.match(/[)\]]\s+(.+)\s*$/);
-    if (after) {
-      const extra = after[1].trim();
-      if (extra.startsWith("#")) continue;
-      // Allow operators, comparisons, arithmetic, colons, parens, brackets after ) or ]
-      if (/^[+\-*/%<>=!&|^~:.,()\[\]{]/.test(extra)) continue;
-      const fw = extra.split(/\s/)[0];
-      const ok = new Set(["if","else","elif","for","while","and","or","not","in","is","as","lambda","def","class","return","import","from","try","except","finally","with","break","continue","pass","raise","yield","del","assert","global","nonlocal"]);
-      if (!ok.has(fw)) return _fail(`This wouldn't run in Python — unexpected "${extra}" after the statement.`);
+    // Check for trailing garbage at end of line after any closing delimiter )] }
+    // Find the last significant closing delimiter and check what follows it
+    const endCheck = t.match(/^.*([)\]}])\s*(.+?)\s*$/);
+    if (endCheck) {
+      const trailing = endCheck[2];
+      if (!trailing.startsWith("#") && trailing !== ":") {
+        // Valid: operators, colons, another closer, opening paren/bracket
+        if (/^[+\-*/%<>=!&|^~:.,()\[\]{}]/.test(trailing) && !/^[!][^=]/.test(trailing) && trailing !== "!") { /* valid */ }
+        else {
+          const fw = trailing.split(/\s/)[0];
+          const ok = new Set(["if","else","elif","for","while","and","or","not","in","is","as","lambda","def","class","return","import","from","try","except","finally","with","break","continue","pass","raise","yield","del","assert","global","nonlocal"]);
+          if (!ok.has(fw)) return _fail(`This wouldn't run in Python — unexpected "${trailing}" after the statement.`);
+        }
+      }
     }
   }
 
