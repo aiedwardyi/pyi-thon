@@ -48,90 +48,233 @@ const LIGHT = {
 let C = { ...DARK };
 
 // ─── OFFLINE EVALUATOR ───
-function evaluateOffline(userCode, level) {
-  const code = userCode.trim();
-  const codeLower = code.toLowerCase();
-  const expected = level.expectedOutput.trim();
-  if (!code || code === level.starterCode.trim()) {
-    return { correct: false, feedback: "Write some code first!", explanation: "" };
-  }
-
-  // Must have print() for levels that expect output
-  if (expected && !codeLower.includes("print")) {
-    return { correct: false, feedback: "Don't forget to use print() to display your output.", explanation: "Offline mode checks for key patterns." };
-  }
-
-  // Basic syntax check — catch garbage text after statements
-  const codeNoStrings = code.replace(/("""[\s\S]*?"""|'''[\s\S]*?'''|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g, '""');
-  const codeNoComments = codeNoStrings.replace(/#.*/g, "");
-  for (const line of codeNoComments.split("\n")) {
-    const trimmed = line.trim();
-    if (!trimmed) continue;
-    // Check for anything after closing paren/bracket (e.g. `print("x") 23` or `print("x") garbage`)
-    const afterClose = trimmed.match(/[)\]]\s+(.+)\s*$/);
-    if (afterClose) {
-      const extra = afterClose[1].trim();
-      // Allow trailing comments and valid continuations like `) if x else y`
-      if (extra.startsWith("#")) continue;
-      const firstWord = extra.split(/\s/)[0];
-      const pyKeywords = new Set(["if","else","elif","for","while","and","or","not","in","is","as","lambda","def","class","return","import","from","try","except","finally","with","break","continue","pass","raise","yield","del","assert","global","nonlocal"]);
-      if (!pyKeywords.has(firstWord)) {
-        return { correct: false, feedback: `This wouldn't run in Python — unexpected "${extra}" after the statement.`, explanation: "Your code has extra text that would cause a SyntaxError." };
-      }
-    }
-  }
-
-  // Extract all string literals from the code
-  const stringLiterals = [];
-  const strRegex = /(?:f?)("""[\s\S]*?"""|'''[\s\S]*?'''|"([^"\\]|\\.)*"|'([^'\\]|\\.)*')/g;
+// Helpers
+function _extractStrings(code) {
+  const strs = [];
+  const re = /(?:f?)("""[\s\S]*?"""|'''[\s\S]*?'''|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g;
   let m;
-  while ((m = strRegex.exec(code)) !== null) {
-    // Remove surrounding quotes
+  while ((m = re.exec(code)) !== null) {
     let s = m[0];
     if (s.startsWith("f")) s = s.slice(1);
     if (s.startsWith('"""') || s.startsWith("'''")) s = s.slice(3, -3);
     else s = s.slice(1, -1);
-    stringLiterals.push(s);
+    strs.push(s);
+  }
+  return strs;
+}
+function _stripStringsAndComments(code) {
+  return code.replace(/("""[\s\S]*?"""|'''[\s\S]*?'''|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g, '""').replace(/#.*/g, "");
+}
+function _has(code, ...words) { const lc = code.toLowerCase(); return words.every(w => lc.includes(w)); }
+function _hasAny(code, ...words) { const lc = code.toLowerCase(); return words.some(w => lc.includes(w)); }
+function _fail(msg) { return { correct: false, feedback: msg, explanation: "" }; }
+function _pass() { return { correct: true, feedback: "Looks correct! (Offline mode)", explanation: "" }; }
+
+function evaluateOffline(userCode, level) {
+  const code = userCode.trim();
+  const lc = code.toLowerCase();
+  const expected = level.expectedOutput.trim();
+  if (!code || code === level.starterCode.trim()) return _fail("Write some code first!");
+
+  // Basic syntax: catch garbage after statements
+  const stripped = _stripStringsAndComments(code);
+  for (const line of stripped.split("\n")) {
+    const t = line.trim();
+    if (!t) continue;
+    const after = t.match(/[)\]]\s+(.+)\s*$/);
+    if (after) {
+      const extra = after[1].trim();
+      if (extra.startsWith("#")) continue;
+      const fw = extra.split(/\s/)[0];
+      const ok = new Set(["if","else","elif","for","while","and","or","not","in","is","as","lambda","def","class","return","import","from","try","except","finally","with","break","continue","pass","raise","yield","del","assert","global","nonlocal"]);
+      if (!ok.has(fw)) return _fail(`This wouldn't run in Python — unexpected "${extra}" after the statement.`);
+    }
   }
 
-  // For single-line expected output, require EXACT string match in the code
-  const expectedLines = expected.split("\n").map(l => l.trim()).filter(Boolean);
-  if (expectedLines.length === 1) {
-    const target = expectedLines[0];
-    const exactMatch = stringLiterals.some(s => s === target);
-    // Also check for numeric/expression outputs like "14", "20.0", etc
-    const isNumeric = /^[\d.\-]+$/.test(target);
-    if (!exactMatch && !isNumeric) {
-      // Check if any string is close but not exact (extra/missing chars)
-      const closeMatch = stringLiterals.some(s => s.includes(target) && s !== target);
-      if (closeMatch) {
-        return { correct: false, feedback: `Close! But your output has extra characters. Expected exactly: ${target}`, explanation: "Offline mode checks for exact string matches." };
+  // Check for bare undefined identifiers in assignments (e.g. name = eddiee without quotes)
+  const assignLines = stripped.split("\n").map(l => l.trim()).filter(l => l.match(/^\w+\s*=\s*[a-zA-Z]/));
+  const pyAll = new Set(["True","False","None","int","str","float","list","dict","set","tuple","type","len","range","print","input","sum","min","max","abs","round","sorted","enumerate","zip","map","filter","open","isinstance","bool","super","not"]);
+  for (const aline of assignLines) {
+    const rhsMatch = aline.match(/=\s*([a-zA-Z_]\w*)\s*$/);
+    if (rhsMatch) {
+      const rhs = rhsMatch[1];
+      if (!pyAll.has(rhs) && !aline.startsWith(rhs)) {
+        // Check if rhs was defined earlier in code
+        const defRegex = new RegExp(`^\\s*${rhs}\\s*=`, "m");
+        if (!defRegex.test(stripped.split(aline)[0] || "")) {
+          return _fail(`"${rhs}" is not defined. Did you forget to wrap it in quotes?`);
+        }
       }
-      return { correct: false, feedback: "Your output doesn't match what's expected. Check the task carefully.", explanation: "Offline mode checks for exact output patterns." };
-    }
-  } else {
-    // Multi-line: check each expected line appears in code
-    let matched = 0;
-    for (const line of expectedLines) {
-      if (stringLiterals.some(s => s === line) || codeLower.includes(line.toLowerCase())) matched++;
-    }
-    if (matched < expectedLines.length * 0.7) {
-      return { correct: false, feedback: "Your output doesn't seem to match what's expected.", explanation: "Offline mode checks for expected output patterns." };
     }
   }
 
-  // Check for key constructs from the hint
-  const hintClean = (level.hint || "").replace(/\\n/g, "\n").toLowerCase();
-  const hintKeywords = [...new Set((hintClean.match(/\b(print|input|def|class|for|while|if|elif|else|return|import|try|except|with|open|append|range|len|sum|int|str|float|round|break|continue)\b/g) || []))];
-  let kwMatches = 0;
-  for (const kw of hintKeywords) { if (codeLower.includes(kw)) kwMatches++; }
-  const kwRatio = hintKeywords.length > 0 ? kwMatches / hintKeywords.length : 1;
+  // Must have print() for levels expecting output
+  if (expected && !_has(code, "print")) return _fail("Don't forget to use print() to display your output.");
 
-  if (kwRatio < 0.4) {
-    return { correct: false, feedback: "Hmm, your approach seems different. Check the hint for guidance.", explanation: "Offline mode checks for key patterns." };
+  const strs = _extractStrings(code);
+  const id = level.id;
+
+  // ─── PER-LEVEL VALIDATION ───
+  switch (id) {
+    case 1: // Hello, World! — must print exact string
+      if (!strs.includes("Hello, World!")) return _fail('Your string must be exactly "Hello, World!" — check capitalization and punctuation.');
+      return _pass();
+
+    case 2: // Variables — must assign variable AND use it in print (not hardcode)
+      if (!strs.includes("Alice")) return _fail('Set name to "Alice" (with quotes).');
+      if (!stripped.includes("print") || stripped.match(/print\s*\(\s*""/)) {
+        // print("") means they're printing a hardcoded string — check if they used the variable
+        if (!stripped.match(/print\s*\(\s*\w+\s*\)/) && !_has(stripped, "print(name")) return _fail("Use print(name) to print the variable, not print(\"Alice\").");
+      }
+      if (!stripped.match(/name\s*=/)) return _fail('Create a variable called "name" using = assignment.');
+      return _pass();
+
+    case 3: // String concat — need name, age, str(), concatenation
+      if (!strs.includes("Alice")) return _fail('Set name to "Alice".');
+      if (!_has(code, "25") && !_has(code, "age")) return _fail("Set age = 25.");
+      if (!_has(lc, "str(") && !_has(lc, "f\"") && !_has(lc, "f'") && !_has(lc, "format")) return _fail("Convert age to string with str(age), an f-string, or .format().");
+      if (!strs.some(s => s.includes("Alice is 25") || s.includes("{") || s.includes("+"))) {
+        if (!_has(code, "+") && !_has(lc, "f\"") && !_has(lc, "f'")) return _fail('Use + to concatenate strings, or use an f-string.');
+      }
+      return _pass();
+
+    case 4: // Input — must use input()
+      if (!_has(lc, "input(")) return _fail("Use input() to ask the user for their name.");
+      if (!_has(lc, "hello")) return _fail('Your output should start with "Hello, ".');
+      return _pass();
+
+    case 5: // If/else — must use if and else
+      if (!_has(lc, "if ") || !_has(lc, "else")) return _fail("Use both if and else for this task.");
+      if (!strs.includes("pass")) return _fail('Print "pass" when score >= 70.');
+      return _pass();
+
+    case 6: // Elif — must use elif
+      if (!_has(lc, "elif")) return _fail("Use elif for multiple conditions.");
+      return _pass();
+
+    case 7: // For loop — must use for and range
+      if (!_has(lc, "for ") || !_has(lc, "range")) return _fail("Use a for loop with range().");
+      return _pass();
+
+    case 8: // While loop — must use while
+      if (!_has(lc, "while ")) return _fail("Use a while loop for this task.");
+      return _pass();
+
+    case 9: // Interactive loop — while + input
+      if (!_has(lc, "while ") || !_has(lc, "input(")) return _fail("Use a while loop with input().");
+      return _pass();
+
+    case 10: // Running total — for loop + accumulator
+      if (!_has(lc, "for ") && !_has(lc, "while ")) return _fail("Use a loop to calculate the sum.");
+      if (!_has(code, "total") && !_has(code, "sum") && !_has(code, "result")) return _fail("Use an accumulator variable (like total = 0) to track the sum.");
+      return _pass();
+
+    case 11: // Averages — division
+      if (!_has(code, "/")) return _fail("Use / to divide for the average.");
+      return _pass();
+
+    case 12: // Sentinel loop — while True + break
+      if (!_has(lc, "while") || !_has(lc, "break")) return _fail('Use "while True" with "break" for the sentinel pattern.');
+      if (!_has(lc, "input(")) return _fail("Use input() to read values.");
+      return _pass();
+
+    case 13: // Functions — def + return
+      if (!_has(lc, "def ")) return _fail("Define a function using def.");
+      if (!_has(lc, "return")) return _fail("Use return to send back the result.");
+      if (!_has(lc, "double")) return _fail('Name your function "double".');
+      return _pass();
+
+    case 14: // Multiple params — def with 2 params
+      if (!_has(lc, "def ")) return _fail("Define a function using def.");
+      if (!_has(lc, "greet")) return _fail('Name your function "greet".');
+      if (!_has(lc, "return")) return _fail("Use return to send back the result.");
+      return _pass();
+
+    case 15: // Lists — create + index
+      if (!_has(code, "[") || !_has(code, "]")) return _fail("Create a list using [ ] brackets.");
+      if (!_has(code, "[1]") && !_has(code, "[ 1]") && !_has(code, "[1 ]")) return _fail("Access the second item using index [1].");
+      return _pass();
+
+    case 16: // List methods — append + len
+      if (!_has(lc, "append")) return _fail("Use .append() to add an item.");
+      if (!_has(lc, "len(")) return _fail("Use len() to get the length.");
+      return _pass();
+
+    case 17: // Dicts — create + access
+      if (!_has(code, "{") || !_has(code, "}")) return _fail("Create a dictionary using { } braces.");
+      if (!strs.includes("Alice")) return _fail('Use "Alice" as the name value.');
+      return _pass();
+
+    case 18: // Dict loop — .items()
+      if (!_has(lc, ".items()")) return _fail("Use .items() to loop through key-value pairs.");
+      if (!_has(lc, "for ")) return _fail("Use a for loop.");
+      return _pass();
+
+    case 19: // Mini app — list + while + input + append
+      if (!_has(lc, "while") || !_has(lc, "input(") || !_has(lc, "append")) return _fail("Use a while loop with input() and .append().");
+      return _pass();
+
+    case 20: // File I/O — open + write + read
+      if (!_has(lc, "open(")) return _fail("Use open() to work with files.");
+      if (!_has(lc, '"w"') && !_has(lc, "'w'")) return _fail('Open the file in write mode with "w".');
+      return _pass();
+
+    case 21: // Try/except
+      if (!_has(lc, "try") || !_has(lc, "except")) return _fail("Use try/except to handle the error.");
+      if (!strs.includes("Not a number")) return _fail('Print "Not a number" in the except block.');
+      return _pass();
+
+    case 22: // Classes
+      if (!_has(lc, "class ")) return _fail("Define a class using the class keyword.");
+      if (!_has(lc, "__init__")) return _fail("Add an __init__ method.");
+      if (!_has(lc, "self")) return _fail("Use self to refer to the instance.");
+      return _pass();
+
+    case 23: // JSON
+      if (!_has(lc, "import json")) return _fail("Import the json module first.");
+      if (!_has(lc, "json.dumps") || !_has(lc, "json.loads")) return _fail("Use json.dumps() and json.loads().");
+      return _pass();
+
+    case 24: // Import + structure
+      if (!_has(lc, "import math")) return _fail("Import the math module.");
+      if (!_has(lc, "def ")) return _fail("Define a function for circle_area.");
+      if (!_has(lc, "math.pi")) return _fail("Use math.pi for the value of pi.");
+      return _pass();
+
+    case 25: // Graduation
+      if (!_has(lc, "def ")) return _fail("Define a get_average function.");
+      if (!_has(code, "{") || !_has(code, "}")) return _fail("Create a scores dictionary.");
+      if (!_has(lc, "sum(") || !_has(lc, "len(")) return _fail("Use sum() and len() to calculate the average.");
+      return _pass();
+
+    case 26: // List comprehension
+      if (!code.match(/\[.+for .+ in .+\]/)) return _fail("Use a list comprehension: [expr for x in iterable].");
+      return _pass();
+
+    case 27: // String methods
+      if (!_has(lc, ".split(") || !_has(lc, ".join(")) return _fail("Use .split() and .join().");
+      return _pass();
+
+    case 28: // F-strings
+      if (!_has(lc, 'f"') && !_has(lc, "f'")) return _fail("Use an f-string: f\"...{variable}...\"");
+      if (!_has(code, "{") || !_has(code, "}")) return _fail("Put variables inside { } in the f-string.");
+      return _pass();
+
+    case 29: // Lambda + map
+      if (!_has(lc, "lambda")) return _fail("Use a lambda function.");
+      if (!_has(lc, "map(")) return _fail("Use map() to apply the function.");
+      return _pass();
+
+    case 30: // Data pipeline
+      if (!_has(lc, "for ")) return _fail("Use a for loop to iterate through students.");
+      if (!_has(lc, "if ")) return _fail("Use an if statement to filter by score.");
+      if (!_has(code, '["score"]') && !_has(code, "['score']") && !_has(code, ".score")) return _fail('Access scores with student["score"].');
+      return _pass();
+
+    default:
+      // Generic fallback
+      return _pass();
   }
-
-  return { correct: true, feedback: "Looks correct! (Offline mode)", explanation: "Offline evaluation uses pattern matching. For smarter feedback, switch to Claude mode." };
 }
 
 // ─── PYTHON SYNTAX HIGHLIGHTER ───
