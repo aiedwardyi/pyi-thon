@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="screenshots/correct-dark.png" alt="Pyi-thon — Learn Python in Your Browser" width="800" />
-</p>
-
 <h1 align="center">Pyi-thon</h1>
 
 <p align="center">
@@ -88,8 +84,8 @@ Most Python tutorials make you read. Pyi-thon makes you **write**.
 ## Quick Start
 
 ```bash
-git clone https://github.com/aiedwardyi/pyithon.git
-cd pyithon
+git clone https://github.com/aiedwardyi/pyi-thon.git
+cd pyi-thon
 npm install
 npm run dev
 ```
@@ -136,14 +132,14 @@ You write Python  →  Submit  →  AI or Pyodide evaluates  →  Feedback + XP
 ## Project Structure
 
 ```
-pyithon/
+pyi-thon/
 ├── index.html          # Entry point + font imports
 ├── package.json        # Dependencies (React + Vite only)
 ├── vite.config.js      # Dev server + Claude API proxy
 ├── .env.example        # API key template (all providers)
 └── src/
     ├── main.jsx        # React mount point
-    └── App.jsx         # The entire app — single file, ~1400 lines
+    └── App.jsx         # The entire app — single file, ~1600 lines
 ```
 
 The whole application lives in one file. Colors, levels, translations, evaluator, syntax highlighter, and all UI components. Simple to understand, easy to fork.
@@ -200,5 +196,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 </p>
 
 <p align="center">
-  Made by <a href="https://github.com/aiedwardyi">Eddie Yi</a>
+  Made by <a href="https://github.com/aiedwardyi">Edward Yi</a>
 </p>

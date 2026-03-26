@@ -77,8 +77,8 @@ const STRINGS = {
     providerDesc: "Select AI evaluator",
     startLearning: "Start Learning",
     configureApiKey: "Configure API Key",
-    tagline: "Master Python from scratch.\nNo AI. No autocomplete. Just you.",
-    subtitle: "30 levels \u00b7 3 phases \u00b7 Local Edition",
+    tagline: "Master Python from scratch.\nAI-powered feedback. Real coding.",
+    subtitle: "30 levels \u00b7 3 phases \u00b7 Open Source",
     settings: "Settings",
     darkMode: "Dark",
     lightMode: "Light",
@@ -103,6 +103,7 @@ const STRINGS = {
     offlinePyError: "Python error: ",
     offlineWrongOutput: 'Your code outputs "{actual}" but the expected output is "{expected}".',
     offlineRunError: "Couldn't run your code. Try again.",
+    offlineFallback: "Running offline — add an API key in Settings for AI feedback",
   },
   ko: {
     levels: "\ub808\ubca8",
@@ -132,8 +133,8 @@ const STRINGS = {
     providerDesc: "AI \ud3c9\uac00\uae30 \uc120\ud0dd",
     startLearning: "\ud559\uc2b5 \uc2dc\uc791",
     configureApiKey: "API \ud0a4 \uc124\uc815",
-    tagline: "\ud30c\uc774\uc36c\uc744 \ucc98\uc74c\ubd80\ud130 \ub9c8\uc2a4\ud130\ud558\uc138\uc694.\nAI \uc5c6\uc774. \uc790\ub3d9\uc644\uc131 \uc5c6\uc774. \uc624\uc9c1 \ub2f9\uc2e0\uc758 \ud798\uc73c\ub85c.",
-    subtitle: "30 \ub808\ubca8 \u00b7 3 \ub2e8\uacc4 \u00b7 \ub85c\uceec \uc5d0\ub514\uc158",
+    tagline: "\ud30c\uc774\uc36c\uc744 \ucc98\uc74c\ubd80\ud130 \ub9c8\uc2a4\ud130\ud558\uc138\uc694.\nAI \ud53c\ub4dc\ubc31. \uc9c4\uc9dc \ucf54\ub529.",
+    subtitle: "30 \ub808\ubca8 \u00b7 3 \ub2e8\uacc4 \u00b7 \uc624\ud508 \uc18c\uc2a4",
     settings: "\uc124\uc815",
     darkMode: "\ub2e4\ud06c",
     lightMode: "\ub77c\uc774\ud2b8",
@@ -158,6 +159,7 @@ const STRINGS = {
     offlinePyError: "Python \uc624\ub958: ",
     offlineWrongOutput: '\ucd9c\ub825\uc774 "{actual}"\uc774\uc9c0\ub9cc \uc608\uc0c1 \ucd9c\ub825\uc740 "{expected}"\uc785\ub2c8\ub2e4.',
     offlineRunError: "\ucf54\ub4dc\ub97c \uc2e4\ud589\ud560 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4. \ub2e4\uc2dc \uc2dc\ub3c4\ud558\uc138\uc694.",
+    offlineFallback: "\uc624\ud504\ub77c\uc778\uc73c\ub85c \uc2e4\ud589 \uc911 — \uc124\uc815\uc5d0\uc11c API \ud0a4\ub97c \ucd94\uac00\ud558\uba74 AI \ud53c\ub4dc\ubc31\uc744 \ubc1b\uc744 \uc218 \uc788\uc2b5\ub2c8\ub2e4",
   }
 };
 
@@ -676,6 +678,7 @@ export default function PyithonApp() {
   const [showXPFloat, setShowXPFloat] = useState(false);
   const [lang, setLang] = useState(() => localStorage.getItem("pyithon-lang") || "en");
   const [provider, setProvider] = useState(() => localStorage.getItem("pyithon-provider") || "claude");
+  const [offlineFallbackToast, setOfflineFallbackToast] = useState(false);
 
   const t = (key) => STRINGS[lang]?.[key] || STRINGS.en[key] || key;
 
@@ -775,7 +778,11 @@ export default function PyithonApp() {
 
   const handleSubmit = useCallback(async () => {
     if (isEvaluating) return;
-    if (!offlineMode && !apiKey) { setShowApiSetup(true); return; }
+    const useOffline = offlineMode || !apiKey;
+    if (!offlineMode && !apiKey) {
+      setOfflineFallbackToast(true);
+      setTimeout(() => setOfflineFallbackToast(false), 4000);
+    }
     const userCode = code.trim();
     if (!userCode || userCode === level.starterCode.trim()) {
       setFeedback({ correct: false, message: t("writeCodeFirst"), expected: level.expectedOutput });
@@ -786,7 +793,7 @@ export default function PyithonApp() {
     const expected = level.expectedOutput.trim();
     setIsEvaluating(true); setFeedback(null); setTab("output");
     try {
-      const result = offlineMode ? await evaluateOffline(userCode, level, lang) : await evaluateWithAI(userCode, level, apiKey, lang, provider);
+      const result = useOffline ? await evaluateOffline(userCode, level, lang) : await evaluateWithAI(userCode, level, apiKey, lang, provider);
       if (result.correct) {
         setFeedback({ correct: true, message: result.feedback || "Correct!", expected, aiExplanation: result.explanation });
         const isNew = !completedLevels.has(level.id);
@@ -1523,6 +1530,17 @@ export default function PyithonApp() {
           >{t("next")} &rarr;</button>
         )}
       </div>
+      {offlineFallbackToast && (
+        <div style={{
+          position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)",
+          background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 12,
+          padding: "10px 20px", fontSize: 13, color: C.textDim, fontWeight: 500,
+          boxShadow: `0 8px 32px rgba(0,0,0,0.3)`, zIndex: 9999,
+          animation: "fadeSlideUp 0.3s ease-out", whiteSpace: "nowrap",
+        }}>
+          {t("offlineFallback")}
+        </div>
+      )}
       <style>{getGlobalStyles(C)}</style>
     </div>
   );
