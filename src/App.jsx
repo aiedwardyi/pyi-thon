@@ -1235,7 +1235,16 @@ export default function PyithonApp() {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
             <span style={{ fontSize: 11, fontWeight: 600 }}>{t("levels")}</span>
           </button>
-          <span style={{ fontSize: 14, fontWeight: 800, color: C.accent, letterSpacing: -0.5, marginLeft: 8, display: isWide ? "inline" : "none" }}>Pyi-thon</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginLeft: 8 }}>
+            <svg viewBox="0 0 200 200" style={{ width: 20, height: 20, flexShrink: 0, filter: `drop-shadow(0 0 6px ${C.accentGlow})` }}>
+              <defs><linearGradient id="hG" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stopColor={C.accentDeep} /><stop offset="100%" stopColor={C.accentLight} /></linearGradient></defs>
+              <path d="M60 160 L60 60 L30 90" fill="none" stroke="url(#hG)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M100 160 L100 40 L70 70" fill="none" stroke="url(#hG)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M140 160 L140 60 L110 90" fill="none" stroke="url(#hG)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M175 160 L175 80 L145 110" fill="none" stroke="url(#hG)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span style={{ fontSize: 14, fontWeight: 800, color: C.accent, letterSpacing: -0.5, display: isWide ? "inline" : "none" }}>Pyi-thon</span>
+          </div>
 
           <div style={{ flex: 1, margin: "0 20px", maxWidth: 280 }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
