@@ -976,24 +976,10 @@ export default function PyithonApp() {
             </div>
             <div style={{ flex: 1 }}>
               <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{feedback.correct ? "Correct!" : "Not quite"}</span>
-              <p style={{ fontSize: 12, color: C.textDim, margin: "2px 0 0", lineHeight: 1.5 }}>{feedback.message}</p>
+              <p style={{ fontSize: 13, color: C.textMuted, margin: "4px 0 0", lineHeight: 1.6 }}>{feedback.aiExplanation || feedback.message}</p>
             </div>
-            {feedback.correct && <span style={{ fontSize: 12, color: C.amber, fontWeight: 700, background: C.amberBg, padding: "4px 10px", borderRadius: 8, border: `1px solid ${C.amberBorder}` }}>+100 XP</span>}
+            {feedback.correct && <span style={{ fontSize: 12, color: C.amber, fontWeight: 700, background: C.amberBg, padding: "4px 10px", borderRadius: 8, border: `1px solid ${C.amberBorder}`, flexShrink: 0 }}>+100 XP</span>}
           </div>
-
-          {/* Claude says — only shown in online mode */}
-          {feedback.aiExplanation && !offlineMode && (
-            <div style={{
-              marginBottom: 16, borderRadius: 10, padding: 14, position: "relative",
-              background: C.accentBg, border: `1px solid ${C.accentBorder}`,
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill={C.accent}><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-2h2v2h-2zm0-4V7h2v6h-2z"/></svg>
-                <span style={{ fontSize: 10, fontWeight: 700, color: C.accent, textTransform: "uppercase", letterSpacing: 1.5 }}>Claude says</span>
-              </div>
-              <p style={{ color: C.textMuted, fontSize: 13, lineHeight: 1.7, margin: 0 }}>{feedback.aiExplanation}</p>
-            </div>
-          )}
 
           {/* Expected output */}
           <div style={{ marginBottom: 16 }}>
