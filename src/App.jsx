@@ -85,6 +85,8 @@ function evaluateOffline(userCode, level) {
     if (after) {
       const extra = after[1].trim();
       if (extra.startsWith("#")) continue;
+      // Allow operators, comparisons, arithmetic, colons, parens, brackets after ) or ]
+      if (/^[+\-*/%<>=!&|^~:.,()\[\]{]/.test(extra)) continue;
       const fw = extra.split(/\s/)[0];
       const ok = new Set(["if","else","elif","for","while","and","or","not","in","is","as","lambda","def","class","return","import","from","try","except","finally","with","break","continue","pass","raise","yield","del","assert","global","nonlocal"]);
       if (!ok.has(fw)) return _fail(`This wouldn't run in Python — unexpected "${extra}" after the statement.`);
@@ -186,7 +188,7 @@ function evaluateOffline(userCode, level) {
 
     case 14: // Multiple params — def with 2 params
       if (!_has(lc, "def ")) return _fail("Define a function using def.");
-      if (!_has(lc, "greet")) return _fail('Name your function "greet".');
+      if (!stripped.match(/def\s+greet\s*\(/)) return _fail('Name your function "greet".');
       if (!_has(lc, "return")) return _fail("Use return to send back the result.");
       return _pass();
 
