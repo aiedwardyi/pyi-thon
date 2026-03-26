@@ -378,27 +378,31 @@ function saveProgress(data) {
 
 // ─── CLAUDE API EVALUATOR (with timeout + error handling) ───
 async function evaluateWithClaude(userCode, level, apiKey) {
-  const prompt = `You are a Python code evaluator. Determine if the student's code is functionally correct.
+  const prompt = `You are a Python code evaluator for an educational platform. Evaluate if the student's code is correct AND uses the concept being taught.
 
-RULES:
-- Would this code produce the expected output in Python 3?
-- Accept creative solutions (different variable names, different approaches).
-- Code must be valid Python that would run.
+CRITICAL RULES:
+- The student MUST use the concept/technique described in the task. Hardcoding the output is NOT acceptable.
+- For example, if the task says "create a variable and print it", then print("value") without using a variable is WRONG.
+- If the task says "use a for loop", writing print(1)\\nprint(2)\\nprint(3) is WRONG.
+- If the task says "use str() to concatenate", just print("the answer") is WRONG.
+- Accept creative solutions (different variable names, f-strings vs concatenation, etc.) as long as they use the required concept.
+- Code must be valid Python 3 that would actually run without errors.
 - For simulated input, assume input() receives values in order.
 - Be encouraging but honest.
 
+CONCEPT BEING TAUGHT: ${level.concept}
 TASK: ${level.task}
 EXPECTED OUTPUT: ${level.expectedOutput}
 ${level.simulatedInput ? `SIMULATED INPUT: ${level.simulatedInput}` : ""}
-HINT (reference solution): ${level.hint}
+REFERENCE SOLUTION: ${level.hint}
 
 STUDENT CODE:
 \`\`\`python
 ${userCode}
 \`\`\`
 
-Is this functionally correct? Respond ONLY with JSON, no markdown fences:
-{"correct": true/false, "feedback": "brief message", "explanation": "1-2 sentences"}`;
+Does this code use the required concept AND produce the correct output? Respond ONLY with JSON, no markdown fences:
+{"correct": true/false, "feedback": "brief encouraging message", "explanation": "1-2 sentences explaining why correct/incorrect, focusing on whether they used the concept"}`;
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 30000);
