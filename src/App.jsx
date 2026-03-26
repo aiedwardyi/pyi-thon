@@ -203,7 +203,7 @@ function evaluateOffline(userCode, level) {
       return _pass();
 
     case 17: // Dicts — create + access
-      if (!_has(code, "{") || !_has(code, "}")) return _fail("Create a dictionary using { } braces.");
+      if ((!_has(code, "{") || !_has(code, "}")) && !_has(lc, "dict(")) return _fail("Create a dictionary using { } braces or dict().");
       if (!strs.includes("Alice")) return _fail('Use "Alice" as the name value.');
       return _pass();
 
