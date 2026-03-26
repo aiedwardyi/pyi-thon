@@ -67,21 +67,16 @@ function evaluateOffline(userCode, level) {
   for (const line of codeNoComments.split("\n")) {
     const trimmed = line.trim();
     if (!trimmed) continue;
-    // Check for bare words after closing paren/bracket (e.g. `print("x") garbage`)
-    const afterClose = trimmed.match(/[)\]]\s+([a-zA-Z_]\w*)\s*$/);
+    // Check for anything after closing paren/bracket (e.g. `print("x") 23` or `print("x") garbage`)
+    const afterClose = trimmed.match(/[)\]]\s+(.+)\s*$/);
     if (afterClose) {
-      const word = afterClose[1];
+      const extra = afterClose[1].trim();
+      // Allow trailing comments and valid continuations like `) if x else y`
+      if (extra.startsWith("#")) continue;
+      const firstWord = extra.split(/\s/)[0];
       const pyKeywords = new Set(["if","else","elif","for","while","and","or","not","in","is","as","lambda","def","class","return","import","from","try","except","finally","with","break","continue","pass","raise","yield","del","assert","global","nonlocal"]);
-      if (!pyKeywords.has(word)) {
-        return { correct: false, feedback: `This wouldn't run in Python — unexpected "${word}" on the same line.`, explanation: "Your code has extra text that would cause a SyntaxError." };
-      }
-    }
-    // Check for multiple bare expressions on one line (e.g. `x = 5 abc`)
-    const afterAssign = trimmed.match(/=\s*\S+.*?\s+([a-zA-Z_]\w*)\s*$/);
-    if (afterAssign && !trimmed.includes(",") && !trimmed.includes(" and ") && !trimmed.includes(" or ") && !trimmed.includes(" if ") && !trimmed.includes(" in ") && !trimmed.includes(" not ")) {
-      const word = afterAssign[1];
-      if (!/^(and|or|not|in|is|if|else|for|while)$/.test(word)) {
-        return { correct: false, feedback: `This wouldn't run in Python — unexpected "${word}" after the expression.`, explanation: "Your code has extra text that would cause a SyntaxError." };
+      if (!pyKeywords.has(firstWord)) {
+        return { correct: false, feedback: `This wouldn't run in Python — unexpected "${extra}" after the statement.`, explanation: "Your code has extra text that would cause a SyntaxError." };
       }
     }
   }
