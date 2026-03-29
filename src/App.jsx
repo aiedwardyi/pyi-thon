@@ -254,19 +254,28 @@ def _loop_guard(frame, event, arg):
     if event == 'line':
         _loop_counter += 1
         if _loop_counter > _loop_limit:
-            raise RuntimeError("Infinite loop detected - your loop ran over 100,000 iterations. Check your loop condition and make sure it will eventually stop.")
+            raise RuntimeError("Infinite loop detected - your code executed over 100,000 lines. Check your loops and make sure they will eventually stop.")
     return _loop_guard
 sys.settrace(_loop_guard)
 `);
     pyodide.runPython(code);
-    pyodide.runPython("sys.settrace(_original_trace)");
+    // Cleanup: restore trace and stdout safely
+    pyodide.runPython(`
+_sys = __import__('sys')
+_sys.settrace(_original_trace if '_original_trace' in dir() else None)
+_sys.stdout = _sys.__stdout__
+`);
     const output = pyodide.runPython("_captured_output.getvalue()");
-    // Reset stdout
-    pyodide.runPython("sys.stdout = sys.__stdout__");
     return { success: true, output: output.trimEnd() };
   } catch (err) {
-    pyodide.runPython("sys.settrace(None)");
-    pyodide.runPython("sys.stdout = sys.__stdout__");
+    try {
+      pyodide.runPython(`
+_sys = __import__('sys')
+_sys.settrace(None)
+if hasattr(_sys, '__stdout__'):
+    _sys.stdout = _sys.__stdout__
+`);
+    } catch (_) {}
     const msg = err.message || String(err);
     // Extract just the Python error line
     const lines = msg.split("\n");
@@ -468,9 +477,10 @@ async function evaluateOffline(userCode, level, lang) {
   // Step 1: Check construct requirements (does the code use the right concept?)
   const checks = _getChecks(lang);
   const check = checks[level.id];
-  const conceptOk = !check || !check(code, code.toLowerCase());
-  if (!conceptOk) {
-    return _fail(check(code, code.toLowerCase()));
+  const lc = code.toLowerCase();
+  const checkErr = check ? check(code, lc) : null;
+  if (checkErr) {
+    return _fail(checkErr);
   }
 
   // Step 2: Actually run the code with Pyodide
@@ -481,7 +491,7 @@ async function evaluateOffline(userCode, level, lang) {
       const mistakes = (COMMON_MISTAKES[lang] || COMMON_MISTAKES.en)[level.id] || COMMON_MISTAKES.en[level.id] || [];
       for (const [pattern, hint] of mistakes) {
         if (pattern.test(code)) {
-          return { correct: false, feedback: `${_t("offlinePyError")}${result.error}\n\nHint: ${hint}`, explanation: "" };
+          return { correct: false, feedback: `${_t("offlinePyError")}${result.error}\n\n${_t("hint")}: ${hint}`, explanation: "" };
         }
       }
       return { correct: false, feedback: `${_t("offlinePyError")}${result.error}`, explanation: "" };
