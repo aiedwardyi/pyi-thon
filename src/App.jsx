@@ -1148,21 +1148,21 @@ export default function PyithonApp() {
           {/* Theme selector */}
           <div style={{ padding: "14px 0", borderBottom: `1px solid ${C.border}` }}>
             <p id="theme-switch-label" style={{ color: C.text, fontSize: 14, fontWeight: 600, margin: 0 }}>{t("switchAppearance")}</p>
-            <div role="radiogroup" aria-labelledby="theme-switch-label" style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
+            <div role="radiogroup" aria-labelledby="theme-switch-label" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(68px, 1fr))", gap: 6, marginTop: 10 }}>
               {Object.entries(THEMES).map(([key, { label, labelKo, colors }]) => (
                 <button key={key} role="radio" aria-checked={themeKey === key} onClick={() => setThemeKey(key)} style={{
-                  display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
-                  padding: "8px 10px", borderRadius: 10, cursor: "pointer", fontFamily: "inherit",
+                  display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+                  padding: "6px 4px", borderRadius: 8, cursor: "pointer", fontFamily: "inherit",
                   border: themeKey === key ? `2px solid ${C.accent}` : `2px solid ${C.border}`,
                   background: themeKey === key ? C.accentBg : "transparent",
                   transition: "all 0.2s",
                 }}>
-                  <div style={{ display: "flex", gap: 3 }}>
+                  <div style={{ display: "flex", gap: 2 }}>
                     {colors.map((c, i) => (
-                      <div key={i} style={{ width: 16, height: 16, borderRadius: "50%", background: c, border: "1px solid rgba(255,255,255,0.1)" }} />
+                      <div key={i} style={{ width: 12, height: 12, borderRadius: "50%", background: c, border: "1px solid rgba(255,255,255,0.1)" }} />
                     ))}
                   </div>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: themeKey === key ? C.accentText : C.textDim }}>
+                  <span style={{ fontSize: 9, fontWeight: 600, color: themeKey === key ? C.accentText : C.textDim, whiteSpace: "nowrap" }}>
                     {lang === "ko" ? labelKo : label}
                   </span>
                 </button>
@@ -1202,7 +1202,7 @@ export default function PyithonApp() {
 
           {/* AI Provider */}
           {!offlineMode && (
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 0", borderBottom: `1px solid ${C.border}` }}>
+            <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", justifyContent: "space-between", gap: 8, padding: "14px 0", borderBottom: `1px solid ${C.border}` }}>
               <div>
                 <p style={{ color: C.text, fontSize: 14, fontWeight: 600, margin: 0 }}>{t("provider")}</p>
                 <p style={{ color: C.textDim, fontSize: 12, margin: "2px 0 0" }}>{t("providerDesc")}</p>
