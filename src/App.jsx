@@ -233,17 +233,38 @@ def input(prompt=""):
 __builtins__.input = input
 `);
   try {
+    // Inject a loop iteration limit to prevent infinite loops from freezing the browser
+    pyodide.runPython(`
+import sys
+_loop_limit = 100000
+_original_trace = sys.gettrace()
+_loop_counter = 0
+def _loop_guard(frame, event, arg):
+    global _loop_counter
+    if event == 'line':
+        _loop_counter += 1
+        if _loop_counter > _loop_limit:
+            raise RuntimeError("Infinite loop detected - your loop ran over 100,000 iterations. Check your loop condition and make sure it will eventually stop.")
+    return _loop_guard
+sys.settrace(_loop_guard)
+`);
     pyodide.runPython(code);
+    pyodide.runPython("sys.settrace(_original_trace)");
     const output = pyodide.runPython("_captured_output.getvalue()");
     // Reset stdout
     pyodide.runPython("sys.stdout = sys.__stdout__");
     return { success: true, output: output.trimEnd() };
   } catch (err) {
+    pyodide.runPython("sys.settrace(None)");
     pyodide.runPython("sys.stdout = sys.__stdout__");
     const msg = err.message || String(err);
     // Extract just the Python error line
     const lines = msg.split("\n");
     const pyErr = lines.filter(l => l.match(/Error:|error:/i)).pop() || lines[lines.length - 1] || msg;
+    // Give a friendlier message for infinite loop detection
+    if (msg.includes("Infinite loop detected")) {
+      return { success: false, output: "", error: "Infinite loop detected! Check your while loop - make sure the condition will eventually become False (e.g., increment your counter variable)." };
+    }
     return { success: false, output: "", error: pyErr.trim() };
   }
 }
