@@ -40,8 +40,78 @@ const LIGHT = {
   syntaxNumber: "#0369a1", syntaxFunction: "#4338ca", syntaxBuiltin: "#047857",
   dotGrid: "rgba(0,0,0,0.04)", scheme: "light",
   trafficRed: "rgba(220,38,38,0.6)", trafficYellow: "rgba(217,119,6,0.6)", trafficGreen: "rgba(5,150,105,0.6)",
-  // Light mode button text on gradient backgrounds should be white
   btnText: "#ffffff",
+};
+
+const TOKYO = {
+  bg: "#1a1b26", bgCard: "#1f2335", bgPanel: "#24283b", bgSubtle: "rgba(255,255,255,0.03)",
+  bgGlass: "rgba(26,27,38,0.88)", bgGlassStrong: "rgba(26,27,38,0.95)",
+  border: "rgba(255,255,255,0.08)", borderLight: "rgba(255,255,255,0.04)", borderFocus: "rgba(125,207,255,0.35)",
+  text: "#c0caf5", textMuted: "rgba(192,202,245,0.85)", textDim: "rgba(192,202,245,0.4)",
+  accent: "#7aa2f7", accentLight: "#89b4fa", accentDark: "#5d7de0", accentDeep: "#3d59a1",
+  accentGlow: "rgba(122,162,247,0.4)", accentGlowSoft: "rgba(122,162,247,0.15)",
+  accentText: "rgba(137,180,250,0.9)", accentTextDim: "rgba(137,180,250,0.45)",
+  accentBg: "rgba(61,89,161,0.15)", accentBorder: "rgba(61,89,161,0.3)",
+  green: "#9ece6a", greenLight: "#b5e890", greenBg: "rgba(158,206,106,0.1)", greenBorder: "rgba(158,206,106,0.25)",
+  red: "#f7768e", redBg: "rgba(247,118,142,0.1)", redBorder: "rgba(247,118,142,0.25)",
+  amber: "#e0af68", amberBg: "rgba(224,175,104,0.1)", amberBorder: "rgba(224,175,104,0.2)", amberText: "rgba(224,175,104,0.9)",
+  codeBg: "rgba(0,0,0,0.3)", codeText: "#9ece6a",
+  lineNum: "rgba(122,162,247,0.2)", lineNumActive: "rgba(122,162,247,0.5)",
+  syntaxKeyword: "#bb9af7", syntaxString: "#9ece6a", syntaxComment: "rgba(192,202,245,0.3)",
+  syntaxNumber: "#ff9e64", syntaxFunction: "#7aa2f7", syntaxBuiltin: "#2ac3de",
+  dotGrid: "rgba(255,255,255,0.03)", scheme: "dark",
+  trafficRed: "rgba(247,118,142,0.5)", trafficYellow: "rgba(224,175,104,0.5)", trafficGreen: "rgba(158,206,106,0.5)",
+  btnText: "#ffffff",
+};
+
+const LOVE = {
+  bg: "#191724", bgCard: "#1f1d2e", bgPanel: "#26233a", bgSubtle: "rgba(255,255,255,0.03)",
+  bgGlass: "rgba(25,23,36,0.88)", bgGlassStrong: "rgba(25,23,36,0.95)",
+  border: "rgba(255,255,255,0.08)", borderLight: "rgba(255,255,255,0.04)", borderFocus: "rgba(235,111,146,0.35)",
+  text: "#e0def4", textMuted: "rgba(224,222,244,0.85)", textDim: "rgba(224,222,244,0.4)",
+  accent: "#eb6f92", accentLight: "#f0a0b8", accentDark: "#d65d7f", accentDeep: "#b4637a",
+  accentGlow: "rgba(235,111,146,0.4)", accentGlowSoft: "rgba(235,111,146,0.15)",
+  accentText: "rgba(235,111,146,0.9)", accentTextDim: "rgba(235,111,146,0.45)",
+  accentBg: "rgba(180,99,122,0.15)", accentBorder: "rgba(180,99,122,0.3)",
+  green: "#9ccfd8", greenLight: "#b8e0e8", greenBg: "rgba(156,207,216,0.1)", greenBorder: "rgba(156,207,216,0.25)",
+  red: "#eb6f92", redBg: "rgba(235,111,146,0.1)", redBorder: "rgba(235,111,146,0.25)",
+  amber: "#f6c177", amberBg: "rgba(246,193,119,0.1)", amberBorder: "rgba(246,193,119,0.2)", amberText: "rgba(246,193,119,0.9)",
+  codeBg: "rgba(0,0,0,0.3)", codeText: "#9ccfd8",
+  lineNum: "rgba(235,111,146,0.2)", lineNumActive: "rgba(235,111,146,0.5)",
+  syntaxKeyword: "#c4a7e7", syntaxString: "#f6c177", syntaxComment: "rgba(224,222,244,0.3)",
+  syntaxNumber: "#ea9a97", syntaxFunction: "#eb6f92", syntaxBuiltin: "#9ccfd8",
+  dotGrid: "rgba(255,255,255,0.03)", scheme: "dark",
+  trafficRed: "rgba(235,111,146,0.5)", trafficYellow: "rgba(246,193,119,0.5)", trafficGreen: "rgba(156,207,216,0.5)",
+  btnText: "#ffffff",
+};
+
+const GRUVBOX = {
+  bg: "#1d2021", bgCard: "#282828", bgPanel: "#32302f", bgSubtle: "rgba(255,255,255,0.03)",
+  bgGlass: "rgba(29,32,33,0.88)", bgGlassStrong: "rgba(29,32,33,0.95)",
+  border: "rgba(255,255,255,0.08)", borderLight: "rgba(255,255,255,0.04)", borderFocus: "rgba(254,128,25,0.35)",
+  text: "#ebdbb2", textMuted: "rgba(235,219,178,0.85)", textDim: "rgba(235,219,178,0.4)",
+  accent: "#fe8019", accentLight: "#fabd2f", accentDark: "#d65d0e", accentDeep: "#af3a03",
+  accentGlow: "rgba(254,128,25,0.4)", accentGlowSoft: "rgba(254,128,25,0.15)",
+  accentText: "rgba(254,128,25,0.9)", accentTextDim: "rgba(254,128,25,0.45)",
+  accentBg: "rgba(175,58,3,0.15)", accentBorder: "rgba(175,58,3,0.3)",
+  green: "#b8bb26", greenLight: "#d5d84a", greenBg: "rgba(184,187,38,0.1)", greenBorder: "rgba(184,187,38,0.25)",
+  red: "#fb4934", redBg: "rgba(251,73,52,0.1)", redBorder: "rgba(251,73,52,0.25)",
+  amber: "#fabd2f", amberBg: "rgba(250,189,47,0.1)", amberBorder: "rgba(250,189,47,0.2)", amberText: "rgba(250,189,47,0.9)",
+  codeBg: "rgba(0,0,0,0.3)", codeText: "#b8bb26",
+  lineNum: "rgba(254,128,25,0.2)", lineNumActive: "rgba(254,128,25,0.5)",
+  syntaxKeyword: "#fb4934", syntaxString: "#b8bb26", syntaxComment: "rgba(235,219,178,0.3)",
+  syntaxNumber: "#d3869b", syntaxFunction: "#fabd2f", syntaxBuiltin: "#8ec07c",
+  dotGrid: "rgba(255,255,255,0.03)", scheme: "dark",
+  trafficRed: "rgba(251,73,52,0.5)", trafficYellow: "rgba(250,189,47,0.5)", trafficGreen: "rgba(184,187,38,0.5)",
+  btnText: "#ffffff",
+};
+
+const THEMES = {
+  dark: { palette: DARK, label: "Dark", labelKo: "\ub2e4\ud06c", colors: ["#08090e", "#818cf8", "#c084fc"] },
+  light: { palette: LIGHT, label: "Light", labelKo: "\ub77c\uc774\ud2b8", colors: ["#f0f1f5", "#4f46e5", "#7c3aed"] },
+  tokyo: { palette: TOKYO, label: "Tokyo Night", labelKo: "\ub3c4\ucfc4 \ub098\uc774\ud2b8", colors: ["#1a1b26", "#7aa2f7", "#bb9af7"] },
+  love: { palette: LOVE, label: "Love", labelKo: "\ub7ec\ube0c", colors: ["#191724", "#eb6f92", "#c4a7e7"] },
+  gruvbox: { palette: GRUVBOX, label: "Gruvbox", labelKo: "\uadf8\ub8e8\ubc15\uc2a4", colors: ["#1d2021", "#fe8019", "#fb4934"] },
 };
 
 // Mutable theme reference — updated by component
@@ -647,7 +717,7 @@ const LEVELS_KO = {
   29: { title: "Lambda\uc640 Map", subtitle: "\uc778\ub77c\uc778 \ud568\uc218\uc640 \ubcc0\ud658", concept: "lambda\ub294 \uc791\uc740 \uc775\uba85 \ud568\uc218\ub97c \ub9cc\ub4ed\ub2c8\ub2e4. map()\uc740 \ub9ac\uc2a4\ud2b8\uc758 \ubaa8\ub4e0 \ud56d\ubaa9\uc5d0 \ud568\uc218\ub97c \uc801\uc6a9\ud569\ub2c8\ub2e4.", task: "map\uacfc lambda\ub97c \uc0ac\uc6a9\ud558\uc5ec [1, 2, 3, 4, 5]\uc758 \ubaa8\ub4e0 \uc22b\uc790\ub97c 3\ubc30\ub85c \ub9cc\ub4dc\uc138\uc694. \uacb0\uacfc \ub9ac\uc2a4\ud2b8\ub97c \ucd9c\ub825\ud558\uc138\uc694.", hint: "result = list(map(lambda x: x * 3, [1, 2, 3, 4, 5]))\\nprint(result)", explanation: 'lambda x: x * 3\uc740 \uac04\uacb0\ud55c \ud55c \uc904 \ud568\uc218\uc785\ub2c8\ub2e4.' },
   30: { title: "\ucd5c\uc885 \ubcf4\uc2a4: \ub370\uc774\ud130 \ud30c\uc774\ud504\ub77c\uc778", subtitle: "\ucc98\ub9ac, \ubcc0\ud658, \ucd9c\ub825", concept: "\uc2e4\uc81c \ud504\ub85c\uadf8\ub7a8\uc740 \ud328\ud134\uc744 \ub530\ub985\ub2c8\ub2e4: \uc785\ub825 \ud30c\uc2f1, \ub370\uc774\ud130 \ubcc0\ud658, \ucd9c\ub825 \uc0dd\uc131.", task: '\ud559\uc0dd \ub515\uc154\ub108\ub9ac \ub9ac\uc2a4\ud2b8(name/score)\uc5d0\uc11c \uc810\uc218\uac00 80 \uc774\uc0c1\uc778 \ud559\uc0dd\uc758 \uc774\ub984\ub9cc \ucd9c\ub825\ud558\uc138\uc694.', hint: 'for s in students:\\n    if s["score"] >= 80:\\n        print(s["name"])', explanation: '\ubc18\ubcf5, \ud544\ud130, \ucd94\ucd9c \u2014 \ubaa8\ub4e0 \uc5b8\uc5b4\uc5d0\uc11c\uc758 \ub370\uc774\ud130 \ucc98\ub9ac\uc758 \ubcf8\uc9c8\uc785\ub2c8\ub2e4.' },
 };
-const PHASE_COLORS = { 1: [C.accentDark, C.accent], 2: ["#0ea5e9", "#38bdf8"], 3: ["#f59e0b", "#fbbf24"] };
+const getPhaseColors = () => ({ 1: [C.accentDark, C.accent], 2: ["#0ea5e9", "#38bdf8"], 3: ["#f59e0b", "#fbbf24"] });
 
 // ─── LOCAL STORAGE ───
 const STORAGE_KEY = "pyithon-progress";
@@ -812,7 +882,12 @@ export default function PyithonApp() {
   const [apiKeyInput, setApiKeyInput] = useState("");
   const [offlineMode, setOfflineMode] = useState(() => localStorage.getItem("pyithon-offline") === "true");
   const [pyodideStatus, setPyodideStatus] = useState("idle"); // idle, loading, ready, error
-  const [darkMode, setDarkMode] = useState(() => localStorage.getItem("pyithon-theme") !== "light");
+  const [themeKey, setThemeKey] = useState(() => {
+    const stored = localStorage.getItem("pyithon-theme");
+    if (stored && THEMES[stored]) return stored;
+    return stored === "light" ? "light" : "dark";
+  });
+  const darkMode = THEMES[themeKey].palette.scheme === "dark";
   const editorRef = useRef(null);
   const highlightRef = useRef(null);
   const audioCtxRef = useRef(null);
@@ -866,7 +941,7 @@ export default function PyithonApp() {
   }, []);
 
   // Theme + preferences sync
-  Object.assign(C, darkMode ? DARK : LIGHT);
+  Object.assign(C, THEMES[themeKey].palette);
   useEffect(() => { localStorage.setItem("pyithon-sound", soundEnabled); }, [soundEnabled]);
   useEffect(() => { localStorage.setItem("pyithon-offline", offlineMode); }, [offlineMode]);
   // Preload Pyodide when offline mode is enabled or on first submit
@@ -876,7 +951,7 @@ export default function PyithonApp() {
       loadPyodideRuntime().then(() => setPyodideStatus("ready")).catch(() => setPyodideStatus("error"));
     }
   }, [offlineMode, pyodideStatus]);
-  useEffect(() => { localStorage.setItem("pyithon-theme", darkMode ? "dark" : "light"); }, [darkMode]);
+  useEffect(() => { localStorage.setItem("pyithon-theme", themeKey); }, [themeKey]);
   useEffect(() => { localStorage.setItem("pyithon-lang", lang); }, [lang]);
   useEffect(() => { localStorage.setItem("pyithon-provider", provider); }, [provider]);
   useEffect(() => {
@@ -1026,15 +1101,29 @@ export default function PyithonApp() {
             </button>
           </div>
 
-          {/* Theme toggle */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 0", borderBottom: `1px solid ${C.border}` }}>
-            <div>
-              <p style={{ color: C.text, fontSize: 14, fontWeight: 600, margin: 0 }}>{t(darkMode ? "darkMode" : "lightMode")} {t("modeSuffix")}</p>
-              <p style={{ color: C.textDim, fontSize: 12, margin: "2px 0 0" }}>{t("switchAppearance")}</p>
+          {/* Theme selector */}
+          <div style={{ padding: "14px 0", borderBottom: `1px solid ${C.border}` }}>
+            <p id="theme-switch-label" style={{ color: C.text, fontSize: 14, fontWeight: 600, margin: 0 }}>{t("switchAppearance")}</p>
+            <div role="radiogroup" aria-labelledby="theme-switch-label" style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
+              {Object.entries(THEMES).map(([key, { label, labelKo, colors }]) => (
+                <button key={key} role="radio" aria-checked={themeKey === key} onClick={() => setThemeKey(key)} style={{
+                  display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
+                  padding: "8px 10px", borderRadius: 10, cursor: "pointer", fontFamily: "inherit",
+                  border: themeKey === key ? `2px solid ${C.accent}` : `2px solid ${C.border}`,
+                  background: themeKey === key ? C.accentBg : "transparent",
+                  transition: "all 0.2s",
+                }}>
+                  <div style={{ display: "flex", gap: 3 }}>
+                    {colors.map((c, i) => (
+                      <div key={i} style={{ width: 16, height: 16, borderRadius: "50%", background: c, border: "1px solid rgba(255,255,255,0.1)" }} />
+                    ))}
+                  </div>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: themeKey === key ? C.accentText : C.textDim }}>
+                    {lang === "ko" ? labelKo : label}
+                  </span>
+                </button>
+              ))}
             </div>
-            <button onClick={() => setDarkMode(!darkMode)} style={toggleStyle(!darkMode)}>
-              <div style={{ width: 20, height: 20, borderRadius: "50%", background: "#fff", transition: "all 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }} />
-            </button>
           </div>
 
           {/* Language toggle */}
@@ -1200,7 +1289,7 @@ export default function PyithonApp() {
                 <div style={{
                   width: 32, height: 32, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center",
                   fontSize: 11, fontWeight: 800, letterSpacing: 1,
-                  background: `linear-gradient(135deg, ${PHASE_COLORS[phase][0]}, ${PHASE_COLORS[phase][1]})`,
+                  background: `linear-gradient(135deg, ${getPhaseColors()[phase][0]}, ${getPhaseColors()[phase][1]})`,
                   color: C.btnText,
                 }}>{PHASE_ICONS[phase]}</div>
                 <span style={{ fontSize: 14, fontWeight: 700, color: C.text, letterSpacing: -0.3 }}>{t("phaseName" + phase)}</span>
@@ -1544,7 +1633,7 @@ export default function PyithonApp() {
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
             <div style={{
               fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 20,
-              background: `linear-gradient(135deg, ${PHASE_COLORS[level.phase][0]}, ${PHASE_COLORS[level.phase][1]})`,
+              background: `linear-gradient(135deg, ${getPhaseColors()[level.phase][0]}, ${getPhaseColors()[level.phase][1]})`,
               color: C.btnText, letterSpacing: 0.5,
             }}>{t("phase")} {level.phase}</div>
             <span style={{ color: C.textDim, fontSize: 11 }}>{t("day")} {level.day}</span>
