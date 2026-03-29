@@ -106,12 +106,56 @@ const GRUVBOX = {
   btnText: "#ffffff",
 };
 
+const CATPPUCCIN = {
+  bg: "#1e1e2e", bgCard: "#252536", bgPanel: "#2a2a3c", bgSubtle: "rgba(255,255,255,0.03)",
+  bgGlass: "rgba(30,30,46,0.88)", bgGlassStrong: "rgba(30,30,46,0.95)",
+  border: "rgba(255,255,255,0.08)", borderLight: "rgba(255,255,255,0.04)", borderFocus: "rgba(203,166,247,0.35)",
+  text: "#cdd6f4", textMuted: "rgba(205,214,244,0.85)", textDim: "rgba(205,214,244,0.4)",
+  accent: "#cba6f7", accentLight: "#d4bbf9", accentDark: "#b486f0", accentDeep: "#9d6ee8",
+  accentGlow: "rgba(203,166,247,0.4)", accentGlowSoft: "rgba(203,166,247,0.15)",
+  accentText: "rgba(203,166,247,0.9)", accentTextDim: "rgba(203,166,247,0.45)",
+  accentBg: "rgba(157,110,232,0.15)", accentBorder: "rgba(157,110,232,0.3)",
+  green: "#a6e3a1", greenLight: "#c0eebb", greenBg: "rgba(166,227,161,0.1)", greenBorder: "rgba(166,227,161,0.25)",
+  red: "#f38ba8", redBg: "rgba(243,139,168,0.1)", redBorder: "rgba(243,139,168,0.25)",
+  amber: "#f9e2af", amberBg: "rgba(249,226,175,0.1)", amberBorder: "rgba(249,226,175,0.2)", amberText: "rgba(249,226,175,0.9)",
+  codeBg: "rgba(0,0,0,0.3)", codeText: "#a6e3a1",
+  lineNum: "rgba(203,166,247,0.2)", lineNumActive: "rgba(203,166,247,0.5)",
+  syntaxKeyword: "#cba6f7", syntaxString: "#a6e3a1", syntaxComment: "rgba(205,214,244,0.3)",
+  syntaxNumber: "#fab387", syntaxFunction: "#89b4fa", syntaxBuiltin: "#94e2d5",
+  dotGrid: "rgba(255,255,255,0.03)", scheme: "dark",
+  trafficRed: "rgba(243,139,168,0.5)", trafficYellow: "rgba(249,226,175,0.5)", trafficGreen: "rgba(166,227,161,0.5)",
+  btnText: "#ffffff",
+};
+
+const NORD = {
+  bg: "#2e3440", bgCard: "#3b4252", bgPanel: "#434c5e", bgSubtle: "rgba(255,255,255,0.03)",
+  bgGlass: "rgba(46,52,64,0.88)", bgGlassStrong: "rgba(46,52,64,0.95)",
+  border: "rgba(255,255,255,0.08)", borderLight: "rgba(255,255,255,0.04)", borderFocus: "rgba(136,192,208,0.35)",
+  text: "#eceff4", textMuted: "rgba(236,239,244,0.85)", textDim: "rgba(236,239,244,0.4)",
+  accent: "#88c0d0", accentLight: "#8fbcbb", accentDark: "#5e81ac", accentDeep: "#4c6c8c",
+  accentGlow: "rgba(136,192,208,0.4)", accentGlowSoft: "rgba(136,192,208,0.15)",
+  accentText: "rgba(136,192,208,0.9)", accentTextDim: "rgba(136,192,208,0.45)",
+  accentBg: "rgba(76,108,140,0.15)", accentBorder: "rgba(76,108,140,0.3)",
+  green: "#a3be8c", greenLight: "#b8d4a0", greenBg: "rgba(163,190,140,0.1)", greenBorder: "rgba(163,190,140,0.25)",
+  red: "#bf616a", redBg: "rgba(191,97,106,0.1)", redBorder: "rgba(191,97,106,0.25)",
+  amber: "#ebcb8b", amberBg: "rgba(235,203,139,0.1)", amberBorder: "rgba(235,203,139,0.2)", amberText: "rgba(235,203,139,0.9)",
+  codeBg: "rgba(0,0,0,0.25)", codeText: "#a3be8c",
+  lineNum: "rgba(136,192,208,0.2)", lineNumActive: "rgba(136,192,208,0.5)",
+  syntaxKeyword: "#81a1c1", syntaxString: "#a3be8c", syntaxComment: "rgba(236,239,244,0.3)",
+  syntaxNumber: "#b48ead", syntaxFunction: "#88c0d0", syntaxBuiltin: "#8fbcbb",
+  dotGrid: "rgba(255,255,255,0.03)", scheme: "dark",
+  trafficRed: "rgba(191,97,106,0.5)", trafficYellow: "rgba(235,203,139,0.5)", trafficGreen: "rgba(163,190,140,0.5)",
+  btnText: "#ffffff",
+};
+
 const THEMES = {
   dark: { palette: DARK, label: "Dark", labelKo: "\ub2e4\ud06c", colors: ["#08090e", "#818cf8", "#c084fc"] },
   light: { palette: LIGHT, label: "Light", labelKo: "\ub77c\uc774\ud2b8", colors: ["#f0f1f5", "#4f46e5", "#7c3aed"] },
   tokyo: { palette: TOKYO, label: "Tokyo Night", labelKo: "\ub3c4\ucfc4 \ub098\uc774\ud2b8", colors: ["#1a1b26", "#7aa2f7", "#bb9af7"] },
   love: { palette: LOVE, label: "Love", labelKo: "\ub7ec\ube0c", colors: ["#191724", "#eb6f92", "#c4a7e7"] },
   gruvbox: { palette: GRUVBOX, label: "Gruvbox", labelKo: "\uadf8\ub8e8\ubc15\uc2a4", colors: ["#1d2021", "#fe8019", "#fb4934"] },
+  catppuccin: { palette: CATPPUCCIN, label: "Catppuccin", labelKo: "\uce74\ud478\uce58\ub178", colors: ["#1e1e2e", "#cba6f7", "#f38ba8"] },
+  nord: { palette: NORD, label: "Nord", labelKo: "\ub178\ub974\ub4dc", colors: ["#2e3440", "#88c0d0", "#b48ead"] },
 };
 
 // Mutable theme reference — updated by component
