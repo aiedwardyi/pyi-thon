@@ -1355,13 +1355,13 @@ export default function PyithonApp() {
                       transition: "all 0.2s ease",
                       ...(unlocked && !curr ? {} : {}),
                     }}
-                      onMouseEnter={e => { if (unlocked) { e.currentTarget.style.background = curr ? "rgba(79,70,229,0.18)" : done ? "rgba(16,185,129,0.12)" : "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = curr ? C.accent : done ? C.green : C.borderFocus; e.currentTarget.style.transform = "translateX(4px)"; }}}
-                      onMouseLeave={e => { if (unlocked) { e.currentTarget.style.background = curr ? C.accentBg : done ? C.greenBg : "rgba(255,255,255,0.015)"; e.currentTarget.style.borderColor = curr ? C.accentBorder : done ? C.greenBorder : C.border; e.currentTarget.style.transform = "translateX(0)"; }}}
+                      onMouseEnter={e => { if (unlocked) { e.currentTarget.style.background = curr ? C.accentBg : done ? C.greenBg : "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = curr ? C.accent : done ? C.green : C.borderFocus; e.currentTarget.style.transform = "translateX(4px)"; e.currentTarget.style.filter = "brightness(1.3)"; }}}
+                      onMouseLeave={e => { if (unlocked) { e.currentTarget.style.background = curr ? C.accentBg : done ? C.greenBg : "rgba(255,255,255,0.015)"; e.currentTarget.style.borderColor = curr ? C.accentBorder : done ? C.greenBorder : C.border; e.currentTarget.style.transform = "translateX(0)"; e.currentTarget.style.filter = "none"; }}}
                     >
                       <div style={{
                         width: 40, height: 40, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center",
                         fontSize: 13, fontWeight: 700, flexShrink: 0,
-                        background: done ? "rgba(16,185,129,0.15)" : curr ? C.accentBg : "rgba(255,255,255,0.03)",
+                        background: done ? C.greenBg : curr ? C.accentBg : "rgba(255,255,255,0.03)",
                         color: done ? C.green : curr ? C.accent : C.textDim,
                         border: `1px solid ${done ? C.greenBorder : curr ? C.accentBorder : "transparent"}`,
                       }}>
