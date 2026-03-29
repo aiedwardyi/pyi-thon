@@ -67,34 +67,22 @@ Most Python tutorials make you read. Pyi-thon makes you **write**.
 
 ## Themes
 
-Switch instantly from the settings panel.
+7 built-in themes. Switch instantly from settings.
 
 <table>
   <tr>
-    <td align="center">
-      <img src="screenshots/theme-dark.png" width="400" /><br />
-      <img src="https://img.shields.io/badge/-Dark-08090e?style=for-the-badge&labelColor=08090e" />
-    </td>
-    <td align="center">
-      <img src="screenshots/theme-light.png" width="400" /><br />
-      <img src="https://img.shields.io/badge/-Light-f0f1f5?style=for-the-badge&labelColor=f0f1f5&color=4f46e5" />
-    </td>
+    <td align="center"><img src="screenshots/theme-dark.png" width="250" /><br /><img src="https://img.shields.io/badge/-Dark-08090e?style=flat-square&labelColor=08090e" /></td>
+    <td align="center"><img src="screenshots/theme-light.png" width="250" /><br /><img src="https://img.shields.io/badge/-Light-f0f1f5?style=flat-square&labelColor=f0f1f5&color=4f46e5" /></td>
+    <td align="center"><img src="screenshots/theme-tokyo.png" width="250" /><br /><img src="https://img.shields.io/badge/-Tokyo%20Night-1a1b26?style=flat-square&labelColor=1a1b26&color=7aa2f7" /></td>
   </tr>
   <tr>
-    <td align="center">
-      <img src="screenshots/theme-tokyo.png" width="400" /><br />
-      <img src="https://img.shields.io/badge/-Tokyo%20Night-1a1b26?style=for-the-badge&labelColor=1a1b26&color=7aa2f7" />
-    </td>
-    <td align="center">
-      <img src="screenshots/theme-love.png" width="400" /><br />
-      <img src="https://img.shields.io/badge/-Love-191724?style=for-the-badge&labelColor=191724&color=eb6f92" />
-    </td>
+    <td align="center"><img src="screenshots/theme-love.png" width="250" /><br /><img src="https://img.shields.io/badge/-Love-191724?style=flat-square&labelColor=191724&color=eb6f92" /></td>
+    <td align="center"><img src="screenshots/theme-gruvbox.png" width="250" /><br /><img src="https://img.shields.io/badge/-Gruvbox-1d2021?style=flat-square&labelColor=1d2021&color=fe8019" /></td>
+    <td align="center"><img src="screenshots/theme-catppuccin.png" width="250" /><br /><img src="https://img.shields.io/badge/-Catppuccin-1e1e2e?style=flat-square&labelColor=1e1e2e&color=cba6f7" /></td>
   </tr>
   <tr>
-    <td align="center" colspan="2">
-      <img src="screenshots/theme-gruvbox.png" width="400" /><br />
-      <img src="https://img.shields.io/badge/-Gruvbox-1d2021?style=for-the-badge&labelColor=1d2021&color=fe8019" />
-    </td>
+    <td align="center"><img src="screenshots/theme-nord.png" width="250" /><br /><img src="https://img.shields.io/badge/-Nord-2e3440?style=flat-square&labelColor=2e3440&color=88c0d0" /></td>
+    <td align="center" colspan="2"></td>
   </tr>
 </table>
 
@@ -107,7 +95,7 @@ Switch instantly from the settings panel.
 | **AI-Powered Evaluation** | Claude, OpenAI, or Gemini analyze your code and accept creative solutions |
 | **Offline Mode** | Works completely offline with Pyodide — no API key required |
 | **Bilingual** | Full English and Korean (한국어) interface and level content |
-| **5 Themes** | Dark, Light, Tokyo Night, Love, and Gruvbox |
+| **7 Themes** | Dark, Light, Tokyo Night, Love, Gruvbox, Catppuccin, and Nord |
 | **Gamification** | XP system, streak counter, confetti celebrations, sound effects |
 | **Syntax Highlighting** | Full Python syntax highlighting in the built-in editor |
 | **Progress Saving** | Auto-saves to localStorage — close the tab, come back later |
