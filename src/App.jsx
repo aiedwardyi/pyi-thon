@@ -1350,13 +1350,13 @@ export default function PyithonApp() {
                     <button key={l.id} onClick={() => unlocked && goToLevel(idx)} disabled={!unlocked} style={{
                       display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderRadius: 14, textAlign: "left", fontFamily: "inherit",
                       border: `1px solid ${curr ? C.accentBorder : done ? C.greenBorder : C.border}`,
-                      background: curr ? C.accentBg : done ? C.greenBg : "rgba(255,255,255,0.015)",
+                      background: curr ? C.accentBg : done ? C.bgSubtle : "rgba(255,255,255,0.015)",
                       cursor: unlocked ? "pointer" : "not-allowed", opacity: unlocked ? 1 : 0.3,
                       transition: "all 0.2s ease",
                       ...(unlocked && !curr ? {} : {}),
                     }}
-                      onMouseEnter={e => { if (unlocked) { e.currentTarget.style.background = curr ? C.accentBg : done ? C.greenBg : "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = curr ? C.accent : done ? C.green : C.borderFocus; e.currentTarget.style.transform = "translateX(4px)"; e.currentTarget.style.filter = "brightness(1.3)"; }}}
-                      onMouseLeave={e => { if (unlocked) { e.currentTarget.style.background = curr ? C.accentBg : done ? C.greenBg : "rgba(255,255,255,0.015)"; e.currentTarget.style.borderColor = curr ? C.accentBorder : done ? C.greenBorder : C.border; e.currentTarget.style.transform = "translateX(0)"; e.currentTarget.style.filter = "none"; }}}
+                      onMouseEnter={e => { if (unlocked) { e.currentTarget.style.background = curr ? C.accentBg : done ? C.bgSubtle : "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = curr ? C.accent : done ? C.green : C.borderFocus; e.currentTarget.style.transform = "translateX(4px)"; e.currentTarget.style.filter = "brightness(1.3)"; }}}
+                      onMouseLeave={e => { if (unlocked) { e.currentTarget.style.background = curr ? C.accentBg : done ? C.bgSubtle : "rgba(255,255,255,0.015)"; e.currentTarget.style.borderColor = curr ? C.accentBorder : done ? C.greenBorder : C.border; e.currentTarget.style.transform = "translateX(0)"; e.currentTarget.style.filter = "none"; }}}
                     >
                       <div style={{
                         width: 40, height: 40, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center",
