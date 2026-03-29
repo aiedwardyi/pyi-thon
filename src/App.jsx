@@ -109,7 +109,7 @@ const GRUVBOX = {
 const THEMES = {
   dark: { palette: DARK, label: "Dark", labelKo: "\ub2e4\ud06c", colors: ["#08090e", "#818cf8", "#c084fc"] },
   light: { palette: LIGHT, label: "Light", labelKo: "\ub77c\uc774\ud2b8", colors: ["#f0f1f5", "#4f46e5", "#7c3aed"] },
-  tokyo: { palette: TOKYO, label: "Tokyo", labelKo: "\ub3c4\ucfc4", colors: ["#1a1b26", "#7aa2f7", "#bb9af7"] },
+  tokyo: { palette: TOKYO, label: "Tokyo Night", labelKo: "\ub3c4\ucfc4 \ub098\uc774\ud2b8", colors: ["#1a1b26", "#7aa2f7", "#bb9af7"] },
   love: { palette: LOVE, label: "Love", labelKo: "\ub7ec\ube0c", colors: ["#191724", "#eb6f92", "#c4a7e7"] },
   gruvbox: { palette: GRUVBOX, label: "Gruvbox", labelKo: "\uadf8\ub8e8\ubc15\uc2a4", colors: ["#1d2021", "#fe8019", "#fb4934"] },
 };
@@ -1103,10 +1103,10 @@ export default function PyithonApp() {
 
           {/* Theme selector */}
           <div style={{ padding: "14px 0", borderBottom: `1px solid ${C.border}` }}>
-            <p style={{ color: C.text, fontSize: 14, fontWeight: 600, margin: 0 }}>{t("switchAppearance")}</p>
-            <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
+            <p id="theme-switch-label" style={{ color: C.text, fontSize: 14, fontWeight: 600, margin: 0 }}>{t("switchAppearance")}</p>
+            <div role="radiogroup" aria-labelledby="theme-switch-label" style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
               {Object.entries(THEMES).map(([key, { label, labelKo, colors }]) => (
-                <button key={key} onClick={() => setThemeKey(key)} style={{
+                <button key={key} role="radio" aria-checked={themeKey === key} onClick={() => setThemeKey(key)} style={{
                   display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
                   padding: "8px 10px", borderRadius: 10, cursor: "pointer", fontFamily: "inherit",
                   border: themeKey === key ? `2px solid ${C.accent}` : `2px solid ${C.border}`,
