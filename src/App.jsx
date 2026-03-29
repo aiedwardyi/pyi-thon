@@ -104,6 +104,11 @@ const STRINGS = {
     offlineWrongOutput: 'Your code outputs "{actual}" but the expected output is "{expected}".',
     offlineRunError: "Couldn't run your code. Try again.",
     offlineFallback: "Running offline — add an API key in Settings for AI feedback",
+    offlineConceptOk: "Your code uses the right concept! But the output doesn't match.",
+    offlineAlmostRight: "Almost! ",
+    offlineLineDiff: 'Line {line}: got "{got}" but expected "{exp}".',
+    offlineExtraLines: "Your output has {n} extra line(s).",
+    offlineMissingLines: "Your output is missing {n} line(s).",
   },
   ko: {
     levels: "\ub808\ubca8",
@@ -160,6 +165,11 @@ const STRINGS = {
     offlineWrongOutput: '\ucd9c\ub825\uc774 "{actual}"\uc774\uc9c0\ub9cc \uc608\uc0c1 \ucd9c\ub825\uc740 "{expected}"\uc785\ub2c8\ub2e4.',
     offlineRunError: "\ucf54\ub4dc\ub97c \uc2e4\ud589\ud560 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4. \ub2e4\uc2dc \uc2dc\ub3c4\ud558\uc138\uc694.",
     offlineFallback: "\uc624\ud504\ub77c\uc778\uc73c\ub85c \uc2e4\ud589 \uc911 — \uc124\uc815\uc5d0\uc11c API \ud0a4\ub97c \ucd94\uac00\ud558\uba74 AI \ud53c\ub4dc\ubc31\uc744 \ubc1b\uc744 \uc218 \uc788\uc2b5\ub2c8\ub2e4",
+    offlineConceptOk: "\uc62c\ubc14\ub978 \uac1c\ub150\uc744 \uc0ac\uc6a9\ud588\uc2b5\ub2c8\ub2e4! \ud558\uc9c0\ub9cc \ucd9c\ub825\uc774 \uc77c\uce58\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4.",
+    offlineAlmostRight: "\uac70\uc758 \ub2e4 \ub418\uc5c8\uc2b5\ub2c8\ub2e4! ",
+    offlineLineDiff: '{line}\ubc88\uc9f8 \uc904: "{got}" \ub300\uc2e0 "{exp}"\uc774(\uac00) \uc608\uc0c1\ub429\ub2c8\ub2e4.',
+    offlineExtraLines: "\ucd9c\ub825\uc5d0 {n}\uac1c\uc758 \ucd94\uac00 \uc904\uc774 \uc788\uc2b5\ub2c8\ub2e4.",
+    offlineMissingLines: "\ucd9c\ub825\uc5d0 {n}\uac1c\uc758 \uc904\uc774 \ubd80\uc871\ud569\ub2c8\ub2e4.",
   }
 };
 
@@ -375,6 +385,81 @@ function _getChecks(lang) {
   };
 }
 
+// Common mistakes per level - targeted hints for frequent beginner errors
+const COMMON_MISTAKES = {
+  en: {
+    1: [
+      [/print\s*[^(]/, "Don't forget the parentheses: print(...)"],
+      [/Print\(/, "Python is case-sensitive - use lowercase print()"],
+      [/hello, world/i, "Check capitalization - it should be exactly: Hello, World!"],
+      [/Hello World/, "Don't forget the comma: Hello, World!"],
+    ],
+    2: [
+      [/print\s*\(\s*["']Alice["']\s*\)/, "Don't hardcode the string - use print(name) to print the variable"],
+    ],
+    3: [
+      [/print\s*\(\s*name\s*\+\s*" is "\s*\+\s*age\s*\)/, "age is an integer - use str(age) to convert it first"],
+    ],
+    5: [
+      [/score\s*==\s*70/, "Use >= (greater than or equal) not == (equals)"],
+      [/Pass|Fail/, 'Use lowercase "pass" and "fail"'],
+    ],
+    7: [
+      [/range\s*\(\s*4\s*\)/, "range(4) only goes 0-3. Use range(5) for 0-4"],
+      [/range\s*\(\s*1\s*,\s*5\s*\)/, "range(1,5) starts at 1, but the task asks for 0-4. Use range(5)"],
+    ],
+    8: [
+      [/while .+:[\s\S]*(?!count|i|n|num|x|c)\s*[+=]/, "Make sure you increment your counter inside the while loop!"],
+      [/while\s+True/, "Use a condition like 'while count <= 5' instead of 'while True' for this level"],
+    ],
+    10: [
+      [/range\s*\(\s*5\s*\)/, "range(5) gives 0-4. Use range(1, 6) to get 1-5"],
+    ],
+    11: [
+      [/\/\//, "Use / for regular division (gives float), not // (integer division)"],
+    ],
+    26: [
+      [/for .+ in range\(5\)/, "range(5) starts at 0. Use range(1, 6) to get 1-5"],
+    ],
+  },
+  ko: {
+    1: [
+      [/print\s*[^(]/, "괄호를 잊지 마세요: print(...)"],
+      [/Print\(/, "Python은 대소문자를 구분합니다 - 소문자 print()를 사용하세요"],
+    ],
+    8: [
+      [/while .+:[\s\S]*(?!count|i|n|num|x|c)\s*[+=]/, "while 루프 안에서 카운터를 증가시키세요!"],
+    ],
+  },
+};
+
+// Build a line-by-line diff message
+function _buildDiffFeedback(actual, expected, _t) {
+  const aLines = actual.split("\n");
+  const eLines = expected.split("\n");
+  const hints = [];
+
+  // Find first differing line
+  const minLen = Math.min(aLines.length, eLines.length);
+  for (let i = 0; i < minLen; i++) {
+    if (aLines[i] !== eLines[i]) {
+      hints.push(_t("offlineLineDiff")
+        .replace("{line}", i + 1)
+        .replace("{got}", aLines[i])
+        .replace("{exp}", eLines[i]));
+      break;
+    }
+  }
+
+  if (aLines.length > eLines.length) {
+    hints.push(_t("offlineExtraLines").replace("{n}", aLines.length - eLines.length));
+  } else if (aLines.length < eLines.length) {
+    hints.push(_t("offlineMissingLines").replace("{n}", eLines.length - aLines.length));
+  }
+
+  return hints.join(" ");
+}
+
 async function evaluateOffline(userCode, level, lang) {
   const _t = (key) => STRINGS[lang]?.[key] || STRINGS.en[key] || key;
   const code = userCode.trim();
@@ -383,23 +468,55 @@ async function evaluateOffline(userCode, level, lang) {
   // Step 1: Check construct requirements (does the code use the right concept?)
   const checks = _getChecks(lang);
   const check = checks[level.id];
-  if (check) {
-    const err = check(code, code.toLowerCase());
-    if (err) return _fail(err);
+  const conceptOk = !check || !check(code, code.toLowerCase());
+  if (!conceptOk) {
+    return _fail(check(code, code.toLowerCase()));
   }
 
   // Step 2: Actually run the code with Pyodide
   try {
     const result = await runPython(code, level.simulatedInput || "");
     if (!result.success) {
+      // Check for common mistakes to give better error hints
+      const mistakes = (COMMON_MISTAKES[lang] || COMMON_MISTAKES.en)[level.id] || COMMON_MISTAKES.en[level.id] || [];
+      for (const [pattern, hint] of mistakes) {
+        if (pattern.test(code)) {
+          return { correct: false, feedback: `${_t("offlinePyError")}${result.error}\n\nHint: ${hint}`, explanation: "" };
+        }
+      }
       return { correct: false, feedback: `${_t("offlinePyError")}${result.error}`, explanation: "" };
     }
+
     const actual = result.output.trim();
     const expected = level.expectedOutput.trim();
+
+    // Exact match - perfect
     if (actual === expected) {
       return { correct: true, feedback: _t("offlineCorrect"), explanation: "" };
     }
-    // Show what they got vs what was expected
+
+    // Normalized match - accept minor whitespace differences
+    const normalizeWs = (s) => s.replace(/\s+$/gm, "").replace(/\n+$/, "");
+    if (normalizeWs(actual) === normalizeWs(expected)) {
+      return { correct: true, feedback: _t("offlineCorrect"), explanation: "" };
+    }
+
+    // Check common mistakes for targeted hints
+    const mistakes = (COMMON_MISTAKES[lang] || COMMON_MISTAKES.en)[level.id] || COMMON_MISTAKES.en[level.id] || [];
+    for (const [pattern, hint] of mistakes) {
+      if (pattern.test(code)) {
+        const diff = _buildDiffFeedback(actual, expected, _t);
+        return { correct: false, feedback: `${_t("offlineAlmostRight")}${hint}${diff ? "\n\n" + diff : ""}`, explanation: "" };
+      }
+    }
+
+    // Partial credit - concept is right but output is wrong
+    const diff = _buildDiffFeedback(actual, expected, _t);
+    if (diff) {
+      return { correct: false, feedback: `${_t("offlineConceptOk")} ${diff}`, explanation: "" };
+    }
+
+    // Fallback - generic wrong output
     return { correct: false, feedback: _t("offlineWrongOutput").replace("{actual}", actual).replace("{expected}", expected), explanation: "" };
   } catch (err) {
     return { correct: false, feedback: _t("offlineRunError"), explanation: "" };
