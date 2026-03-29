@@ -65,6 +65,39 @@ Most Python tutorials make you read. Pyi-thon makes you **write**.
   </tr>
 </table>
 
+## Themes
+
+Switch instantly from the settings panel.
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="screenshots/theme-dark.png" width="400" /><br />
+      <img src="https://img.shields.io/badge/-Dark-08090e?style=for-the-badge&labelColor=08090e" />
+    </td>
+    <td align="center">
+      <img src="screenshots/theme-light.png" width="400" /><br />
+      <img src="https://img.shields.io/badge/-Light-f0f1f5?style=for-the-badge&labelColor=f0f1f5&color=4f46e5" />
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="screenshots/theme-tokyo.png" width="400" /><br />
+      <img src="https://img.shields.io/badge/-Tokyo%20Night-1a1b26?style=for-the-badge&labelColor=1a1b26&color=7aa2f7" />
+    </td>
+    <td align="center">
+      <img src="screenshots/theme-love.png" width="400" /><br />
+      <img src="https://img.shields.io/badge/-Love-191724?style=for-the-badge&labelColor=191724&color=eb6f92" />
+    </td>
+  </tr>
+  <tr>
+    <td align="center" colspan="2">
+      <img src="screenshots/theme-gruvbox.png" width="400" /><br />
+      <img src="https://img.shields.io/badge/-Gruvbox-1d2021?style=for-the-badge&labelColor=1d2021&color=fe8019" />
+    </td>
+  </tr>
+</table>
+
 ## Features
 
 | Feature | Description |
@@ -74,7 +107,7 @@ Most Python tutorials make you read. Pyi-thon makes you **write**.
 | **AI-Powered Evaluation** | Claude, OpenAI, or Gemini analyze your code and accept creative solutions |
 | **Offline Mode** | Works completely offline with Pyodide — no API key required |
 | **Bilingual** | Full English and Korean (한국어) interface and level content |
-| **Dark & Light Themes** | Beautiful, polished UI in both modes |
+| **5 Themes** | Dark, Light, Tokyo Night, Love, and Gruvbox |
 | **Gamification** | XP system, streak counter, confetti celebrations, sound effects |
 | **Syntax Highlighting** | Full Python syntax highlighting in the built-in editor |
 | **Progress Saving** | Auto-saves to localStorage — close the tab, come back later |
