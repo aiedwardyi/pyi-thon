@@ -150,6 +150,8 @@ You write Python  →  Submit  →  AI or Pyodide evaluates  →  Feedback + XP
 
 For lessons that teach `input()`, offline checks use built-in sample inputs shown in the lesson UI and result panel so the expected output stays reproducible on mobile and desktop.
 
+The URL-driven QA/debug mode is limited to local/dev environments so shared production links cannot auto-run test payloads.
+
 **AI mode** sends your code to your chosen provider for nuanced evaluation. It accepts creative solutions, different variable names, and alternative approaches, as long as you use the concept being taught.
 
 ## Project Structure
