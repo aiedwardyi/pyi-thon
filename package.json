@@ -7,13 +7,15 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node test/run-tests.js"
+    "test": "node test/run-tests.js",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.0",
     "@vitejs/plugin-react": "^4.2.0",
     "vite": "^5.4.0"
   }
