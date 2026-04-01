@@ -1249,7 +1249,7 @@ export default function PyithonApp() {
     return (
       <div style={{ ...pageStyle, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 32, position: "relative" }}>
         {/* Clickable backdrop */}
-        <div onClick={() => setShowApiSetup(false)} style={{ position: "fixed", inset: 0, background: darkMode ? "rgba(0,0,0,0.5)" : "rgba(0,0,0,0.2)", backdropFilter: "blur(8px)", zIndex: 0 }} />
+        <div data-testid="settings-backdrop" onClick={() => setShowApiSetup(false)} style={{ position: "fixed", inset: 0, background: darkMode ? "rgba(0,0,0,0.5)" : "rgba(0,0,0,0.2)", backdropFilter: "blur(8px)", zIndex: 0 }} />
         <div style={{
           maxWidth: 440, width: "100%", background: C.bgGlass, backdropFilter: "blur(24px)",
           border: `1px solid ${C.border}`, borderRadius: 20, padding: 32,
@@ -1258,7 +1258,7 @@ export default function PyithonApp() {
         }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
             <h2 style={{ color: C.text, fontSize: 20, fontWeight: 700, margin: 0, letterSpacing: -0.5 }}>{t("settings")}</h2>
-            <button onClick={() => setShowApiSetup(false)} style={{ color: C.textDim, background: "none", border: "none", cursor: "pointer", padding: 4 }}>
+            <button aria-label="Close settings" data-testid="close-settings" onClick={() => setShowApiSetup(false)} style={{ color: C.textDim, background: "none", border: "none", cursor: "pointer", padding: 4 }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
@@ -1296,7 +1296,7 @@ export default function PyithonApp() {
             </div>
             <div style={{ display: "flex", gap: 4 }}>
               {[["en", "EN"], ["ko", "\ud55c\uad6d\uc5b4"]].map(([code, label]) => (
-                <button key={code} onClick={() => setLang(code)} style={{
+                <button key={code} data-testid={`lang-${code}`} onClick={() => setLang(code)} style={{
                   padding: "6px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600,
                   border: `1px solid ${lang === code ? C.accentBorder : C.border}`,
                   background: lang === code ? C.accentBg : "transparent",
@@ -1797,7 +1797,7 @@ export default function PyithonApp() {
                 : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
               }
             </button>
-            <button onClick={() => setShowApiSetup(true)} style={{
+            <button aria-label="Open settings" data-testid="open-settings" onClick={() => setShowApiSetup(true)} style={{
               color: C.textDim, background: "none", border: "none", cursor: "pointer",
               fontSize: 14, padding: 4, transition: "color 0.2s",
             }}
@@ -1898,7 +1898,7 @@ export default function PyithonApp() {
           )}
 
           {showHint && (
-            <div style={{
+            <div data-testid="hint-panel" style={{
               marginTop: 10, background: C.amberBg, border: `1px solid ${C.amberBorder}`,
               borderRadius: 12, padding: "12px 16px",
               animation: "fadeSlideUp 0.3s ease-out",
