@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { buildDiffFeedback, buildMismatchFeedback } from "./offlineEvaluation";
 
 // ─── COLOR PALETTES ───
 const DARK = {
@@ -223,6 +224,21 @@ const STRINGS = {
     offlineLineDiff: 'Line {line}: got "{got}" but expected "{exp}".',
     offlineExtraLines: "Your output has {n} extra line(s).",
     offlineMissingLines: "Your output is missing {n} line(s).",
+    sampleInput: "Sample Input",
+    sampleInputUsed: "Sample input used for this run",
+    offlineInputMismatch: "This lesson is checked with built-in sample input, so you will not type interactively in the runner.",
+    niceWork: "Nice work!",
+    generalError: "Error",
+    apiKeyInvalidExpired: "Your API key is invalid or expired. Go to Settings to enter a new key, or switch to Offline mode.",
+    apiRateLimited: "Rate limit reached. Wait a moment and try again, or switch to Offline mode.",
+    apiOverloaded: "The {provider} API is temporarily overloaded. Try again in a minute, or switch to Offline mode.",
+    apiStatusError: "Something went wrong (error {status}). Check your API key in Settings, or switch to Offline mode.",
+    apiKeyInvalid: "Your API key is invalid. Go to Settings to update it, or switch to Offline mode.",
+    apiGenericError: "Something went wrong with the API. Try again, or switch to Offline mode.",
+    apiEmptyResponse: "Got an empty response from {provider}. Check your API key in Settings.",
+    apiParseError: "Could not parse response.",
+    apiParseRaw: "Raw",
+    apiTimeout: "Request timed out. Check your internet/API provider, then try again or switch to Offline mode.",
   },
   ko: {
     levels: "\ub808\ubca8",
@@ -284,6 +300,21 @@ const STRINGS = {
     offlineLineDiff: '{line}\ubc88\uc9f8 \uc904: "{got}" \ub300\uc2e0 "{exp}"\uc774(\uac00) \uc608\uc0c1\ub429\ub2c8\ub2e4.',
     offlineExtraLines: "\ucd9c\ub825\uc5d0 {n}\uac1c\uc758 \ucd94\uac00 \uc904\uc774 \uc788\uc2b5\ub2c8\ub2e4.",
     offlineMissingLines: "\ucd9c\ub825\uc5d0 {n}\uac1c\uc758 \uc904\uc774 \ubd80\uc871\ud569\ub2c8\ub2e4.",
+    sampleInput: "\uc608\uc2dc \uc785\ub825",
+    sampleInputUsed: "\uc774\ubc88 \uc2e4\ud589\uc5d0 \uc0ac\uc6a9\ub41c \uc608\uc2dc \uc785\ub825",
+    offlineInputMismatch: "\uc774 \ub808\uc2a8\uc740 \ucc44\uc810 \uc2dc \ub0b4\uc7a5 \uc608\uc2dc \uc785\ub825\uc744 \uc0ac\uc6a9\ud558\ubbc0\ub85c \ub7ec\ub108\uc5d0\uc11c \uc9c1\uc811 \uc785\ub825\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4.",
+    niceWork: "\uc798\ud588\uc5b4\uc694!",
+    generalError: "\uc624\ub958",
+    apiKeyInvalidExpired: "API \ud0a4\uac00 \uc798\ubabb\ub418\uc5c8\uac70\ub098 \ub9cc\ub8cc\ub418\uc5c8\uc2b5\ub2c8\ub2e4. \uc124\uc815\uc5d0\uc11c \uc0c8 \ud0a4\ub97c \uc785\ub825\ud558\uac70\ub098 \uc624\ud504\ub77c\uc778 \ubaa8\ub4dc\ub85c \uc804\ud658\ud558\uc138\uc694.",
+    apiRateLimited: "\uc694\uccad \ud55c\ub3c4\uc5d0 \ub3c4\ub2ec\ud588\uc2b5\ub2c8\ub2e4. \uc7a0\uc2dc \ud6c4 \ub2e4\uc2dc \uc2dc\ub3c4\ud558\uac70\ub098 \uc624\ud504\ub77c\uc778 \ubaa8\ub4dc\ub85c \uc804\ud658\ud558\uc138\uc694.",
+    apiOverloaded: "{provider} API\uac00 \uc77c\uc2dc\uc801\uc73c\ub85c \uacfc\ubd80\ud558\uc785\ub2c8\ub2e4. 1\ubd84 \ud6c4 \ub2e4\uc2dc \uc2dc\ub3c4\ud558\uac70\ub098 \uc624\ud504\ub77c\uc778 \ubaa8\ub4dc\ub85c \uc804\ud658\ud558\uc138\uc694.",
+    apiStatusError: "\ubb38\uc81c\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4 (error {status}). \uc124\uc815\uc5d0\uc11c API \ud0a4\ub97c \ud655\uc778\ud558\uac70\ub098 \uc624\ud504\ub77c\uc778 \ubaa8\ub4dc\ub85c \uc804\ud658\ud558\uc138\uc694.",
+    apiKeyInvalid: "API \ud0a4\uac00 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4. \uc124\uc815\uc5d0\uc11c \uc5c5\ub370\uc774\ud2b8\ud558\uac70\ub098 \uc624\ud504\ub77c\uc778 \ubaa8\ub4dc\ub85c \uc804\ud658\ud558\uc138\uc694.",
+    apiGenericError: "API \ucc98\ub9ac \uc911 \ubb38\uc81c\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4. \ub2e4\uc2dc \uc2dc\ub3c4\ud558\uac70\ub098 \uc624\ud504\ub77c\uc778 \ubaa8\ub4dc\ub85c \uc804\ud658\ud558\uc138\uc694.",
+    apiEmptyResponse: "{provider}\uc5d0\uc11c \ube48 \uc751\ub2f5\uc774 \ub3cc\uc544\uc654\uc2b5\ub2c8\ub2e4. \uc124\uc815\uc5d0\uc11c API \ud0a4\ub97c \ud655\uc778\ud558\uc138\uc694.",
+    apiParseError: "\uc751\ub2f5\uc744 \ud574\uc11d\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4.",
+    apiParseRaw: "\uc6d0\ubcf8 \uc751\ub2f5",
+    apiTimeout: "\uc694\uccad \uc2dc\uac04\uc774 \ucd08\uacfc\ub418\uc5c8\uc2b5\ub2c8\ub2e4. \ub124\ud2b8\uc6cc\ud06c \ub610\ub294 API \uc81c\uacf5\uc790 \uc0c1\ud0dc\ub97c \ud655\uc778\ud55c \ub4a4 \ub2e4\uc2dc \uc2dc\ub3c4\ud558\uac70\ub098 \uc624\ud504\ub77c\uc778 \ubaa8\ub4dc\ub85c \uc804\ud658\ud558\uc138\uc694.",
   }
 };
 
@@ -556,33 +587,6 @@ const COMMON_MISTAKES = {
   },
 };
 
-// Build a line-by-line diff message
-function _buildDiffFeedback(actual, expected, _t) {
-  const aLines = actual.split("\n");
-  const eLines = expected.split("\n");
-  const hints = [];
-
-  // Find first differing line
-  const minLen = Math.min(aLines.length, eLines.length);
-  for (let i = 0; i < minLen; i++) {
-    if (aLines[i] !== eLines[i]) {
-      hints.push(_t("offlineLineDiff")
-        .replace("{line}", i + 1)
-        .replace("{got}", aLines[i])
-        .replace("{exp}", eLines[i]));
-      break;
-    }
-  }
-
-  if (aLines.length > eLines.length) {
-    hints.push(_t("offlineExtraLines").replace("{n}", aLines.length - eLines.length));
-  } else if (aLines.length < eLines.length) {
-    hints.push(_t("offlineMissingLines").replace("{n}", eLines.length - aLines.length));
-  }
-
-  return hints.join(" ");
-}
-
 async function evaluateOffline(userCode, level, lang) {
   const _t = (key) => STRINGS[lang]?.[key] || STRINGS.en[key] || key;
   const code = userCode.trim();
@@ -629,19 +633,48 @@ async function evaluateOffline(userCode, level, lang) {
     const mistakes = (COMMON_MISTAKES[lang] || COMMON_MISTAKES.en)[level.id] || COMMON_MISTAKES.en[level.id] || [];
     for (const [pattern, hint] of mistakes) {
       if (pattern.test(code)) {
-        const diff = _buildDiffFeedback(actual, expected, _t);
-        return { correct: false, feedback: `${_t("offlineAlmostRight")}${hint}${diff ? "\n\n" + diff : ""}`, explanation: "" };
+        return {
+          correct: false,
+          feedback: buildMismatchFeedback({
+            actual,
+            expected,
+            sampleInput: level.simulatedInput || "",
+            t: _t,
+            prefix: `${_t("offlineAlmostRight")}${hint}`,
+          }),
+          explanation: ""
+        };
       }
     }
 
     // Partial credit - concept is right but output is wrong
-    const diff = _buildDiffFeedback(actual, expected, _t);
+    const diff = buildDiffFeedback(actual, expected, _t);
     if (diff) {
-      return { correct: false, feedback: `${_t("offlineConceptOk")} ${diff}`, explanation: "" };
+      return {
+        correct: false,
+        feedback: buildMismatchFeedback({
+          actual,
+          expected,
+          sampleInput: level.simulatedInput || "",
+          t: _t,
+          prefix: _t("offlineConceptOk"),
+        }),
+        explanation: ""
+      };
     }
 
     // Fallback - generic wrong output
-    return { correct: false, feedback: _t("offlineWrongOutput").replace("{actual}", actual).replace("{expected}", expected), explanation: "" };
+    return {
+      correct: false,
+      feedback: buildMismatchFeedback({
+        actual,
+        expected,
+        sampleInput: level.simulatedInput || "",
+        t: _t,
+        prefix: _t("offlineWrongOutput").replace("{actual}", actual).replace("{expected}", expected),
+      }),
+      explanation: ""
+    };
   } catch (err) {
     return { correct: false, feedback: _t("offlineRunError"), explanation: "" };
   }
@@ -690,6 +723,39 @@ function highlightPython(code) {
     tokens.push({ text: code.slice(lastIndex), color: null });
   }
   return tokens;
+}
+
+function getQaConfig() {
+  if (typeof window === "undefined") return null;
+  const params = new URLSearchParams(window.location.search);
+  if (!params.has("qa")) return null;
+
+  const parseList = (value) => (value || "")
+    .split(",")
+    .map(v => Number(v.trim()))
+    .filter(v => Number.isFinite(v) && v > 0);
+
+  let code = "";
+  const codeB64 = params.get("qaCodeB64");
+  if (codeB64) {
+    try {
+      code = decodeURIComponent(escape(window.atob(codeB64)));
+    } catch {
+      code = "";
+    }
+  }
+
+  const levelId = Number(params.get("qaLevel"));
+  return {
+    enabled: true,
+    levelId: Number.isFinite(levelId) ? levelId : null,
+    lang: params.get("qaLang") || null,
+    offline: params.get("qaOffline") === "1",
+    skipWelcome: params.get("qaSkipWelcome") !== "0",
+    autoRun: params.get("qaAutoRun") === "1",
+    code,
+    completedLevels: parseList(params.get("qaCompleted")),
+  };
 }
 
 // ─── LEVEL DATA ───
@@ -775,6 +841,7 @@ function saveProgress(data) {
 // ─── AI EVALUATOR (multi-provider, with timeout + error handling) ───
 async function evaluateWithAI(userCode, level, apiKey, lang, provider) {
   const providerConfig = AI_PROVIDERS[provider];
+  const _t = (key) => STRINGS[lang]?.[key] || STRINGS.en[key] || key;
 
   const prompt = `You are a Python code evaluator for an educational platform. Evaluate if the student's code is correct AND uses the concept being taught.
 
@@ -855,10 +922,10 @@ Does this code use the required concept AND produce the correct output? Respond 
 
     if (!response.ok) {
       const status = response.status;
-      if (status === 401) return { correct: false, feedback: "Your API key is invalid or expired. Go to Settings to enter a new key, or switch to Offline mode.", explanation: "" };
-      if (status === 429) return { correct: false, feedback: "Rate limit reached. Wait a moment and try again, or switch to Offline mode.", explanation: "" };
-      if (status === 529 || status === 503) return { correct: false, feedback: `The ${providerConfig.name} API is temporarily overloaded. Try again in a minute, or switch to Offline mode.`, explanation: "" };
-      return { correct: false, feedback: `Something went wrong (error ${status}). Check your API key in Settings, or switch to Offline mode.`, explanation: "" };
+      if (status === 401) return { correct: false, feedback: _t("apiKeyInvalidExpired"), explanation: "" };
+      if (status === 429) return { correct: false, feedback: _t("apiRateLimited"), explanation: "" };
+      if (status === 529 || status === 503) return { correct: false, feedback: _t("apiOverloaded").replace("{provider}", providerConfig.name), explanation: "" };
+      return { correct: false, feedback: _t("apiStatusError").replace("{status}", status), explanation: "" };
     }
 
     const data = await response.json();
@@ -868,24 +935,24 @@ Does this code use the required concept AND produce the correct output? Respond 
     if (provider === "claude") {
       if (data.error) {
         const msg = data.error.message || "";
-        if (msg.includes("invalid") || msg.includes("auth")) return { correct: false, feedback: "Your API key is invalid. Go to Settings to update it, or switch to Offline mode.", explanation: "" };
-        return { correct: false, feedback: "Something went wrong with the API. Try again, or switch to Offline mode.", explanation: "" };
+        if (msg.includes("invalid") || msg.includes("auth")) return { correct: false, feedback: _t("apiKeyInvalid"), explanation: "" };
+        return { correct: false, feedback: _t("apiGenericError"), explanation: "" };
       }
       text = (data.content || []).map(b => b.text || "").join("").trim();
     } else if (provider === "openai") {
       if (data.error) {
-        return { correct: false, feedback: data.error.message || "Something went wrong with the API.", explanation: "" };
+        return { correct: false, feedback: _t("apiGenericError"), explanation: "" };
       }
       text = data.choices?.[0]?.message?.content?.trim() || "";
     } else if (provider === "gemini") {
       if (data.error) {
-        return { correct: false, feedback: data.error.message || "Something went wrong with the API.", explanation: "" };
+        return { correct: false, feedback: _t("apiGenericError"), explanation: "" };
       }
       text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
     }
 
     if (!text) {
-      return { correct: false, feedback: `Got an empty response from ${providerConfig.name}. Check your API key in Settings.`, explanation: "" };
+      return { correct: false, feedback: _t("apiEmptyResponse").replace("{provider}", providerConfig.name), explanation: "" };
     }
 
     const clean = text.replace(/```json|```/g, "").trim();
@@ -893,21 +960,23 @@ Does this code use the required concept AND produce the correct output? Respond 
       return JSON.parse(clean);
     } catch {
       if (text.toLowerCase().includes('"correct": true') || text.toLowerCase().includes('"correct":true')) {
-        return { correct: true, feedback: "Nice work!", explanation: "" };
+        return { correct: true, feedback: _t("niceWork"), explanation: "" };
       }
-      return { correct: false, feedback: "Could not parse response.", explanation: "Raw: " + text.substring(0, 200) };
+      return { correct: false, feedback: _t("apiParseError"), explanation: `${_t("apiParseRaw")}: ${text.substring(0, 200)}` };
     }
   } catch (err) {
     clearTimeout(timeout);
     if (err.name === "AbortError") {
-      return { correct: false, feedback: "Request timed out. Check your internet connection, or switch to Offline mode.", explanation: "" };
+      return { correct: false, feedback: _t("apiTimeout"), explanation: "" };
     }
-    return { correct: false, feedback: `Couldn't connect to ${providerConfig.name}. Check your internet connection, or switch to Offline mode.`, explanation: "" };
+    return { correct: false, feedback: `${_t("apiGenericError")} (${providerConfig.name})`, explanation: "" };
   }
 }
 
 // ─── MAIN APP ───
 export default function PyithonApp() {
+  const qaConfigRef = useRef(getQaConfig());
+  const qaAutorunRef = useRef(false);
   const [currentLevel, setCurrentLevel] = useState(0);
   const [code, setCode] = useState(LEVELS[0].starterCode);
   const [showHint, setShowHint] = useState(false);
@@ -937,6 +1006,7 @@ export default function PyithonApp() {
   const audioCtxRef = useRef(null);
   const [tab, setTab] = useState("editor");
   const [isWide, setIsWide] = useState(window.innerWidth >= 900);
+  const [isCompactMobile, setIsCompactMobile] = useState(window.innerWidth < 430);
   const [conceptCollapsed, setConceptCollapsed] = useState(false);
   const [levelTransition, setLevelTransition] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(() => localStorage.getItem("pyithon-sound") === "true");
@@ -956,6 +1026,18 @@ export default function PyithonApp() {
 
   useEffect(() => {
     const saved = loadProgress();
+    const qaConfig = qaConfigRef.current;
+    if (qaConfig?.enabled) {
+      if (qaConfig.completedLevels.length) setCompletedLevels(new Set(qaConfig.completedLevels));
+      if (qaConfig.levelId) {
+        const levelIndex = LEVELS.findIndex(l => l.id === qaConfig.levelId);
+        if (levelIndex >= 0) setCurrentLevel(levelIndex);
+      }
+      if (qaConfig.lang && STRINGS[qaConfig.lang]) setLang(qaConfig.lang);
+      if (qaConfig.offline) setOfflineMode(true);
+      if (qaConfig.skipWelcome) setShowWelcome(false);
+      return;
+    }
     if (saved) {
       if (saved.completedLevels) setCompletedLevels(new Set(saved.completedLevels));
       if (saved.currentLevel !== undefined) setCurrentLevel(saved.currentLevel);
@@ -979,7 +1061,19 @@ export default function PyithonApp() {
   }, [currentLevel]);
 
   useEffect(() => {
-    const onResize = () => setIsWide(window.innerWidth >= 900);
+    const qaConfig = qaConfigRef.current;
+    if (!qaConfig?.enabled) return;
+    if (!qaConfig.code) return;
+    const current = LEVELS[currentLevel];
+    if (qaConfig.levelId && current.id !== qaConfig.levelId) return;
+    setCode(qaConfig.code);
+  }, [currentLevel]);
+
+  useEffect(() => {
+    const onResize = () => {
+      setIsWide(window.innerWidth >= 900);
+      setIsCompactMobile(window.innerWidth < 430);
+    };
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
@@ -1062,7 +1156,7 @@ export default function PyithonApp() {
     try {
       const result = useOffline ? await evaluateOffline(userCode, level, lang) : await evaluateWithAI(userCode, level, apiKey, lang, provider);
       if (result.correct) {
-        setFeedback({ correct: true, message: result.feedback || "Correct!", expected, aiExplanation: result.explanation });
+        setFeedback({ correct: true, message: result.feedback || t("correct"), expected, aiExplanation: result.explanation });
         const isNew = !completedLevels.has(level.id);
         if (isNew) {
           const nc = new Set(completedLevels); nc.add(level.id); setCompletedLevels(nc);
@@ -1079,7 +1173,7 @@ export default function PyithonApp() {
         playTone(330, 0.15, "triangle");
       }
     } catch (err) {
-      setFeedback({ correct: false, message: "Error: " + err.message, expected });
+      setFeedback({ correct: false, message: `${t("generalError")}: ${err.message}`, expected });
     } finally { setIsEvaluating(false); }
   }, [code, level, completedLevels, bestStreak, streak, apiKey, isEvaluating, playTone, offlineMode, lang, provider]);
 
@@ -1094,6 +1188,17 @@ export default function PyithonApp() {
   const goToLevel = (idx) => { if (idx < unlockedUpTo || completedLevels.has(LEVELS[idx].id)) { setCurrentLevel(idx); setShowLevelSelect(false); } };
 
   const filename = `level_${String(level.id).padStart(2, "0")}.py`;
+
+  useEffect(() => {
+    const qaConfig = qaConfigRef.current;
+    if (!qaConfig?.enabled || !qaConfig.autoRun || qaAutorunRef.current) return;
+    const current = LEVELS[currentLevel];
+    if (qaConfig.levelId && current.id !== qaConfig.levelId) return;
+    if (qaConfig.code && code !== qaConfig.code) return;
+    qaAutorunRef.current = true;
+    const timer = setTimeout(() => handleSubmit(), 150);
+    return () => clearTimeout(timer);
+  }, [currentLevel, code, handleSubmit]);
 
   const pageStyle = {
     minHeight: "100vh", background: C.bg, color: C.text,
@@ -1529,6 +1634,17 @@ export default function PyithonApp() {
             }}>{feedback.expected}</pre>
           </div>
 
+          {level.simulatedInput && (
+            <div style={{ marginBottom: 16 }}>
+              <p style={{ fontSize: 10, fontWeight: 700, color: C.textDim, textTransform: "uppercase", letterSpacing: 1.5, margin: "0 0 8px" }}>{t("sampleInputUsed")}</p>
+              <pre style={{
+                background: C.codeBg, borderRadius: 10, padding: 14, color: C.codeText, fontSize: 12,
+                overflowX: "auto", fontFamily: monoFont, margin: 0, whiteSpace: "pre-wrap",
+                border: `1px solid ${C.borderLight}`,
+              }}>{level.simulatedInput}</pre>
+            </div>
+          )}
+
           {/* Concept */}
           <div style={{ paddingTop: 16, borderTop: `1px solid ${C.border}` }}>
             <p style={{ fontSize: 10, fontWeight: 700, color: C.textDim, textTransform: "uppercase", letterSpacing: 1.5, margin: "0 0 6px" }}>{t("concept")}</p>
@@ -1590,18 +1706,26 @@ export default function PyithonApp() {
         background: C.bgGlassStrong, backdropFilter: "blur(24px)",
         borderBottom: `1px solid ${C.border}`,
       }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 20px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: isCompactMobile ? "wrap" : "nowrap",
+          rowGap: isCompactMobile ? 10 : 0,
+          columnGap: isCompactMobile ? 8 : 0,
+          padding: isCompactMobile ? "10px 14px" : "10px 20px",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: isCompactMobile ? 6 : 8, minWidth: 0 }}>
             <button onClick={() => setShowLevelSelect(true)} style={{
               color: C.accentText, background: "rgba(255,255,255,0.03)", border: `1px solid ${C.border}`,
-              cursor: "pointer", padding: "7px 10px", borderRadius: 10, transition: "all 0.2s",
+              cursor: "pointer", padding: isCompactMobile ? "7px 9px" : "7px 10px", borderRadius: 10, transition: "all 0.2s",
               display: "flex", alignItems: "center", gap: 6,
             }}
               onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.borderColor = C.borderFocus; }}
               onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.borderColor = C.border; }}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
-              <span style={{ fontSize: 11, fontWeight: 600 }}>{t("levels")}</span>
+              <span style={{ fontSize: 11, fontWeight: 600, display: isCompactMobile ? "none" : "inline" }}>{t("levels")}</span>
             </button>
             <svg viewBox="0 0 200 200" style={{ width: 20, height: 20, flexShrink: 0, filter: `drop-shadow(0 0 6px ${C.accentGlow})` }}>
               <defs><linearGradient id="hG" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stopColor={C.accentDeep} /><stop offset="100%" stopColor={C.accentLight} /></linearGradient></defs>
@@ -1610,10 +1734,16 @@ export default function PyithonApp() {
               <path d="M140 160 L140 60 L110 90" fill="none" stroke="url(#hG)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
               <path d="M175 160 L175 80 L145 110" fill="none" stroke="url(#hG)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            <span style={{ fontSize: 14, fontWeight: 800, color: C.accent, letterSpacing: -0.5, display: isWide ? "inline" : "none" }}>Pyi-thon</span>
+            <span style={{ fontSize: 14, fontWeight: 800, color: C.accent, letterSpacing: -0.5, display: isWide && !isCompactMobile ? "inline" : "none" }}>Pyi-thon</span>
           </div>
 
-          <div style={{ flex: 1, margin: "0 20px", maxWidth: 280 }}>
+          <div style={{
+            flex: isCompactMobile ? "1 1 100%" : 1,
+            order: isCompactMobile ? 3 : 0,
+            width: isCompactMobile ? "100%" : "auto",
+            margin: isCompactMobile ? 0 : "0 20px",
+            maxWidth: isCompactMobile ? "none" : 280,
+          }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
               <span style={{ fontSize: 11, color: C.accentTextDim, fontWeight: 600 }}>{t("levels")} {level.id}</span>
               <span style={{ fontSize: 11, color: C.accentTextDim }}>{completedLevels.size}/{LEVELS.length}</span>
@@ -1628,16 +1758,16 @@ export default function PyithonApp() {
             </div>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: isCompactMobile ? 8 : 14, flexShrink: 0, marginLeft: "auto" }}>
             {streak > 0 && <div style={{
               display: "flex", alignItems: "center", gap: 5, color: C.amber,
-              background: C.amberBg, padding: "4px 10px", borderRadius: 8,
+              background: C.amberBg, padding: isCompactMobile ? "4px 8px" : "4px 10px", borderRadius: 8,
               border: `1px solid ${C.amberBorder}`,
             }}>
               <span style={{ fontSize: 13 }}>&#x1F525;</span>
               <span style={{ fontSize: 12, fontWeight: 700 }}>{streak}</span>
             </div>}
-            <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 5, color: C.accentText, background: C.accentBg, padding: "4px 10px", borderRadius: 8, border: `1px solid ${C.accentBorder}` }}>
+            <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 5, color: C.accentText, background: C.accentBg, padding: isCompactMobile ? "4px 8px" : "4px 10px", borderRadius: 8, border: `1px solid ${C.accentBorder}` }}>
               <span style={{ fontSize: 13 }}>&#x26A1;</span>
               <span style={{ fontSize: 12, fontWeight: 700 }}>{totalXP}</span>
               {showXPFloat && <span style={{ position: "absolute", top: -8, right: -4, color: C.amber, fontSize: 12, fontWeight: 700, animation: "xpFloat 1.5s ease-out forwards", pointerEvents: "none" }}>+100</span>}
@@ -1705,6 +1835,16 @@ export default function PyithonApp() {
           <div style={{ background: "rgba(255,255,255,0.015)", border: `1px solid ${C.border}`, borderRadius: 12, padding: "12px 16px" }}>
             <p style={{ fontSize: 10, fontWeight: 700, color: C.accent, textTransform: "uppercase", letterSpacing: 1.5, margin: "0 0 6px" }}>{t("task")}</p>
             <p style={{ color: C.textMuted, fontSize: 13, lineHeight: 1.7, margin: 0 }}>{levelT.task}</p>
+            {level.simulatedInput && (
+              <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${C.borderLight}` }}>
+                <p style={{ fontSize: 10, fontWeight: 700, color: C.textDim, textTransform: "uppercase", letterSpacing: 1.5, margin: "0 0 6px" }}>{t("sampleInput")}</p>
+                <pre style={{
+                  margin: 0, whiteSpace: "pre-wrap", fontSize: 12, lineHeight: 1.6,
+                  color: C.codeText, fontFamily: monoFont, background: C.codeBg,
+                  borderRadius: 10, padding: "10px 12px", border: `1px solid ${C.borderLight}`,
+                }}>{level.simulatedInput}</pre>
+              </div>
+            )}
           </div>
         </div>
 
@@ -1762,14 +1902,16 @@ export default function PyithonApp() {
       <div style={{
         position: "sticky", bottom: 0,
         background: C.bgGlassStrong, backdropFilter: "blur(24px)",
-        borderTop: `1px solid ${C.border}`, padding: "12px 20px",
+        borderTop: `1px solid ${C.border}`, padding: isCompactMobile ? "12px 14px" : "12px 20px",
         display: "flex", alignItems: "center", gap: 8, zIndex: 30,
+        flexWrap: isCompactMobile ? "wrap" : "nowrap",
       }}>
         <button onClick={() => setShowHint(!showHint)} style={{
           padding: "10px 16px", borderRadius: 12, fontSize: 12, fontWeight: 600,
           background: C.amberBg, color: C.amber,
           border: `1px solid ${C.amberBorder}`, cursor: "pointer", fontFamily: "inherit",
           transition: "all 0.2s",
+          flex: isCompactMobile ? "1 1 calc(50% - 4px)" : "0 0 auto",
         }}
           onMouseEnter={e => { e.target.style.background = "rgba(245,158,11,0.15)"; e.target.style.transform = "translateY(-1px)"; }}
           onMouseLeave={e => { e.target.style.background = C.amberBg; e.target.style.transform = "translateY(0)"; }}
@@ -1780,13 +1922,14 @@ export default function PyithonApp() {
           background: "rgba(255,255,255,0.03)", color: C.accentTextDim,
           border: `1px solid ${C.border}`, cursor: "pointer", fontFamily: "inherit",
           transition: "all 0.2s",
+          flex: isCompactMobile ? "1 1 calc(50% - 4px)" : "0 0 auto",
         }}
           onMouseEnter={e => { e.target.style.background = "rgba(255,255,255,0.06)"; e.target.style.borderColor = C.borderFocus; e.target.style.transform = "translateY(-1px)"; }}
           onMouseLeave={e => { e.target.style.background = "rgba(255,255,255,0.03)"; e.target.style.borderColor = C.border; e.target.style.transform = "translateY(0)"; }}
         >{t("reset")}</button>
 
         <button onClick={handleSubmit} disabled={isEvaluating} style={{
-          flex: 1, padding: "12px 0", borderRadius: 12, fontSize: 14, fontWeight: 700,
+          flex: isCompactMobile ? "1 1 100%" : 1, padding: "12px 0", borderRadius: 12, fontSize: 14, fontWeight: 700,
           color: C.btnText, border: "none", fontFamily: "inherit",
           cursor: isEvaluating ? "not-allowed" : "pointer",
           background: `linear-gradient(135deg, ${C.accentDeep}, ${C.accent})`,
@@ -1805,6 +1948,7 @@ export default function PyithonApp() {
             background: C.greenBg, color: C.green,
             border: `1px solid ${C.greenBorder}`, cursor: "pointer", fontFamily: "inherit",
             transition: "all 0.2s", animation: "fadeSlideUp 0.3s ease-out",
+            flex: isCompactMobile ? "1 1 100%" : "0 0 auto",
           }}
             onMouseEnter={e => { e.target.style.background = "rgba(16,185,129,0.15)"; e.target.style.transform = "translateY(-1px)"; }}
             onMouseLeave={e => { e.target.style.background = C.greenBg; e.target.style.transform = "translateY(0)"; }}
@@ -1817,7 +1961,10 @@ export default function PyithonApp() {
           background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 12,
           padding: "10px 20px", fontSize: 13, color: C.textDim, fontWeight: 500,
           boxShadow: `0 8px 32px rgba(0,0,0,0.3)`, zIndex: 9999,
-          animation: "fadeSlideUp 0.3s ease-out", whiteSpace: "nowrap",
+          animation: "fadeSlideUp 0.3s ease-out",
+          whiteSpace: "normal",
+          maxWidth: "min(92vw, 480px)",
+          textAlign: "center",
         }}>
           {t("offlineFallback")}
         </div>
