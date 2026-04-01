@@ -148,6 +148,8 @@ You write Python  →  Submit  →  AI or Pyodide evaluates  →  Feedback + XP
 
 **Offline mode** runs your code through Pyodide (real Python compiled to WebAssembly) and checks the output against expected results. It also verifies you used the right concept — no cheating with hardcoded answers.
 
+For lessons that teach `input()`, offline checks use built-in sample inputs shown in the lesson UI and result panel so the expected output stays reproducible on mobile and desktop.
+
 **AI mode** sends your code to your chosen provider for nuanced evaluation. It accepts creative solutions, different variable names, and alternative approaches, as long as you use the concept being taught.
 
 ## Project Structure
