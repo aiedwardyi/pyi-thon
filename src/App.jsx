@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { buildDiffFeedback, buildMismatchFeedback } from "./offlineEvaluation";
+import { formatHintText } from "./hintFormatting";
 
 // ─── COLOR PALETTES ───
 const DARK = {
@@ -870,7 +871,7 @@ CONCEPT BEING TAUGHT: ${level.concept}
 TASK: ${level.task}
 EXPECTED OUTPUT: ${level.expectedOutput}
 ${level.simulatedInput ? `SIMULATED INPUT: ${level.simulatedInput}` : ""}
-REFERENCE SOLUTION: ${level.hint}
+REFERENCE SOLUTION: ${formatHintText(level.hint)}
 
 STUDENT CODE:
 \`\`\`python
@@ -1032,6 +1033,7 @@ export default function PyithonApp() {
 
   const level = LEVELS[currentLevel];
   const levelT = lang === "ko" && LEVELS_KO[level.id] ? { ...level, ...LEVELS_KO[level.id] } : level;
+  const formattedHint = formatHintText(levelT.hint);
   const unlockedUpTo = Math.max(...completedLevels, 0) + 1;
   const progressPercent = (completedLevels.size / LEVELS.length) * 100;
 
@@ -1902,7 +1904,7 @@ export default function PyithonApp() {
               animation: "fadeSlideUp 0.3s ease-out",
             }}>
               <p style={{ color: C.amberText, fontSize: 12, lineHeight: 1.7, margin: 0, whiteSpace: "pre-wrap" }}>
-                <span style={{ fontWeight: 700, marginRight: 6 }}>{t("hint")}:</span>{levelT.hint}
+                <span style={{ fontWeight: 700, marginRight: 6 }}>{t("hint")}:</span>{formattedHint}
               </p>
             </div>
           )}
