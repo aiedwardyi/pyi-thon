@@ -725,8 +725,19 @@ function highlightPython(code) {
   return tokens;
 }
 
+function decodeBase64Utf8(value) {
+  const binary = window.atob(value);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return new TextDecoder("utf-8").decode(bytes);
+}
+
 function getQaConfig() {
   if (typeof window === "undefined") return null;
+  const isLocalQaHost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+  if (!import.meta.env.DEV && !isLocalQaHost) return null;
   const params = new URLSearchParams(window.location.search);
   if (!params.has("qa")) return null;
 
@@ -739,7 +750,7 @@ function getQaConfig() {
   const codeB64 = params.get("qaCodeB64");
   if (codeB64) {
     try {
-      code = decodeURIComponent(escape(window.atob(codeB64)));
+      code = decodeBase64Utf8(codeB64);
     } catch {
       code = "";
     }
