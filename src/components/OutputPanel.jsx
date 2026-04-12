@@ -18,7 +18,7 @@ export default function OutputPanel({
   if (isEvaluating) {
     return (
       <div style={{ flex: 1, minHeight: 200 }}>
-        <div style={{
+        <div className="ui-panel-pop" style={{
           height: "100%",
           borderRadius: 14,
           border: `1px solid ${C.accentBorder}`,
@@ -48,7 +48,7 @@ export default function OutputPanel({
             </div>
             <span style={{ fontSize: 24, color: C.accent, animation: "bracketPulse 1.2s ease-in-out infinite 0.1s", display: "inline-block" }}>{`}`}</span>
           </div>
-          <p style={{ color: C.accentTextDim, fontSize: 13, fontWeight: 600, margin: 0, letterSpacing: 0.5 }}>
+          <p style={{ color: C.accentTextDim, fontSize: 13, fontWeight: 600, margin: 0, letterSpacing: 0 }}>
             {providerLabel} {t("isEvaluatingMsg")}
           </p>
         </div>
@@ -59,7 +59,7 @@ export default function OutputPanel({
   if (!feedback) {
     return (
       <div style={{ flex: 1, minHeight: 200 }}>
-        <div style={{
+        <div className="ui-panel-pop" style={{
           height: "100%",
           borderRadius: 14,
           border: `1px solid ${C.border}`,
@@ -79,7 +79,7 @@ export default function OutputPanel({
 
   return (
     <div style={{ flex: 1, minHeight: 200 }}>
-      <div style={{
+      <div className="ui-panel-pop" style={{
         height: "100%",
         borderRadius: 14,
         padding: 20,
@@ -90,6 +90,7 @@ export default function OutputPanel({
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16, paddingBottom: 16, borderBottom: `1px solid ${C.border}` }}>
           <button
             type="button"
+            className="ui-icon-pop"
             onClick={() => {
               if (!feedback.correct) setTab("editor");
             }}
@@ -123,14 +124,14 @@ export default function OutputPanel({
             <p style={{ fontSize: 13, color: C.textMuted, margin: "4px 0 0", lineHeight: 1.6 }}>{feedback.aiExplanation || feedback.message}</p>
           </div>
           {feedback.correct && (
-            <span style={{ fontSize: 12, color: C.amber, fontWeight: 700, background: C.amberBg, padding: "4px 10px", borderRadius: 8, border: `1px solid ${C.amberBorder}`, flexShrink: 0 }}>
+            <span className="ui-badge-pop" style={{ fontSize: 12, color: C.amber, fontWeight: 700, background: C.amberBg, padding: "4px 10px", borderRadius: 8, border: `1px solid ${C.amberBorder}`, flexShrink: 0 }}>
               +100 XP
             </span>
           )}
         </div>
 
         <div style={{ marginBottom: 16 }}>
-          <p style={{ fontSize: 10, fontWeight: 700, color: C.textDim, textTransform: "uppercase", letterSpacing: 1.5, margin: "0 0 8px" }}>{t("expectedOutput")}</p>
+          <p style={{ fontSize: 10, fontWeight: 700, color: C.textDim, textTransform: "uppercase", letterSpacing: 0, margin: "0 0 8px" }}>{t("expectedOutput")}</p>
           <pre style={{
             background: C.codeBg,
             borderRadius: 10,
@@ -147,7 +148,7 @@ export default function OutputPanel({
 
         {level.simulatedInput && (
           <div style={{ marginBottom: 16 }}>
-            <p style={{ fontSize: 10, fontWeight: 700, color: C.textDim, textTransform: "uppercase", letterSpacing: 1.5, margin: "0 0 8px" }}>{t("sampleInputUsed")}</p>
+            <p style={{ fontSize: 10, fontWeight: 700, color: C.textDim, textTransform: "uppercase", letterSpacing: 0, margin: "0 0 8px" }}>{t("sampleInputUsed")}</p>
             <pre style={{
               background: C.codeBg,
               borderRadius: 10,
@@ -164,13 +165,14 @@ export default function OutputPanel({
         )}
 
         <div style={{ paddingTop: 16, borderTop: `1px solid ${C.border}` }}>
-          <p style={{ fontSize: 10, fontWeight: 700, color: C.textDim, textTransform: "uppercase", letterSpacing: 1.5, margin: "0 0 6px" }}>{t("concept")}</p>
+          <p style={{ fontSize: 10, fontWeight: 700, color: C.textDim, textTransform: "uppercase", letterSpacing: 0, margin: "0 0 6px" }}>{t("concept")}</p>
           <p style={{ color: C.textDim, fontSize: 12, lineHeight: 1.7, margin: 0 }}>{levelT.explanation}</p>
         </div>
 
         {!feedback.correct && (
           <button
             type="button"
+            className="ui-pop"
             onClick={() => {
               setFeedback(null);
               setTab("editor");

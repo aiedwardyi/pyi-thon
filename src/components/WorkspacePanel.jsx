@@ -68,6 +68,7 @@ export default function WorkspacePanel({
               <button
                 key={panelKey}
                 type="button"
+                className="ui-pop-soft"
                 aria-pressed={tab === panelKey}
                 onClick={() => setTab(panelKey)}
                 style={{
@@ -99,7 +100,7 @@ export default function WorkspacePanel({
       )}
 
       {showHint && (
-        <div data-testid="hint-panel" style={{
+        <div className="ui-panel-pop" data-testid="hint-panel" style={{
           marginTop: 10,
           background: C.amberBg,
           border: `1px solid ${C.amberBorder}`,

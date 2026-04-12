@@ -29,6 +29,7 @@ export default function ActionBar({
     }}>
       <button
         type="button"
+        className="ui-pop-subtle"
         onClick={onToggleHint}
         style={{
           padding: "10px 16px",
@@ -57,6 +58,7 @@ export default function ActionBar({
 
       <button
         type="button"
+        className="ui-pop-subtle"
         onClick={handleReset}
         style={{
           padding: "10px 16px",
@@ -87,6 +89,7 @@ export default function ActionBar({
 
       <button
         type="button"
+        className="ui-pop-subtle"
         onClick={handleSubmit}
         disabled={isEvaluating}
         style={{
@@ -120,6 +123,7 @@ export default function ActionBar({
       {feedback?.correct && currentLevel < totalLevels - 1 && (
         <button
           type="button"
+          className="ui-pop-subtle"
           onClick={onGoNextLevel}
           style={{
             padding: "12px 20px",

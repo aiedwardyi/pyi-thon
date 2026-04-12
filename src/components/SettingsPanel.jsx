@@ -14,7 +14,8 @@ function toggleStyle(active, C, darkMode) {
     transition: "all 0.2s",
     display: "flex",
     alignItems: "center",
-    justifyContent: active ? "flex-end" : "flex-start",
+    justifyContent: "flex-start",
+    position: "relative",
   };
 }
 
@@ -60,8 +61,9 @@ export default function SettingsPanel({
 
   return (
     <div style={{ ...pageStyle, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 32, position: "relative", overflowY: "auto" }}>
-      <div data-testid="settings-backdrop" onClick={closeSettings} style={{ position: "fixed", inset: 0, background: darkMode ? "rgba(0,0,0,0.5)" : "rgba(0,0,0,0.2)", backdropFilter: "blur(8px)", zIndex: 0 }} />
+      <div className="ui-settings-backdrop" data-testid="settings-backdrop" onClick={closeSettings} style={{ position: "fixed", inset: 0, background: darkMode ? "rgba(0,0,0,0.5)" : "rgba(0,0,0,0.2)", backdropFilter: "blur(8px)", zIndex: 0 }} />
       <div
+        className="ui-modal-pop"
         role="dialog"
         aria-modal="true"
         aria-labelledby="settings-title"
@@ -72,8 +74,8 @@ export default function SettingsPanel({
         position: "relative", zIndex: 1, maxHeight: "calc(100vh - 64px)", overflowY: "auto",
       }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
-          <h2 id="settings-title" style={{ color: C.text, fontSize: 20, fontWeight: 700, margin: 0, letterSpacing: -0.5 }}>{t("settings")}</h2>
-          <button ref={closeButtonRef} type="button" aria-label={t("closeSettings")} data-testid="close-settings" onClick={closeSettings} style={{ color: C.textDim, background: "none", border: "none", cursor: "pointer", padding: 4 }}>
+          <h2 id="settings-title" style={{ color: C.text, fontSize: 20, fontWeight: 700, margin: 0, letterSpacing: 0 }}>{t("settings")}</h2>
+          <button ref={closeButtonRef} type="button" className="ui-icon-pop" aria-label={t("closeSettings")} data-testid="close-settings" onClick={closeSettings} style={{ color: C.textDim, background: "none", border: "none", cursor: "pointer", padding: 4 }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
@@ -82,7 +84,7 @@ export default function SettingsPanel({
           <p id="theme-switch-label" style={{ color: C.text, fontSize: 14, fontWeight: 600, margin: 0 }}>{t("switchAppearance")}</p>
           <div role="radiogroup" aria-labelledby="theme-switch-label" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(68px, 1fr))", gap: 6, marginTop: 10 }}>
             {Object.entries(THEMES).map(([key, { label, labelKo, colors }]) => (
-              <button key={key} type="button" role="radio" aria-checked={themeKey === key} onClick={() => setThemeKey(key)} style={{
+              <button key={key} type="button" className="ui-pop-soft" role="radio" aria-checked={themeKey === key} onClick={() => setThemeKey(key)} style={{
                 display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
                 padding: "6px 4px", borderRadius: 8, cursor: "pointer", fontFamily: "inherit",
                 border: themeKey === key ? `2px solid ${C.accent}` : `2px solid ${C.border}`,
@@ -109,7 +111,7 @@ export default function SettingsPanel({
           </div>
           <div role="group" aria-labelledby="language-label" aria-describedby="language-desc" style={{ display: "flex", gap: 4 }}>
             {[["en", "EN"], ["ko", "한국어"]].map(([code, label]) => (
-              <button key={code} type="button" aria-pressed={lang === code} data-testid={`lang-${code}`} onClick={() => setLang(code)} style={{
+              <button key={code} type="button" className="ui-pop-soft" aria-pressed={lang === code} data-testid={`lang-${code}`} onClick={() => setLang(code)} style={{
                 padding: "6px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600,
                 border: `1px solid ${lang === code ? C.accentBorder : C.border}`,
                 background: lang === code ? C.accentBg : "transparent",
@@ -125,8 +127,8 @@ export default function SettingsPanel({
             <p id="offline-mode-label" style={{ color: C.text, fontSize: 14, fontWeight: 600, margin: 0 }}>{t("offlineMode")}</p>
             <p id="offline-mode-desc" style={{ color: C.textDim, fontSize: 12, margin: "2px 0 0" }}>{offlineMode ? `${t("offlineDesc")}${pyodideStatus === "loading" ? ` (${t("loading")})` : pyodideStatus === "ready" ? ` (${t("ready")})` : ""}` : t("onlineDesc")}</p>
           </div>
-          <button type="button" role="switch" aria-checked={offlineMode} aria-labelledby="offline-mode-label" aria-describedby="offline-mode-desc" onClick={() => setOfflineMode(!offlineMode)} style={toggleStyle(offlineMode, C, darkMode)}>
-            <div style={{ width: 20, height: 20, borderRadius: "50%", background: "#fff", transition: "all 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }} />
+          <button type="button" className="ui-pop" role="switch" aria-checked={offlineMode} aria-labelledby="offline-mode-label" aria-describedby="offline-mode-desc" onClick={() => setOfflineMode(!offlineMode)} style={toggleStyle(offlineMode, C, darkMode)}>
+            <div className="ui-toggle-knob" style={{ width: 20, height: 20, borderRadius: "50%", background: "#fff", transition: "all 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)", transform: offlineMode ? "translateX(20px)" : "translateX(0)" }} />
           </button>
         </div>
 
@@ -138,7 +140,7 @@ export default function SettingsPanel({
             </div>
             <div role="group" aria-labelledby="provider-label" aria-describedby="provider-desc" style={{ display: "flex", gap: 4 }}>
               {Object.entries(AI_PROVIDERS).map(([key, prov]) => (
-                <button key={key} type="button" aria-pressed={provider === key} onClick={() => setProvider(key)} style={{
+                <button key={key} type="button" className="ui-pop-soft" aria-pressed={provider === key} onClick={() => setProvider(key)} style={{
                   padding: "6px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600,
                   border: `1px solid ${provider === key ? C.accentBorder : C.border}`,
                   background: provider === key ? C.accentBg : "transparent",
@@ -169,7 +171,7 @@ export default function SettingsPanel({
               onBlur={(event) => { event.target.style.borderColor = C.border; }}
               onKeyDown={(event) => event.key === "Enter" && handleSaveApiKey()}
             />
-            <button type="button" onClick={handleSaveApiKey} style={{
+            <button type="button" className="ui-pop" onClick={handleSaveApiKey} style={{
               width: "100%", padding: "12px 0", borderRadius: 12,
               background: `linear-gradient(135deg, ${C.accentDeep}, ${C.accent})`,
               color: "#fff", border: "none", cursor: "pointer", fontFamily: "inherit",
