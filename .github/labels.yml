@@ -1,0 +1,43 @@
+- name: bug
+  color: d73a4a
+  description: Broken behavior or regression
+
+- name: enhancement
+  color: a2eeef
+  description: Product improvement or new capability
+
+- name: documentation
+  color: 0075ca
+  description: Documentation-only work
+
+- name: accessibility
+  color: 5319e7
+  description: Keyboard, focus, screen reader, contrast, or reduced-motion work
+
+- name: ui-polish
+  color: c5def5
+  description: Visual, layout, animation, or interaction polish
+
+- name: curriculum
+  color: fef2c0
+  description: Lesson structure, concepts, or explanations
+
+- name: new-level
+  color: fbca04
+  description: New Python exercise proposal or implementation
+
+- name: security
+  color: ee0701
+  description: Security hardening that does not require private disclosure
+
+- name: dependencies
+  color: 0366d6
+  description: Dependency or GitHub Actions maintenance
+
+- name: release
+  color: 0e8a16
+  description: Changelog, packaging, tagging, or release workflow work
+
+- name: needs-triage
+  color: ededed
+  description: Needs maintainer review before planning

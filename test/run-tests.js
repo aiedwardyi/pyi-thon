@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 
 import { buildDiffFeedback, buildMismatchFeedback } from "../src/offlineEvaluation.js";
+import "./ai-evaluation.test.js";
+import "./client-secrets.test.js";
 import "./hint-formatting.test.js";
+import "./public-assets.test.js";
 
 const STRINGS = {
   offlineLineDiff: 'Line {line}: got "{got}" but expected "{exp}".',
