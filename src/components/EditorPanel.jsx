@@ -124,7 +124,7 @@ export default function EditorPanel({
                 caretColor: C.accent,
                 zIndex: 1,
               }}
-              placeholder="# Write your Python code here..."
+              placeholder={t("editorPlaceholder")}
               onScroll={(event) => {
                 if (!highlightRef.current) return;
                 highlightRef.current.scrollTop = event.currentTarget.scrollTop;

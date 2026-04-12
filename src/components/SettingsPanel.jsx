@@ -73,7 +73,7 @@ export default function SettingsPanel({
       }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
           <h2 id="settings-title" style={{ color: C.text, fontSize: 20, fontWeight: 700, margin: 0, letterSpacing: -0.5 }}>{t("settings")}</h2>
-          <button ref={closeButtonRef} type="button" aria-label="Close settings" data-testid="close-settings" onClick={closeSettings} style={{ color: C.textDim, background: "none", border: "none", cursor: "pointer", padding: 4 }}>
+          <button ref={closeButtonRef} type="button" aria-label={t("closeSettings")} data-testid="close-settings" onClick={closeSettings} style={{ color: C.textDim, background: "none", border: "none", cursor: "pointer", padding: 4 }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
