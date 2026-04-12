@@ -79,7 +79,6 @@ export default function WorkspacePanel({
                   border: `1px solid ${tab === panelKey ? C.accentBorder : "transparent"}`,
                   cursor: "pointer",
                   fontFamily: "inherit",
-                  transition: "all 0.2s",
                   background: tab === panelKey ? C.accentBg : "transparent",
                   color: tab === panelKey ? C.accentText : C.accentTextDim,
                 }}

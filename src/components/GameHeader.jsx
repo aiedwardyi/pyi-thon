@@ -47,7 +47,6 @@ export default function GameHeader({
               cursor: "pointer",
               padding: isCompactMobile ? "7px 9px" : "7px 10px",
               borderRadius: 10,
-              transition: "all 0.2s",
               display: "flex",
               alignItems: "center",
               gap: 6,
@@ -135,7 +134,6 @@ export default function GameHeader({
               cursor: "pointer",
               fontSize: 14,
               padding: 4,
-              transition: "color 0.2s",
             }}
             onMouseEnter={(event) => {
               event.currentTarget.style.color = C.accentText;
@@ -161,7 +159,6 @@ export default function GameHeader({
               cursor: "pointer",
               fontSize: 14,
               padding: 4,
-              transition: "color 0.2s",
             }}
             onMouseEnter={(event) => {
               event.currentTarget.style.color = C.accentText;

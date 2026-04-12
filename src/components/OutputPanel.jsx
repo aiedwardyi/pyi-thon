@@ -104,15 +104,8 @@ export default function OutputPanel({
               flexShrink: 0,
               background: feedback.correct ? C.green : C.red,
               cursor: feedback.correct ? "default" : "pointer",
-              transition: "transform 0.2s",
               border: "none",
               padding: 0,
-            }}
-            onMouseEnter={(event) => {
-              if (!feedback.correct) event.currentTarget.style.transform = "scale(1.1)";
-            }}
-            onMouseLeave={(event) => {
-              event.currentTarget.style.transform = "scale(1)";
             }}
           >
             {feedback.correct
@@ -190,7 +183,6 @@ export default function OutputPanel({
               fontWeight: 600,
               cursor: "pointer",
               fontFamily: "inherit",
-              transition: "all 0.2s",
             }}
             onMouseEnter={(event) => {
               event.currentTarget.style.background = C.accentBorder;

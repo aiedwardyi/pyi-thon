@@ -274,16 +274,29 @@ export function getGlobalStyles(theme) {
   .ui-badge-pop,
   .ui-chip-pop,
   .ui-level-card,
+  .ui-panel-pop,
   .ui-panel-subtle,
   .ui-editor-shell {
     transform-origin: center;
-    will-change: scale, translate, rotate, filter, box-shadow;
     transition-property: scale, translate, rotate, filter, box-shadow, background-color, border-color, color, opacity;
     transition-duration: 220ms;
     transition-timing-function: cubic-bezier(0.2, 0.9, 0.2, 1.15);
   }
 
   @media (hover: hover) and (pointer: fine) {
+    .ui-pop:hover:not(:disabled),
+    .ui-pop-soft:hover:not(:disabled),
+    .ui-pop-subtle:hover:not(:disabled),
+    .ui-icon-pop:hover:not(:disabled),
+    .ui-badge-pop:hover,
+    .ui-chip-pop:hover,
+    .ui-level-card:hover:not(:disabled),
+    .ui-panel-pop:hover,
+    .ui-panel-subtle:hover,
+    .ui-editor-shell:focus-within {
+      will-change: transform, filter;
+    }
+
     .ui-pop:hover:not(:disabled) {
       scale: 1.035;
       translate: 0 -1px;
@@ -394,13 +407,19 @@ export function getGlobalStyles(theme) {
   }
 
   .ui-toggle-knob {
-    transition: scale 180ms cubic-bezier(0.2, 0.9, 0.2, 1.2), box-shadow 180ms ease;
+    transition: transform 180ms cubic-bezier(0.2, 0.9, 0.2, 1.2), scale 180ms cubic-bezier(0.2, 0.9, 0.2, 1.2), box-shadow 180ms ease;
   }
 
-  .ui-pop:hover .ui-toggle-knob,
   .ui-pop:focus-visible .ui-toggle-knob {
     scale: 1.08;
     box-shadow: 0 3px 10px rgba(0,0,0,0.25);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .ui-pop:hover .ui-toggle-knob {
+      scale: 1.08;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.25);
+    }
   }
 
   .ui-traffic-dot {

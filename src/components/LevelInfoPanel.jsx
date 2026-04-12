@@ -46,7 +46,6 @@ export default function LevelInfoPanel({
           cursor: "pointer",
           fontFamily: "inherit",
           textAlign: "left",
-          transition: "all 0.3s ease",
           marginBottom: 10,
         }}
       >

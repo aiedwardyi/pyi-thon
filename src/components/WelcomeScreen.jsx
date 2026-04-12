@@ -38,15 +38,15 @@ export default function WelcomeScreen({
           border: "none", cursor: "pointer", fontFamily: "inherit",
           background: `linear-gradient(135deg, ${C.accentDeep}, ${C.accent})`,
           boxShadow: `0 8px 40px ${C.accentGlow}, inset 0 1px 0 rgba(255,255,255,0.1)`,
-          transition: "all 0.3s ease", animation: "gentlePulse 2.5s ease-in-out infinite",
+          animation: "gentlePulse 2.5s ease-in-out infinite",
         }}
-          onMouseEnter={(event) => { event.currentTarget.style.transform = "translateY(-2px) scale(1.02)"; event.currentTarget.style.boxShadow = `0 12px 48px ${C.accentGlow}, inset 0 1px 0 rgba(255,255,255,0.15)`; }}
-          onMouseLeave={(event) => { event.currentTarget.style.transform = "translateY(0) scale(1)"; event.currentTarget.style.boxShadow = `0 8px 40px ${C.accentGlow}, inset 0 1px 0 rgba(255,255,255,0.1)`; }}
+          onMouseEnter={(event) => { event.currentTarget.style.boxShadow = `0 12px 48px ${C.accentGlow}, inset 0 1px 0 rgba(255,255,255,0.15)`; }}
+          onMouseLeave={(event) => { event.currentTarget.style.boxShadow = `0 8px 40px ${C.accentGlow}, inset 0 1px 0 rgba(255,255,255,0.1)`; }}
         >{t("startLearning")}</button>
 
         <button type="button" className="ui-pop-soft" onClick={onConfigureApiKey} style={{
           marginTop: 16, color: C.accentTextDim, fontSize: 13, background: "none",
-          border: "none", cursor: "pointer", fontFamily: "inherit", transition: "color 0.2s",
+          border: "none", cursor: "pointer", fontFamily: "inherit",
         }}
           onMouseEnter={(event) => { event.currentTarget.style.color = C.accentText; }}
           onMouseLeave={(event) => { event.currentTarget.style.color = C.accentTextDim; }}

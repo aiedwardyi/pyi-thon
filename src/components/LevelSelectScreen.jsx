@@ -21,7 +21,7 @@ export default function LevelSelectScreen({
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32 }}>
           <button type="button" className="ui-pop" aria-label={t("backToCurrentLevel")} onClick={() => setShowLevelSelect(false)} style={{
             color: C.accentText, background: "rgba(255,255,255,0.03)", border: `1px solid ${C.border}`,
-            cursor: "pointer", padding: "8px 12px", borderRadius: 10, transition: "all 0.2s",
+            cursor: "pointer", padding: "8px 12px", borderRadius: 10,
           }}
             onMouseEnter={(event) => { event.currentTarget.style.background = "rgba(255,255,255,0.06)"; event.currentTarget.style.borderColor = C.borderFocus; }}
             onMouseLeave={(event) => { event.currentTarget.style.background = "rgba(255,255,255,0.03)"; event.currentTarget.style.borderColor = C.border; }}
@@ -62,20 +62,17 @@ export default function LevelSelectScreen({
                     border: `1px solid ${isCurrent ? C.accentBorder : done ? C.greenBorder : C.border}`,
                     background: isCurrent ? C.accentBg : done ? C.bgSubtle : "rgba(255,255,255,0.015)",
                     cursor: unlocked ? "pointer" : "not-allowed", opacity: unlocked ? 1 : 0.3,
-                    transition: "all 0.2s ease",
                   }}
                     onMouseEnter={(event) => {
                       if (!unlocked) return;
                       event.currentTarget.style.background = isCurrent ? C.accentBg : done ? C.bgSubtle : "rgba(255,255,255,0.04)";
                       event.currentTarget.style.borderColor = isCurrent ? C.accent : done ? C.green : C.borderFocus;
-                      event.currentTarget.style.transform = "translateX(4px)";
                       event.currentTarget.style.filter = "brightness(1.3)";
                     }}
                     onMouseLeave={(event) => {
                       if (!unlocked) return;
                       event.currentTarget.style.background = isCurrent ? C.accentBg : done ? C.bgSubtle : "rgba(255,255,255,0.015)";
                       event.currentTarget.style.borderColor = isCurrent ? C.accentBorder : done ? C.greenBorder : C.border;
-                      event.currentTarget.style.transform = "translateX(0)";
                       event.currentTarget.style.filter = "none";
                     }}
                   >

@@ -37,7 +37,6 @@ export default function EditorPanel({
         boxShadow: editorGlow
           ? `0 8px 40px rgba(0,0,0,0.4), 0 0 30px rgba(16,185,129,0.2), inset 0 1px 0 rgba(255,255,255,0.03)`
           : "0 8px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.03)",
-        transition: "border-color 0.3s, box-shadow 0.3s",
       }}>
         <div style={{
           display: "flex",

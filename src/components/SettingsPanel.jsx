@@ -11,7 +11,6 @@ function toggleStyle(active, C, darkMode) {
     cursor: "pointer",
     border: "none",
     background: active ? C.accent : (darkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.12)"),
-    transition: "all 0.2s",
     display: "flex",
     alignItems: "center",
     justifyContent: "flex-start",
@@ -89,7 +88,6 @@ export default function SettingsPanel({
                 padding: "6px 4px", borderRadius: 8, cursor: "pointer", fontFamily: "inherit",
                 border: themeKey === key ? `2px solid ${C.accent}` : `2px solid ${C.border}`,
                 background: themeKey === key ? C.accentBg : "transparent",
-                transition: "all 0.2s",
               }}>
                 <div style={{ display: "flex", gap: 2 }}>
                   {colors.map((color, index) => (
@@ -116,7 +114,7 @@ export default function SettingsPanel({
                 border: `1px solid ${lang === code ? C.accentBorder : C.border}`,
                 background: lang === code ? C.accentBg : "transparent",
                 color: lang === code ? C.accentText : C.textDim,
-                cursor: "pointer", fontFamily: "inherit", transition: "all 0.2s",
+                cursor: "pointer", fontFamily: "inherit",
               }}>{label}</button>
             ))}
           </div>
@@ -128,7 +126,7 @@ export default function SettingsPanel({
             <p id="offline-mode-desc" style={{ color: C.textDim, fontSize: 12, margin: "2px 0 0" }}>{offlineMode ? `${t("offlineDesc")}${pyodideStatus === "loading" ? ` (${t("loading")})` : pyodideStatus === "ready" ? ` (${t("ready")})` : ""}` : t("onlineDesc")}</p>
           </div>
           <button type="button" className="ui-pop" role="switch" aria-checked={offlineMode} aria-labelledby="offline-mode-label" aria-describedby="offline-mode-desc" onClick={() => setOfflineMode(!offlineMode)} style={toggleStyle(offlineMode, C, darkMode)}>
-            <div className="ui-toggle-knob" style={{ width: 20, height: 20, borderRadius: "50%", background: "#fff", transition: "all 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)", transform: offlineMode ? "translateX(20px)" : "translateX(0)" }} />
+            <div className="ui-toggle-knob" style={{ width: 20, height: 20, borderRadius: "50%", background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.2)", transform: offlineMode ? "translateX(20px)" : "translateX(0)" }} />
           </button>
         </div>
 
@@ -145,7 +143,7 @@ export default function SettingsPanel({
                   border: `1px solid ${provider === key ? C.accentBorder : C.border}`,
                   background: provider === key ? C.accentBg : "transparent",
                   color: provider === key ? C.accentText : C.textDim,
-                  cursor: "pointer", fontFamily: "inherit", transition: "all 0.2s",
+                  cursor: "pointer", fontFamily: "inherit",
                 }}>{prov.name}</button>
               ))}
             </div>
@@ -175,7 +173,7 @@ export default function SettingsPanel({
               width: "100%", padding: "12px 0", borderRadius: 12,
               background: `linear-gradient(135deg, ${C.accentDeep}, ${C.accent})`,
               color: "#fff", border: "none", cursor: "pointer", fontFamily: "inherit",
-              fontSize: 13, fontWeight: 700, transition: "all 0.2s",
+              fontSize: 13, fontWeight: 700,
               boxShadow: `0 4px 16px ${C.accentGlow}`,
             }}>{t("saveKey")}</button>
           </div>
