@@ -1,9 +1,13 @@
-import { formatHintText } from "../hintFormatting";
-import { AI_PROVIDERS, STRINGS } from "../data/appConfig";
+import { formatHintText } from "../hintFormatting.js";
+import { AI_PROVIDERS, STRINGS } from "../data/appConfig.js";
 
 export async function evaluateWithAI(userCode, level, apiKey, lang, provider) {
-  const providerConfig = AI_PROVIDERS[provider];
   const _t = (key) => STRINGS[lang]?.[key] || STRINGS.en[key] || key;
+  const providerConfig = AI_PROVIDERS[provider];
+
+  if (!providerConfig) {
+    return { correct: false, feedback: _t("apiGenericError"), explanation: "" };
+  }
 
   const prompt = `You are a Python code evaluator for an educational platform. Evaluate if the student's code is correct AND uses the concept being taught.
 

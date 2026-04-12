@@ -40,16 +40,16 @@ export default function WelcomeScreen({
           boxShadow: `0 8px 40px ${C.accentGlow}, inset 0 1px 0 rgba(255,255,255,0.1)`,
           transition: "all 0.3s ease", animation: "gentlePulse 2.5s ease-in-out infinite",
         }}
-          onMouseEnter={(event) => { event.target.style.transform = "translateY(-2px) scale(1.02)"; event.target.style.boxShadow = `0 12px 48px ${C.accentGlow}, inset 0 1px 0 rgba(255,255,255,0.15)`; }}
-          onMouseLeave={(event) => { event.target.style.transform = "translateY(0) scale(1)"; event.target.style.boxShadow = `0 8px 40px ${C.accentGlow}, inset 0 1px 0 rgba(255,255,255,0.1)`; }}
+          onMouseEnter={(event) => { event.currentTarget.style.transform = "translateY(-2px) scale(1.02)"; event.currentTarget.style.boxShadow = `0 12px 48px ${C.accentGlow}, inset 0 1px 0 rgba(255,255,255,0.15)`; }}
+          onMouseLeave={(event) => { event.currentTarget.style.transform = "translateY(0) scale(1)"; event.currentTarget.style.boxShadow = `0 8px 40px ${C.accentGlow}, inset 0 1px 0 rgba(255,255,255,0.1)`; }}
         >{t("startLearning")}</button>
 
         <button onClick={onConfigureApiKey} style={{
           marginTop: 16, color: C.accentTextDim, fontSize: 13, background: "none",
           border: "none", cursor: "pointer", fontFamily: "inherit", transition: "color 0.2s",
         }}
-          onMouseEnter={(event) => { event.target.style.color = C.accentText; }}
-          onMouseLeave={(event) => { event.target.style.color = C.accentTextDim; }}
+          onMouseEnter={(event) => { event.currentTarget.style.color = C.accentText; }}
+          onMouseLeave={(event) => { event.currentTarget.style.color = C.accentTextDim; }}
         >{t("configureApiKey")}</button>
       </div>
       <style>{getGlobalStyles(C)}</style>
