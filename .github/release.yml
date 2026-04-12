@@ -1,0 +1,27 @@
+changelog:
+  categories:
+    - title: Features
+      labels:
+        - enhancement
+        - feature
+
+    - title: Learning Content
+      labels:
+        - new-level
+        - curriculum
+
+    - title: Fixes
+      labels:
+        - bug
+        - fix
+
+    - title: Docs and Developer Experience
+      labels:
+        - documentation
+        - docs
+        - ci
+        - dependencies
+
+    - title: Other Changes
+      labels:
+        - "*"
