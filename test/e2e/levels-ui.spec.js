@@ -89,6 +89,23 @@ test("settings dialog supports keyboard close", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 });
 
+test("Korean mode localizes accessible labels", async ({ page }) => {
+  await page.goto(levelUrl(1, "ko"));
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+
+  await expect(page.getByRole("button", { name: "설정 열기" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "사운드 켜기" })).toBeVisible();
+  await expect(page.locator("textarea")).toHaveAttribute("placeholder", "# 여기에 Python 코드를 작성하세요...");
+
+  await page.getByTestId("open-settings").click();
+  await expect(page.getByRole("dialog", { name: "설정" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "설정 닫기" })).toBeVisible();
+  await page.getByTestId("close-settings").click();
+
+  await page.getByTestId("open-level-select").click();
+  await expect(page.getByRole("button", { name: "현재 레벨로 돌아가기" })).toBeVisible();
+});
+
 test("mobile QA sweep across all 30 levels", async ({ page, isMobile }) => {
   test.skip(!isMobile, "Mobile-only sweep");
 

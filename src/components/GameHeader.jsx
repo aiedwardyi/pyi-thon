@@ -36,6 +36,8 @@ export default function GameHeader({
         <div style={{ display: "flex", alignItems: "center", gap: isCompactMobile ? 6 : 8, minWidth: 0 }}>
           <button
             type="button"
+            aria-label={t("openLevelSelect")}
+            data-testid="open-level-select"
             onClick={onOpenLevelSelect}
             style={{
               color: C.accentText,
@@ -121,7 +123,7 @@ export default function GameHeader({
           </div>
           <button
             type="button"
-            aria-label={soundEnabled ? "Disable sound effects" : "Enable sound effects"}
+            aria-label={soundEnabled ? t("disableSound") : t("enableSound")}
             aria-pressed={soundEnabled}
             onClick={onToggleSound}
             style={{
@@ -146,7 +148,7 @@ export default function GameHeader({
           </button>
           <button
             type="button"
-            aria-label="Open settings"
+            aria-label={t("openSettings")}
             data-testid="open-settings"
             onClick={onOpenSettings}
             style={{
