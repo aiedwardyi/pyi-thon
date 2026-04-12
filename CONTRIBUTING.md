@@ -21,7 +21,7 @@ Thanks for your interest in contributing. Pyi-thon is an open educational projec
 
 ## Project Shape
 
-The app is intentionally lightweight. Most product logic currently lives in `src/App.jsx`, with supporting bootstrap and configuration in the rest of `src/` and the project root.
+The app is intentionally lightweight. `src/App.jsx` owns the main application flow, while UI panels, app data, storage helpers, AI evaluation, and theme definitions live in focused modules under `src/components`, `src/data`, `src/lib`, and `src/theme`.
 
 When contributing, prefer small, readable changes that fit the existing style instead of introducing extra abstraction too early.
 
@@ -109,4 +109,4 @@ Please keep the conversation respectful and collaborative. Assume good intent, e
 
 ## Questions?
 
-Open an issue or start a discussion. No question is too small.
+Open an issue using the matching template. No question is too small.
