@@ -166,10 +166,14 @@ pyi-thon/
 ├── .env.example        # Notes about keeping provider keys out of public builds
 └── src/
     ├── main.jsx        # React mount point
-    └── App.jsx         # Main application UI and lesson flow
+    ├── App.jsx         # Application orchestration and lesson flow
+    ├── components/     # Focused UI panels and screens
+    ├── data/           # App strings, provider config, and level content
+    ├── lib/            # Storage and AI evaluation helpers
+    └── theme/          # Theme palettes and shared global styles
 ```
 
-Most of the product logic currently lives in `App.jsx`, which keeps the project easy to inspect and iterate on.
+The app stays intentionally lightweight while keeping obvious responsibilities separated so the source is easier to review.
 
 ## Tech Stack
 
@@ -190,6 +194,7 @@ This repo is meant to stay easy to trust, easy to inspect, and easy to ship.
 
 - Quick maintainer check: `npm run smoke`
 - Release-ready changes should pass `npm test`, `npm run build`, and `npm run test:e2e`
+- Release candidates should also pass `npm run lint`
 - UI changes should be checked on both desktop and mobile widths
 - Keep PRs focused so reviews stay fast
 - Include screenshots for visual changes when it helps reviewers
@@ -197,12 +202,15 @@ This repo is meant to stay easy to trust, easy to inspect, and easy to ship.
 
 Versioned releases are published from Git tags such as `v1.0.0`, and the repo includes CI plus release automation so the public history stays easy to follow.
 
+See [CHANGELOG.md](CHANGELOG.md), [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md), and [ROADMAP.md](ROADMAP.md) for release history, release steps, and project direction.
+
 ## Repo Standards
 
 - [Contributing Guide](CONTRIBUTING.md)
 - [Code of Conduct](CODE_OF_CONDUCT.md)
 - [Security Policy](SECURITY.md)
 - [Support Guide](SUPPORT.md)
+- [Roadmap](ROADMAP.md)
 
 ## Self-Hosting
 
