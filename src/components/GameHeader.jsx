@@ -121,6 +121,8 @@ export default function GameHeader({
           </div>
           <button
             type="button"
+            aria-label={soundEnabled ? "Disable sound effects" : "Enable sound effects"}
+            aria-pressed={soundEnabled}
             onClick={onToggleSound}
             style={{
               color: soundEnabled ? C.accent : C.textDim,

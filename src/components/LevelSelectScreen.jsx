@@ -19,7 +19,7 @@ export default function LevelSelectScreen({
       <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: 300, background: `linear-gradient(to bottom, ${C.accentGlowSoft}, transparent)`, pointerEvents: "none", zIndex: 0 }} />
       <div style={{ maxWidth: 640, margin: "0 auto", position: "relative", zIndex: 10 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32 }}>
-          <button onClick={() => setShowLevelSelect(false)} style={{
+          <button type="button" aria-label="Back to current level" onClick={() => setShowLevelSelect(false)} style={{
             color: C.accentText, background: "rgba(255,255,255,0.03)", border: `1px solid ${C.border}`,
             cursor: "pointer", padding: "8px 12px", borderRadius: 10, transition: "all 0.2s",
           }}
@@ -57,7 +57,7 @@ export default function LevelSelectScreen({
                 const isCurrent = idx === currentLevel;
                 const localizedLevel = getLocalizedLevel(level, lang);
                 return (
-                  <button key={level.id} onClick={() => unlocked && goToLevel(idx)} disabled={!unlocked} style={{
+                  <button key={level.id} type="button" onClick={() => unlocked && goToLevel(idx)} disabled={!unlocked} aria-current={isCurrent ? "true" : undefined} style={{
                     display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderRadius: 14, textAlign: "left", fontFamily: "inherit",
                     border: `1px solid ${isCurrent ? C.accentBorder : done ? C.greenBorder : C.border}`,
                     background: isCurrent ? C.accentBg : done ? C.bgSubtle : "rgba(255,255,255,0.015)",

@@ -34,6 +34,7 @@ export default function LevelInfoPanel({
 
       <button
         type="button"
+        aria-expanded={!conceptCollapsed}
         onClick={onToggleConcept}
         style={{
           width: "100%",

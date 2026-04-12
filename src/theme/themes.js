@@ -207,7 +207,24 @@ export function getGlobalStyles(theme) {
   textarea::-webkit-scrollbar-thumb:hover { background: rgba(129,140,248,0.3); }
 
   button { transition: all 0.2s ease; }
+  button:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid ${theme.accent} !important;
+    outline-offset: 3px;
+    box-shadow: 0 0 0 4px ${theme.accentGlowSoft} !important;
+  }
+  button:disabled { cursor: not-allowed; }
 
   ::selection { background: rgba(99,102,241,0.3); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      scroll-behavior: auto !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
 `;
 }

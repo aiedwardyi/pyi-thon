@@ -72,6 +72,23 @@ test("initial QA load stays free of console and page errors", async ({ page }) =
   expect(pageErrors).toEqual([]);
 });
 
+test("settings dialog supports keyboard close", async ({ page }) => {
+  await page.goto(levelUrl(1, "en"));
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+
+  const settingsButton = page.getByTestId("open-settings");
+  await settingsButton.focus();
+  await settingsButton.press("Enter");
+
+  const dialog = page.getByRole("dialog", { name: "Settings" });
+  await expect(dialog).toBeVisible();
+  await expect(page.getByTestId("close-settings")).toBeFocused();
+
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+});
+
 test("mobile QA sweep across all 30 levels", async ({ page, isMobile }) => {
   test.skip(!isMobile, "Mobile-only sweep");
 

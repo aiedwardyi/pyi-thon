@@ -33,7 +33,7 @@ export default function WelcomeScreen({
         </p>
         <p style={{ color: C.accentTextDim, fontSize: 12, marginBottom: 48, letterSpacing: 2, textTransform: "uppercase" }}>{t("subtitle")}</p>
 
-        <button onClick={onStartLearning} style={{
+        <button type="button" onClick={onStartLearning} style={{
           padding: "16px 52px", borderRadius: 14, fontWeight: 700, color: C.btnText, fontSize: 16,
           border: "none", cursor: "pointer", fontFamily: "inherit",
           background: `linear-gradient(135deg, ${C.accentDeep}, ${C.accent})`,
@@ -44,7 +44,7 @@ export default function WelcomeScreen({
           onMouseLeave={(event) => { event.currentTarget.style.transform = "translateY(0) scale(1)"; event.currentTarget.style.boxShadow = `0 8px 40px ${C.accentGlow}, inset 0 1px 0 rgba(255,255,255,0.1)`; }}
         >{t("startLearning")}</button>
 
-        <button onClick={onConfigureApiKey} style={{
+        <button type="button" onClick={onConfigureApiKey} style={{
           marginTop: 16, color: C.accentTextDim, fontSize: 13, background: "none",
           border: "none", cursor: "pointer", fontFamily: "inherit", transition: "color 0.2s",
         }}
