@@ -21,7 +21,7 @@
     "coding-challenges"
   ],
   "engines": {
-    "node": ">=18"
+    "node": ">=18.18.0"
   },
   "scripts": {
     "dev": "vite",
