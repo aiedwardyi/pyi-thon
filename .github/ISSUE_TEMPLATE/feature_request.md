@@ -15,4 +15,4 @@ labels: enhancement
 
 ## Ideas for implementation
 
-<!-- Optional — any thoughts on how to build it? -->
+<!-- Optional - any thoughts on how to build it? -->

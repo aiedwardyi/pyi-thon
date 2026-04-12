@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { formatHintText } from "../src/hintFormatting.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const appSource = fs.readFileSync(path.join(__dirname, "..", "src", "App.jsx"), "utf8");
+const levelsSource = fs.readFileSync(path.join(__dirname, "..", "src", "data", "levels.js"), "utf8");
 
 function run(name, fn) {
   try {
@@ -38,7 +38,7 @@ run("formatHintText converts escaped newlines into real line breaks", () => {
 });
 
 run("all stored hints normalize without leaving raw escaped newlines behind", () => {
-  const hints = extractHintStrings(appSource);
+  const hints = extractHintStrings(levelsSource);
 
   assert.ok(hints.length >= 50, `expected to find many hints, found ${hints.length}`);
 
