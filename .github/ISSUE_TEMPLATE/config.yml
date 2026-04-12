@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Support and troubleshooting
+    url: https://github.com/aiedwardyi/pyi-thon/blob/main/SUPPORT.md
+    about: Read the support guide before opening a question or issue.
+  - name: Security reports
+    url: https://github.com/aiedwardyi/pyi-thon/blob/main/SECURITY.md
+    about: Use this for private security guidance and disclosure expectations.
+  - name: Contribution guidelines
+    url: https://github.com/aiedwardyi/pyi-thon/blob/main/CONTRIBUTING.md
+    about: Review the repo conventions before proposing larger changes.

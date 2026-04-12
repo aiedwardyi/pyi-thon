@@ -2,11 +2,33 @@
   "name": "pyi-thon",
   "private": true,
   "version": "1.0.0",
+  "description": "Interactive Python coding challenges with AI-powered feedback, Pyodide-powered offline mode, and bilingual lessons.",
   "type": "module",
+  "homepage": "https://pyithon.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aiedwardyi/pyi-thon.git"
+  },
+  "bugs": {
+    "url": "https://github.com/aiedwardyi/pyi-thon/issues"
+  },
+  "keywords": [
+    "python",
+    "education",
+    "learning",
+    "react",
+    "pyodide",
+    "coding-challenges"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "lint": "eslint .",
     "preview": "vite preview",
+    "smoke": "npm test && npm run build",
     "test": "node test/run-tests.js",
     "test:e2e": "playwright test"
   },
@@ -15,8 +37,12 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.4",
     "@playwright/test": "^1.59.0",
     "@vitejs/plugin-react": "^4.2.0",
+    "eslint": "^9.39.4",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "globals": "^17.5.0",
     "vite": "^5.4.0"
   }
 }

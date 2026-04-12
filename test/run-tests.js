@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 
 import { buildDiffFeedback, buildMismatchFeedback } from "../src/offlineEvaluation.js";
+import "./client-secrets.test.js";
 import "./hint-formatting.test.js";
 
 const STRINGS = {

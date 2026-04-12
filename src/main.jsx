@@ -1,9 +1,7 @@
-import React from 'react'
 import ReactDOM from 'react-dom/client'
+import { StrictMode, createElement } from 'react'
 import PyithonApp from './App.jsx'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <PyithonApp />
-  </React.StrictMode>,
+  createElement(StrictMode, null, createElement(PyithonApp)),
 )

@@ -15,7 +15,7 @@ async function closeHint(page, lang) {
   await page.getByRole("button", { name: lang === "ko" ? "힌트 숨기기" : "Hide Hint", exact: true }).click();
 }
 
-async function expectHintFormatting(page, levelId) {
+async function expectHintFormatting(page) {
   const text = await page.getByTestId("hint-panel").innerText();
   expect(text.includes("\\n")).toBeFalsy();
 }
@@ -29,7 +29,7 @@ test("desktop QA sweep across all 30 levels", async ({ page, isMobile }) => {
 
     await openHint(page, "en");
     await expect(page.getByTestId("hint-panel")).toBeVisible();
-    await expectHintFormatting(page, levelId);
+    await expectHintFormatting(page);
     await closeHint(page, "en");
 
     await page.getByTestId("open-settings").click();
@@ -40,7 +40,7 @@ test("desktop QA sweep across all 30 levels", async ({ page, isMobile }) => {
     await expect(page.getByRole("button", { name: "힌트", exact: true })).toBeVisible();
     await openHint(page, "ko");
     await expect(page.getByTestId("hint-panel")).toBeVisible();
-    await expectHintFormatting(page, levelId);
+    await expectHintFormatting(page);
     await closeHint(page, "ko");
 
     await page.getByTestId("open-settings").click();
@@ -49,6 +49,27 @@ test("desktop QA sweep across all 30 levels", async ({ page, isMobile }) => {
     await page.getByTestId("close-settings").click();
     await expect(page.getByRole("button", { name: "Hint", exact: true })).toBeVisible();
   }
+});
+
+test("initial QA load stays free of console and page errors", async ({ page }) => {
+  const consoleErrors = [];
+  const pageErrors = [];
+
+  page.on("console", (msg) => {
+    if (msg.type() === "error") {
+      consoleErrors.push(msg.text());
+    }
+  });
+
+  page.on("pageerror", (error) => {
+    pageErrors.push(error.message);
+  });
+
+  await page.goto(levelUrl(1, "en"));
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+
+  expect(consoleErrors).toEqual([]);
+  expect(pageErrors).toEqual([]);
 });
 
 test("mobile QA sweep across all 30 levels", async ({ page, isMobile }) => {
@@ -62,7 +83,7 @@ test("mobile QA sweep across all 30 levels", async ({ page, isMobile }) => {
 
     await openHint(page, "en");
     await expect(page.getByTestId("hint-panel")).toBeVisible();
-    await expectHintFormatting(page, levelId);
+    await expectHintFormatting(page);
     await closeHint(page, "en");
 
     await page.getByTestId("open-settings").click();
