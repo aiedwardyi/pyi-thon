@@ -68,6 +68,7 @@ export default function WorkspacePanel({
               <button
                 key={panelKey}
                 type="button"
+                aria-pressed={tab === panelKey}
                 onClick={() => setTab(panelKey)}
                 style={{
                   padding: "8px 20px",

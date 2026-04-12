@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { AI_PROVIDERS } from "../data/appConfig";
 import { THEMES, getGlobalStyles } from "../theme/themes";
 
@@ -38,18 +39,41 @@ export default function SettingsPanel({
   t,
   themeKey,
 }) {
+  const closeButtonRef = useRef(null);
+  const providerConfig = AI_PROVIDERS[provider] || AI_PROVIDERS.claude;
+  const closeSettings = () => setShowApiSetup(false);
+
+  useEffect(() => {
+    const previouslyFocused = document.activeElement;
+    closeButtonRef.current?.focus();
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") setShowApiSetup(false);
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      if (previouslyFocused instanceof HTMLElement) previouslyFocused.focus();
+    };
+  }, [setShowApiSetup]);
+
   return (
-    <div style={{ ...pageStyle, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 32, position: "relative" }}>
-      <div data-testid="settings-backdrop" onClick={() => setShowApiSetup(false)} style={{ position: "fixed", inset: 0, background: darkMode ? "rgba(0,0,0,0.5)" : "rgba(0,0,0,0.2)", backdropFilter: "blur(8px)", zIndex: 0 }} />
-      <div style={{
+    <div style={{ ...pageStyle, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 32, position: "relative", overflowY: "auto" }}>
+      <div data-testid="settings-backdrop" onClick={closeSettings} style={{ position: "fixed", inset: 0, background: darkMode ? "rgba(0,0,0,0.5)" : "rgba(0,0,0,0.2)", backdropFilter: "blur(8px)", zIndex: 0 }} />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="settings-title"
+        style={{
         maxWidth: 440, width: "100%", background: C.bgGlass, backdropFilter: "blur(24px)",
         border: `1px solid ${C.border}`, borderRadius: 20, padding: 32,
         boxShadow: `0 24px 64px rgba(0,0,0,${darkMode ? "0.5" : "0.15"})`,
-        position: "relative", zIndex: 1,
+        position: "relative", zIndex: 1, maxHeight: "calc(100vh - 64px)", overflowY: "auto",
       }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
-          <h2 style={{ color: C.text, fontSize: 20, fontWeight: 700, margin: 0, letterSpacing: -0.5 }}>{t("settings")}</h2>
-          <button aria-label="Close settings" data-testid="close-settings" onClick={() => setShowApiSetup(false)} style={{ color: C.textDim, background: "none", border: "none", cursor: "pointer", padding: 4 }}>
+          <h2 id="settings-title" style={{ color: C.text, fontSize: 20, fontWeight: 700, margin: 0, letterSpacing: -0.5 }}>{t("settings")}</h2>
+          <button ref={closeButtonRef} type="button" aria-label="Close settings" data-testid="close-settings" onClick={closeSettings} style={{ color: C.textDim, background: "none", border: "none", cursor: "pointer", padding: 4 }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
@@ -58,7 +82,7 @@ export default function SettingsPanel({
           <p id="theme-switch-label" style={{ color: C.text, fontSize: 14, fontWeight: 600, margin: 0 }}>{t("switchAppearance")}</p>
           <div role="radiogroup" aria-labelledby="theme-switch-label" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(68px, 1fr))", gap: 6, marginTop: 10 }}>
             {Object.entries(THEMES).map(([key, { label, labelKo, colors }]) => (
-              <button key={key} role="radio" aria-checked={themeKey === key} onClick={() => setThemeKey(key)} style={{
+              <button key={key} type="button" role="radio" aria-checked={themeKey === key} onClick={() => setThemeKey(key)} style={{
                 display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
                 padding: "6px 4px", borderRadius: 8, cursor: "pointer", fontFamily: "inherit",
                 border: themeKey === key ? `2px solid ${C.accent}` : `2px solid ${C.border}`,
@@ -80,12 +104,12 @@ export default function SettingsPanel({
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 0", borderBottom: `1px solid ${C.border}` }}>
           <div>
-            <p style={{ color: C.text, fontSize: 14, fontWeight: 600, margin: 0 }}>{t("language")}</p>
-            <p style={{ color: C.textDim, fontSize: 12, margin: "2px 0 0" }}>{t("langDesc")}</p>
+            <p id="language-label" style={{ color: C.text, fontSize: 14, fontWeight: 600, margin: 0 }}>{t("language")}</p>
+            <p id="language-desc" style={{ color: C.textDim, fontSize: 12, margin: "2px 0 0" }}>{t("langDesc")}</p>
           </div>
-          <div style={{ display: "flex", gap: 4 }}>
+          <div role="group" aria-labelledby="language-label" aria-describedby="language-desc" style={{ display: "flex", gap: 4 }}>
             {[["en", "EN"], ["ko", "한국어"]].map(([code, label]) => (
-              <button key={code} data-testid={`lang-${code}`} onClick={() => setLang(code)} style={{
+              <button key={code} type="button" aria-pressed={lang === code} data-testid={`lang-${code}`} onClick={() => setLang(code)} style={{
                 padding: "6px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600,
                 border: `1px solid ${lang === code ? C.accentBorder : C.border}`,
                 background: lang === code ? C.accentBg : "transparent",
@@ -98,10 +122,10 @@ export default function SettingsPanel({
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 0", borderBottom: `1px solid ${C.border}` }}>
           <div>
-            <p style={{ color: C.text, fontSize: 14, fontWeight: 600, margin: 0 }}>{t("offlineMode")}</p>
-            <p style={{ color: C.textDim, fontSize: 12, margin: "2px 0 0" }}>{offlineMode ? `${t("offlineDesc")}${pyodideStatus === "loading" ? ` (${t("loading")})` : pyodideStatus === "ready" ? ` (${t("ready")})` : ""}` : t("onlineDesc")}</p>
+            <p id="offline-mode-label" style={{ color: C.text, fontSize: 14, fontWeight: 600, margin: 0 }}>{t("offlineMode")}</p>
+            <p id="offline-mode-desc" style={{ color: C.textDim, fontSize: 12, margin: "2px 0 0" }}>{offlineMode ? `${t("offlineDesc")}${pyodideStatus === "loading" ? ` (${t("loading")})` : pyodideStatus === "ready" ? ` (${t("ready")})` : ""}` : t("onlineDesc")}</p>
           </div>
-          <button onClick={() => setOfflineMode(!offlineMode)} style={toggleStyle(offlineMode, C, darkMode)}>
+          <button type="button" role="switch" aria-checked={offlineMode} aria-labelledby="offline-mode-label" aria-describedby="offline-mode-desc" onClick={() => setOfflineMode(!offlineMode)} style={toggleStyle(offlineMode, C, darkMode)}>
             <div style={{ width: 20, height: 20, borderRadius: "50%", background: "#fff", transition: "all 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }} />
           </button>
         </div>
@@ -109,12 +133,12 @@ export default function SettingsPanel({
         {!offlineMode && (
           <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", justifyContent: "space-between", gap: 8, padding: "14px 0", borderBottom: `1px solid ${C.border}` }}>
             <div>
-              <p style={{ color: C.text, fontSize: 14, fontWeight: 600, margin: 0 }}>{t("provider")}</p>
-              <p style={{ color: C.textDim, fontSize: 12, margin: "2px 0 0" }}>{t("providerDesc")}</p>
+              <p id="provider-label" style={{ color: C.text, fontSize: 14, fontWeight: 600, margin: 0 }}>{t("provider")}</p>
+              <p id="provider-desc" style={{ color: C.textDim, fontSize: 12, margin: "2px 0 0" }}>{t("providerDesc")}</p>
             </div>
-            <div style={{ display: "flex", gap: 4 }}>
+            <div role="group" aria-labelledby="provider-label" aria-describedby="provider-desc" style={{ display: "flex", gap: 4 }}>
               {Object.entries(AI_PROVIDERS).map(([key, prov]) => (
-                <button key={key} onClick={() => setProvider(key)} style={{
+                <button key={key} type="button" aria-pressed={provider === key} onClick={() => setProvider(key)} style={{
                   padding: "6px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600,
                   border: `1px solid ${provider === key ? C.accentBorder : C.border}`,
                   background: provider === key ? C.accentBg : "transparent",
@@ -128,14 +152,14 @@ export default function SettingsPanel({
 
         {!offlineMode && (
           <div style={{ paddingTop: 16 }}>
-            <p style={{ color: C.text, fontSize: 14, fontWeight: 600, margin: "0 0 4px" }}>{t("apiKey")}</p>
-            <p style={{ color: C.textDim, fontSize: 12, lineHeight: 1.6, margin: "0 0 12px" }}>
-              {t("apiKeyDesc")} <span style={{ color: C.accent }}>{AI_PROVIDERS[provider].keyUrl}</span>
+            <p id="api-key-label" style={{ color: C.text, fontSize: 14, fontWeight: 600, margin: "0 0 4px" }}>{t("apiKey")}</p>
+            <p id="api-key-desc" style={{ color: C.textDim, fontSize: 12, lineHeight: 1.6, margin: "0 0 12px" }}>
+              {t("apiKeyDesc")} <span style={{ color: C.accent }}>{providerConfig.keyUrl}</span>
             </p>
             <p style={{ color: C.textDim, fontSize: 11, lineHeight: 1.6, margin: "0 0 12px" }}>
               {t("apiKeyPrivacy")}
             </p>
-            <input type="password" value={apiKeyInput} onChange={(event) => setApiKeyInput(event.target.value)} placeholder={apiKey ? "••••••••" : AI_PROVIDERS[provider].keyPlaceholder}
+            <input type="password" aria-labelledby="api-key-label" aria-describedby="api-key-desc" value={apiKeyInput} onChange={(event) => setApiKeyInput(event.target.value)} placeholder={apiKey ? "••••••••" : providerConfig.keyPlaceholder}
               style={{
                 width: "100%", padding: "12px 16px", borderRadius: 12, background: C.codeBg,
                 border: `1px solid ${C.border}`, color: C.text, fontSize: 13, outline: "none",
@@ -145,7 +169,7 @@ export default function SettingsPanel({
               onBlur={(event) => { event.target.style.borderColor = C.border; }}
               onKeyDown={(event) => event.key === "Enter" && handleSaveApiKey()}
             />
-            <button onClick={handleSaveApiKey} style={{
+            <button type="button" onClick={handleSaveApiKey} style={{
               width: "100%", padding: "12px 0", borderRadius: 12,
               background: `linear-gradient(135deg, ${C.accentDeep}, ${C.accent})`,
               color: "#fff", border: "none", cursor: "pointer", fontFamily: "inherit",
