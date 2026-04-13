@@ -158,7 +158,7 @@ export const THEMES = {
 export const DEFAULT_THEME_KEY = "tokyo";
 
 export function resolveStoredThemeKey(storedTheme) {
-  return THEMES[storedTheme] ? storedTheme : DEFAULT_THEME_KEY;
+  return Object.hasOwn(THEMES, storedTheme) ? storedTheme : DEFAULT_THEME_KEY;
 }
 
 export function getGlobalStyles(theme) {

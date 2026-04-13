@@ -40,6 +40,8 @@ run("Tokyo Night is the default theme when no valid theme is stored", () => {
   assert.equal(DEFAULT_THEME_KEY, "tokyo");
   assert.equal(resolveStoredThemeKey(""), "tokyo");
   assert.equal(resolveStoredThemeKey("unknown-theme"), "tokyo");
+  assert.equal(resolveStoredThemeKey("__proto__"), "tokyo");
+  assert.equal(resolveStoredThemeKey("constructor"), "tokyo");
 });
 
 run("stored theme preference wins over the Tokyo Night default", () => {
