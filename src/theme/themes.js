@@ -155,6 +155,12 @@ export const THEMES = {
   nord: { palette: NORD, label: "Nord", labelKo: "\ub178\ub974\ub4dc", colors: ["#2e3440", "#88c0d0", "#b48ead"] },
 };
 
+export const DEFAULT_THEME_KEY = "tokyo";
+
+export function resolveStoredThemeKey(storedTheme) {
+  return Object.hasOwn(THEMES, storedTheme) ? storedTheme : DEFAULT_THEME_KEY;
+}
+
 export function getGlobalStyles(theme) {
   return `
   *, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -279,8 +285,8 @@ export function getGlobalStyles(theme) {
   .ui-editor-shell {
     transform-origin: center;
     transition-property: transform, filter, box-shadow, background-color, border-color, color, opacity;
-    transition-duration: 220ms;
-    transition-timing-function: cubic-bezier(0.2, 0.9, 0.2, 1.15);
+    transition-duration: 150ms;
+    transition-timing-function: ease-out;
   }
 
   @media (hover: hover) and (pointer: fine) {
@@ -298,62 +304,62 @@ export function getGlobalStyles(theme) {
     }
 
     .ui-pop:hover:not(:disabled) {
-      transform: translateY(-1px) scale(1.035);
-      filter: brightness(1.06) saturate(1.08);
+      transform: translateY(-1px) scale(1.01);
+      filter: brightness(1.03) saturate(1.03);
     }
 
     .ui-pop-soft:hover:not(:disabled) {
-      transform: translateY(-1px) scale(1.02);
-      filter: brightness(1.05);
+      transform: translateY(-1px) scale(1.008);
+      filter: brightness(1.025);
     }
 
     .ui-pop-subtle:hover:not(:disabled) {
-      transform: translateY(-0.5px) scale(1.015);
-      filter: brightness(1.03);
+      transform: translateY(-0.5px) scale(1.005);
+      filter: brightness(1.02);
     }
 
     .ui-icon-pop:hover:not(:disabled) {
-      transform: rotate(4deg) scale(1.18);
-      filter: drop-shadow(0 6px 14px ${theme.accentGlow});
+      transform: scale(1.06);
+      filter: drop-shadow(0 3px 8px ${theme.accentGlow});
     }
 
     .ui-badge-pop:hover,
     .ui-chip-pop:hover {
-      transform: translateY(-1px) scale(1.06);
-      filter: brightness(1.08) saturate(1.08);
+      transform: translateY(-1px) scale(1.02);
+      filter: brightness(1.03) saturate(1.03);
     }
 
     .ui-level-card:hover:not(:disabled) {
-      transform: translate(6px, -1px) scale(1.015);
+      transform: translate(3px, -1px) scale(1.006);
     }
 
     .ui-panel-pop:hover,
     .ui-editor-shell:focus-within {
-      transform: scale(1.004);
-      filter: brightness(1.03);
+      transform: scale(1.001);
+      filter: brightness(1.015);
     }
 
     .ui-panel-subtle:hover {
-      transform: scale(1.002);
-      filter: brightness(1.015);
+      transform: scale(1.001);
+      filter: brightness(1.01);
     }
   }
 
   .ui-pop:active:not(:disabled),
   .ui-pop-soft:active:not(:disabled) {
-    transform: translateY(1px) scale(0.94);
+    transform: translateY(1px) scale(0.985);
     filter: brightness(0.96);
     transition-duration: 90ms;
   }
 
   .ui-pop-subtle:active:not(:disabled) {
-    transform: translateY(0.5px) scale(0.97);
+    transform: translateY(0.5px) scale(0.99);
     filter: brightness(0.98);
     transition-duration: 90ms;
   }
 
   .ui-icon-pop:active:not(:disabled) {
-    transform: rotate(-7deg) scale(0.86);
+    transform: scale(0.96);
     transition-duration: 90ms;
   }
 
@@ -397,17 +403,17 @@ export function getGlobalStyles(theme) {
   }
 
   .ui-toggle-knob {
-    transition: transform 180ms cubic-bezier(0.2, 0.9, 0.2, 1.2), box-shadow 180ms ease;
+    transition: transform 150ms ease-out, box-shadow 150ms ease;
   }
 
   .ui-pop:focus-visible .ui-toggle-knob {
-    --toggle-knob-scale: 1.08;
+    --toggle-knob-scale: 1.04;
     box-shadow: 0 3px 10px rgba(0,0,0,0.25);
   }
 
   @media (hover: hover) and (pointer: fine) {
     .ui-pop:hover .ui-toggle-knob {
-      --toggle-knob-scale: 1.08;
+      --toggle-knob-scale: 1.04;
       box-shadow: 0 3px 10px rgba(0,0,0,0.25);
     }
   }

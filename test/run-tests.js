@@ -4,6 +4,7 @@ import { buildDiffFeedback, buildMismatchFeedback } from "../src/offlineEvaluati
 import "./ai-evaluation.test.js";
 import "./client-secrets.test.js";
 import "./hint-formatting.test.js";
+import "./preferences-storage.test.js";
 import "./public-assets.test.js";
 
 const STRINGS = {
