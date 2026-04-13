@@ -20,9 +20,9 @@ import {
   safeLocalStorageSet,
   saveProgress,
 } from "./lib/storage";
-import { getGlobalStyles, THEMES } from "./theme/themes";
+import { DEFAULT_THEME_KEY, getGlobalStyles, resolveStoredThemeKey, THEMES } from "./theme/themes";
 
-let C = { ...THEMES.dark.palette };
+let C = { ...THEMES[DEFAULT_THEME_KEY].palette };
 
 // ─── PYODIDE PYTHON RUNTIME ───
 let _pyodide = null;
@@ -469,9 +469,7 @@ export default function PyithonApp() {
   const [offlineMode, setOfflineMode] = useState(() => safeLocalStorageGet("pyithon-offline") === "true");
   const [pyodideStatus, setPyodideStatus] = useState("idle"); // idle, loading, ready, error
   const [themeKey, setThemeKey] = useState(() => {
-    const stored = safeLocalStorageGet("pyithon-theme");
-    if (stored && THEMES[stored]) return stored;
-    return stored === "light" ? "light" : "dark";
+    return resolveStoredThemeKey(safeLocalStorageGet("pyithon-theme"));
   });
   const darkMode = THEMES[themeKey].palette.scheme === "dark";
   const editorRef = useRef(null);
@@ -674,7 +672,7 @@ export default function PyithonApp() {
   }, [currentLevel, code, handleSubmit]);
 
   const pageStyle = {
-    minHeight: "100vh", background: C.bg, color: C.text,
+    minHeight: "100vh", backgroundColor: C.bg, color: C.text,
     fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     colorScheme: C.scheme,
     backgroundImage: `radial-gradient(${C.dotGrid} 1px, transparent 1px)`,

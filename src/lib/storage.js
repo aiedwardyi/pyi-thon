@@ -1,4 +1,4 @@
-import { AI_PROVIDERS } from "../data/appConfig";
+import { AI_PROVIDERS } from "../data/appConfig.js";
 
 const STORAGE_KEY = "pyithon-progress";
 const LEGACY_CLAUDE_API_KEY_STORAGE_KEY = "pyithon-api-key";
