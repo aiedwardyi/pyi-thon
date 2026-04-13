@@ -36,6 +36,7 @@ export default function GameHeader({
         <div style={{ display: "flex", alignItems: "center", gap: isCompactMobile ? 6 : 8, minWidth: 0 }}>
           <button
             type="button"
+            className="ui-pop"
             aria-label={t("openLevelSelect")}
             data-testid="open-level-select"
             onClick={onOpenLevelSelect}
@@ -46,7 +47,6 @@ export default function GameHeader({
               cursor: "pointer",
               padding: isCompactMobile ? "7px 9px" : "7px 10px",
               borderRadius: 10,
-              transition: "all 0.2s",
               display: "flex",
               alignItems: "center",
               gap: 6,
@@ -63,14 +63,14 @@ export default function GameHeader({
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></svg>
             <span style={{ fontSize: 11, fontWeight: 600, display: isCompactMobile ? "none" : "inline" }}>{t("levels")}</span>
           </button>
-          <svg viewBox="0 0 200 200" style={{ width: 20, height: 20, flexShrink: 0, filter: `drop-shadow(0 0 6px ${C.accentGlow})` }}>
+          <svg className="ui-logo-float" viewBox="0 0 200 200" style={{ width: 20, height: 20, flexShrink: 0, filter: `drop-shadow(0 0 6px ${C.accentGlow})` }}>
             <defs><linearGradient id="pyithonHeaderLogoGradient" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stopColor={C.accentDeep} /><stop offset="100%" stopColor={C.accentLight} /></linearGradient></defs>
-            <path d="M60 160 L60 60 L30 90" fill="none" stroke="url(#pyithonHeaderLogoGradient)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M100 160 L100 40 L70 70" fill="none" stroke="url(#pyithonHeaderLogoGradient)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M140 160 L140 60 L110 90" fill="none" stroke="url(#pyithonHeaderLogoGradient)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M175 160 L175 80 L145 110" fill="none" stroke="url(#pyithonHeaderLogoGradient)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
+            <path className="ui-logo-line" d="M60 160 L60 60 L30 90" fill="none" stroke="url(#pyithonHeaderLogoGradient)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
+            <path className="ui-logo-line" d="M100 160 L100 40 L70 70" fill="none" stroke="url(#pyithonHeaderLogoGradient)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
+            <path className="ui-logo-line" d="M140 160 L140 60 L110 90" fill="none" stroke="url(#pyithonHeaderLogoGradient)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
+            <path className="ui-logo-line" d="M175 160 L175 80 L145 110" fill="none" stroke="url(#pyithonHeaderLogoGradient)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          <span style={{ fontSize: 14, fontWeight: 800, color: C.accent, letterSpacing: -0.5, display: isWide && !isCompactMobile ? "inline" : "none" }}>Pyi-thon</span>
+          <span style={{ fontSize: 14, fontWeight: 800, color: C.accent, letterSpacing: 0, display: isWide && !isCompactMobile ? "inline" : "none" }}>Pyi-thon</span>
         </div>
 
         <div style={{
@@ -85,7 +85,7 @@ export default function GameHeader({
             <span style={{ fontSize: 11, color: C.accentTextDim }}>{completedCount}/{totalLevels}</span>
           </div>
           <div style={{ height: 5, background: "rgba(255,255,255,0.04)", borderRadius: 8, overflow: "hidden" }}>
-            <div style={{
+            <div className="ui-progress-glow" style={{
               height: "100%",
               borderRadius: 8,
               transition: "width 0.7s ease-out",
@@ -98,7 +98,7 @@ export default function GameHeader({
 
         <div style={{ display: "flex", alignItems: "center", gap: isCompactMobile ? 8 : 14, flexShrink: 0, marginLeft: "auto" }}>
           {streak > 0 && (
-            <div style={{
+            <div className="ui-badge-pop" style={{
               display: "flex",
               alignItems: "center",
               gap: 5,
@@ -112,7 +112,7 @@ export default function GameHeader({
               <span style={{ fontSize: 12, fontWeight: 700 }}>{streak}</span>
             </div>
           )}
-          <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 5, color: C.accentText, background: C.accentBg, padding: isCompactMobile ? "4px 8px" : "4px 10px", borderRadius: 8, border: `1px solid ${C.accentBorder}` }}>
+          <div className="ui-badge-pop" style={{ position: "relative", display: "flex", alignItems: "center", gap: 5, color: C.accentText, background: C.accentBg, padding: isCompactMobile ? "4px 8px" : "4px 10px", borderRadius: 8, border: `1px solid ${C.accentBorder}` }}>
             <span style={{ fontSize: 13 }}>&#x26A1;</span>
             <span style={{ fontSize: 12, fontWeight: 700 }}>{totalXP}</span>
             {showXPFloat && (
@@ -123,6 +123,7 @@ export default function GameHeader({
           </div>
           <button
             type="button"
+            className="ui-icon-pop"
             aria-label={soundEnabled ? t("disableSound") : t("enableSound")}
             aria-pressed={soundEnabled}
             onClick={onToggleSound}
@@ -133,7 +134,6 @@ export default function GameHeader({
               cursor: "pointer",
               fontSize: 14,
               padding: 4,
-              transition: "color 0.2s",
             }}
             onMouseEnter={(event) => {
               event.currentTarget.style.color = C.accentText;
@@ -148,6 +148,7 @@ export default function GameHeader({
           </button>
           <button
             type="button"
+            className="ui-icon-pop"
             aria-label={t("openSettings")}
             data-testid="open-settings"
             onClick={onOpenSettings}
@@ -158,7 +159,6 @@ export default function GameHeader({
               cursor: "pointer",
               fontSize: 14,
               padding: 4,
-              transition: "color 0.2s",
             }}
             onMouseEnter={(event) => {
               event.currentTarget.style.color = C.accentText;

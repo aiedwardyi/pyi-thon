@@ -68,6 +68,7 @@ export default function WorkspacePanel({
               <button
                 key={panelKey}
                 type="button"
+                className="ui-pop-soft"
                 aria-pressed={tab === panelKey}
                 onClick={() => setTab(panelKey)}
                 style={{
@@ -78,7 +79,6 @@ export default function WorkspacePanel({
                   border: `1px solid ${tab === panelKey ? C.accentBorder : "transparent"}`,
                   cursor: "pointer",
                   fontFamily: "inherit",
-                  transition: "all 0.2s",
                   background: tab === panelKey ? C.accentBg : "transparent",
                   color: tab === panelKey ? C.accentText : C.accentTextDim,
                 }}
@@ -99,13 +99,12 @@ export default function WorkspacePanel({
       )}
 
       {showHint && (
-        <div data-testid="hint-panel" style={{
+        <div className="ui-panel-pop" data-testid="hint-panel" style={{
           marginTop: 10,
           background: C.amberBg,
           border: `1px solid ${C.amberBorder}`,
           borderRadius: 12,
           padding: "12px 16px",
-          animation: "fadeSlideUp 0.3s ease-out",
         }}>
           <p style={{ color: C.amberText, fontSize: 12, lineHeight: 1.7, margin: 0, whiteSpace: "pre-wrap" }}>
             <span style={{ fontWeight: 700, marginRight: 6 }}>{t("hint")}:</span>

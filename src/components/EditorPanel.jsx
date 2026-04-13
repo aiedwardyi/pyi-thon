@@ -25,7 +25,7 @@ export default function EditorPanel({
 
   return (
     <div style={{ flex: 1, position: "relative", minHeight: 240, animation: shakeEditor ? "shake 0.4s ease-in-out" : "none" }}>
-      <div style={{
+      <div className="ui-panel-pop ui-editor-shell" style={{
         position: "absolute",
         inset: 0,
         background: C.bgCard,
@@ -37,7 +37,6 @@ export default function EditorPanel({
         boxShadow: editorGlow
           ? `0 8px 40px rgba(0,0,0,0.4), 0 0 30px rgba(16,185,129,0.2), inset 0 1px 0 rgba(255,255,255,0.03)`
           : "0 8px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.03)",
-        transition: "border-color 0.3s, box-shadow 0.3s",
       }}>
         <div style={{
           display: "flex",
@@ -48,11 +47,11 @@ export default function EditorPanel({
           borderBottom: `1px solid ${C.borderLight}`,
         }}>
           <div style={{ display: "flex", gap: 5 }}>
-            <div style={{ width: 10, height: 10, borderRadius: "50%", background: C.trafficRed }} />
-            <div style={{ width: 10, height: 10, borderRadius: "50%", background: C.trafficYellow }} />
-            <div style={{ width: 10, height: 10, borderRadius: "50%", background: C.trafficGreen }} />
+            <div className="ui-traffic-dot" style={{ width: 10, height: 10, borderRadius: "50%", background: C.trafficRed }} />
+            <div className="ui-traffic-dot" style={{ width: 10, height: 10, borderRadius: "50%", background: C.trafficYellow }} />
+            <div className="ui-traffic-dot" style={{ width: 10, height: 10, borderRadius: "50%", background: C.trafficGreen }} />
           </div>
-          <div style={{
+          <div className="ui-chip-pop" style={{
             display: "flex",
             alignItems: "center",
             gap: 6,
