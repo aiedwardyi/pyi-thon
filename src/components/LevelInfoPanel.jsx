@@ -9,6 +9,10 @@ export default function LevelInfoPanel({
   t,
 }) {
   const phasePalette = phaseColors[level.phase];
+  const successChecks = [
+    t("successUseConcept"),
+    t("successMatchOutput"),
+  ];
 
   return (
     <div style={{ padding: "16px 20px 12px" }}>
@@ -61,6 +65,27 @@ export default function LevelInfoPanel({
       <div className="ui-panel-subtle" style={{ background: "rgba(255,255,255,0.015)", border: `1px solid ${C.border}`, borderRadius: 12, padding: "12px 16px" }}>
         <p style={{ fontSize: 10, fontWeight: 700, color: C.accent, textTransform: "uppercase", letterSpacing: 0, margin: "0 0 6px" }}>{t("task")}</p>
         <p style={{ color: C.textMuted, fontSize: 13, lineHeight: 1.7, margin: 0 }}>{levelT.task}</p>
+        <div style={{ marginTop: 12, paddingTop: 10, borderTop: `1px solid ${C.borderLight}` }}>
+          <p style={{ fontSize: 10, fontWeight: 700, color: C.textDim, textTransform: "uppercase", letterSpacing: 0, margin: "0 0 8px" }}>{t("successCriteria")}</p>
+          <ul style={{ margin: 0, paddingLeft: 18, color: C.textMuted, fontSize: 12, lineHeight: 1.7 }}>
+            {successChecks.map((check) => (
+              <li key={check}>{check}</li>
+            ))}
+            {level.simulatedInput && <li>{t("successSampleInput")}</li>}
+          </ul>
+          <pre style={{
+            margin: "8px 0 0",
+            whiteSpace: "pre-wrap",
+            fontSize: 12,
+            lineHeight: 1.6,
+            color: C.codeText,
+            fontFamily: monoFont,
+            background: C.codeBg,
+            borderRadius: 10,
+            padding: "10px 12px",
+            border: `1px solid ${C.borderLight}`,
+          }}>{level.expectedOutput}</pre>
+        </div>
         {level.simulatedInput && (
           <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${C.borderLight}` }}>
             <p style={{ fontSize: 10, fontWeight: 700, color: C.textDim, textTransform: "uppercase", letterSpacing: 0, margin: "0 0 6px" }}>{t("sampleInput")}</p>

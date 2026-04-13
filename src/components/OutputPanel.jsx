@@ -4,6 +4,7 @@ export default function OutputPanel({
   C,
   editorRef,
   feedback,
+  formattedHint,
   isEvaluating,
   level,
   levelT,
@@ -14,6 +15,12 @@ export default function OutputPanel({
   t,
 }) {
   const providerLabel = AI_PROVIDERS[provider]?.name || AI_PROVIDERS.gemini.name;
+  const failedAttemptCount = feedback?.attemptCount || 0;
+  const coachingText = failedAttemptCount >= 3
+    ? t("coachingThird")
+    : failedAttemptCount === 2
+      ? t("coachingSecond")
+      : t("coachingFirst");
 
   if (isEvaluating) {
     return (
@@ -161,37 +168,71 @@ export default function OutputPanel({
           <p style={{ color: C.textDim, fontSize: 12, lineHeight: 1.7, margin: 0 }}>{levelT.explanation}</p>
         </div>
 
+        {feedback.correct && (
+          <div style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${C.border}` }}>
+            <p style={{ fontSize: 10, fontWeight: 700, color: C.amber, textTransform: "uppercase", letterSpacing: 0, margin: "0 0 6px" }}>{t("bonusChallenge")}</p>
+            <p style={{ color: C.textMuted, fontSize: 12, lineHeight: 1.7, margin: 0 }}>{t("bonusChallengeText")}</p>
+          </div>
+        )}
+
         {!feedback.correct && (
-          <button
-            type="button"
-            className="ui-pop"
-            onClick={() => {
-              setFeedback(null);
-              setTab("editor");
-              setTimeout(() => editorRef.current?.focus(), 50);
-            }}
-            style={{
-              width: "100%",
+          <>
+            <div style={{
               marginTop: 16,
-              padding: "12px 0",
+              padding: "12px 14px",
               borderRadius: 10,
-              background: C.accentBg,
               border: `1px solid ${C.accentBorder}`,
-              color: C.accentText,
-              fontSize: 13,
-              fontWeight: 600,
-              cursor: "pointer",
-              fontFamily: "inherit",
-            }}
-            onMouseEnter={(event) => {
-              event.currentTarget.style.background = C.accentBorder;
-            }}
-            onMouseLeave={(event) => {
-              event.currentTarget.style.background = C.accentBg;
-            }}
-          >
-            {t("tryAgain")}
-          </button>
+              background: C.accentBg,
+            }}>
+              <p style={{ fontSize: 10, fontWeight: 700, color: C.accent, textTransform: "uppercase", letterSpacing: 0, margin: "0 0 6px" }}>{t("nextStep")}</p>
+              <p style={{ color: C.accentText, fontSize: 12, lineHeight: 1.7, margin: 0 }}>{coachingText}</p>
+              {failedAttemptCount >= 3 && (
+                <pre style={{
+                  margin: "10px 0 0",
+                  whiteSpace: "pre-wrap",
+                  fontSize: 12,
+                  lineHeight: 1.6,
+                  color: C.codeText,
+                  fontFamily: monoFont,
+                  background: C.codeBg,
+                  borderRadius: 8,
+                  padding: "10px 12px",
+                  border: `1px solid ${C.borderLight}`,
+                }}>{formattedHint}</pre>
+              )}
+            </div>
+
+            <button
+              type="button"
+              className="ui-pop"
+              onClick={() => {
+                setFeedback(null);
+                setTab("editor");
+                setTimeout(() => editorRef.current?.focus(), 50);
+              }}
+              style={{
+                width: "100%",
+                marginTop: 16,
+                padding: "12px 0",
+                borderRadius: 10,
+                background: C.accentBg,
+                border: `1px solid ${C.accentBorder}`,
+                color: C.accentText,
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: "pointer",
+                fontFamily: "inherit",
+              }}
+              onMouseEnter={(event) => {
+                event.currentTarget.style.background = C.accentBorder;
+              }}
+              onMouseLeave={(event) => {
+                event.currentTarget.style.background = C.accentBg;
+              }}
+            >
+              {t("tryAgain")}
+            </button>
+          </>
         )}
       </div>
     </div>
