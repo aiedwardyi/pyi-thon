@@ -9,6 +9,7 @@ export default function LevelInfoPanel({
   t,
 }) {
   const phasePalette = phaseColors[level.phase];
+  const expectedOutput = level.expectedOutput.trim();
   const successChecks = [
     t("successUseConcept"),
     t("successMatchOutput"),
@@ -84,7 +85,7 @@ export default function LevelInfoPanel({
             borderRadius: 10,
             padding: "10px 12px",
             border: `1px solid ${C.borderLight}`,
-          }}>{level.expectedOutput}</pre>
+          }}>{expectedOutput}</pre>
         </div>
         {level.simulatedInput && (
           <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${C.borderLight}` }}>

@@ -625,15 +625,15 @@ export default function PyithonApp() {
       setTimeout(() => setOfflineFallbackToast(false), 4000);
     }
     const userCode = code.trim();
+    const expected = level.expectedOutput.trim();
     if (!userCode || userCode === level.starterCode.trim()) {
       const attemptCount = (failedAttemptsByLevel[level.id] || 0) + 1;
       setFailedAttemptsByLevel(prev => ({ ...prev, [level.id]: attemptCount }));
-      setFeedback({ correct: false, message: t("writeCodeFirst"), expected: level.expectedOutput, attemptCount });
+      setFeedback({ correct: false, message: t("writeCodeFirst"), expected, attemptCount });
       setShakeEditor(true); setTimeout(() => setShakeEditor(false), 500);
       playTone(330, 0.15, "triangle");
       return;
     }
-    const expected = level.expectedOutput.trim();
     setIsEvaluating(true); setFeedback(null); setTab("output");
     try {
       const result = useOffline ? await evaluateOffline(userCode, level, lang) : await evaluateWithAI(userCode, level, apiKey, lang, provider);
