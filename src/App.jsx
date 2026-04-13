@@ -454,6 +454,7 @@ export default function PyithonApp() {
   const [code, setCode] = useState(LEVELS[0].starterCode);
   const [showHint, setShowHint] = useState(false);
   const [feedback, setFeedback] = useState(null);
+  const [failedAttemptsByLevel, setFailedAttemptsByLevel] = useState({});
   const [completedLevels, setCompletedLevels] = useState(() => new Set());
   const [streak, setStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
@@ -511,7 +512,13 @@ export default function PyithonApp() {
       if (qaConfig.skipWelcome) setShowWelcome(false);
       return;
     }
-    if (saved) {
+    const hasSavedSession = saved?.hasStarted
+      || (saved?.completedLevels?.length > 0)
+      || (saved?.currentLevel > 0)
+      || (saved?.streak > 0)
+      || (saved?.bestStreak > 0)
+      || (saved?.totalXP > 0);
+    if (saved && hasSavedSession) {
       if (saved.completedLevels) setCompletedLevels(new Set(saved.completedLevels));
       if (saved.currentLevel !== undefined) setCurrentLevel(saved.currentLevel);
       if (saved.streak !== undefined) setStreak(saved.streak);
@@ -522,8 +529,10 @@ export default function PyithonApp() {
   }, []);
 
   useEffect(() => {
-    saveProgress({ completedLevels: [...completedLevels], currentLevel, streak, bestStreak, totalXP });
-  }, [completedLevels, currentLevel, streak, bestStreak, totalXP]);
+    const hasMeaningfulProgress = completedLevels.size > 0 || currentLevel !== 0 || streak !== 0 || bestStreak !== 0 || totalXP !== 0;
+    if (showWelcome && !hasMeaningfulProgress) return;
+    saveProgress({ completedLevels: [...completedLevels], currentLevel, streak, bestStreak, totalXP, hasStarted: !showWelcome || hasMeaningfulProgress });
+  }, [bestStreak, completedLevels, currentLevel, showWelcome, streak, totalXP]);
 
   useEffect(() => {
     setCode(LEVELS[currentLevel].starterCode);
@@ -616,18 +625,26 @@ export default function PyithonApp() {
       setTimeout(() => setOfflineFallbackToast(false), 4000);
     }
     const userCode = code.trim();
+    const expected = level.expectedOutput.trim();
     if (!userCode || userCode === level.starterCode.trim()) {
-      setFeedback({ correct: false, message: t("writeCodeFirst"), expected: level.expectedOutput });
+      const attemptCount = (failedAttemptsByLevel[level.id] || 0) + 1;
+      setFailedAttemptsByLevel(prev => ({ ...prev, [level.id]: attemptCount }));
+      setFeedback({ correct: false, message: t("writeCodeFirst"), expected, attemptCount });
       setShakeEditor(true); setTimeout(() => setShakeEditor(false), 500);
       playTone(330, 0.15, "triangle");
       return;
     }
-    const expected = level.expectedOutput.trim();
     setIsEvaluating(true); setFeedback(null); setTab("output");
     try {
       const result = useOffline ? await evaluateOffline(userCode, level, lang) : await evaluateWithAI(userCode, level, apiKey, lang, provider);
       if (result.correct) {
-        setFeedback({ correct: true, message: result.feedback || t("correct"), expected, aiExplanation: result.explanation });
+        setFailedAttemptsByLevel(prev => {
+          if (!prev[level.id]) return prev;
+          const next = { ...prev };
+          delete next[level.id];
+          return next;
+        });
+        setFeedback({ correct: true, message: result.feedback || t("correct"), expected, aiExplanation: result.explanation, attemptCount: 0 });
         const isNew = !completedLevels.has(level.id);
         if (isNew) {
           const nc = new Set(completedLevels); nc.add(level.id); setCompletedLevels(nc);
@@ -639,14 +656,18 @@ export default function PyithonApp() {
         setEditorGlow(true); setTimeout(() => setEditorGlow(false), 1500);
         playTone(523.25, 0.1); setTimeout(() => playTone(659.25, 0.1), 100); setTimeout(() => playTone(783.99, 0.15), 200);
       } else {
-        setFeedback({ correct: false, message: result.feedback || t("notQuite"), expected, aiExplanation: result.explanation });
+        const attemptCount = (failedAttemptsByLevel[level.id] || 0) + 1;
+        setFailedAttemptsByLevel(prev => ({ ...prev, [level.id]: attemptCount }));
+        setFeedback({ correct: false, message: result.feedback || t("notQuite"), expected, aiExplanation: result.explanation, attemptCount });
         setStreak(0); setShakeEditor(true); setTimeout(() => setShakeEditor(false), 500);
         playTone(330, 0.15, "triangle");
       }
     } catch (err) {
-      setFeedback({ correct: false, message: `${t("generalError")}: ${err.message}`, expected });
+      const attemptCount = (failedAttemptsByLevel[level.id] || 0) + 1;
+      setFailedAttemptsByLevel(prev => ({ ...prev, [level.id]: attemptCount }));
+      setFeedback({ correct: false, message: `${t("generalError")}: ${err.message}`, expected, attemptCount });
     } finally { setIsEvaluating(false); }
-  }, [apiKey, bestStreak, code, completedLevels, isEvaluating, lang, level, offlineMode, playTone, provider, t]);
+  }, [apiKey, bestStreak, code, completedLevels, failedAttemptsByLevel, isEvaluating, lang, level, offlineMode, playTone, provider, t]);
 
   // Ctrl+Enter to run
   useEffect(() => {
@@ -655,7 +676,18 @@ export default function PyithonApp() {
     return () => window.removeEventListener("keydown", handler);
   }, [handleSubmit]);
 
-  const handleReset = () => { setCode(level.starterCode); setFeedback(null); setShowHint(false); setTab("editor"); };
+  const handleReset = () => {
+    setCode(level.starterCode);
+    setFeedback(null);
+    setShowHint(false);
+    setTab("editor");
+    setFailedAttemptsByLevel(prev => {
+      if (!prev[level.id]) return prev;
+      const next = { ...prev };
+      delete next[level.id];
+      return next;
+    });
+  };
   const goToLevel = (idx) => { if (idx < unlockedUpTo || completedLevels.has(LEVELS[idx].id)) { setCurrentLevel(idx); setShowLevelSelect(false); } };
 
   const filename = `level_${String(level.id).padStart(2, "0")}.py`;

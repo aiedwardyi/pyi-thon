@@ -44,6 +44,7 @@ export default function WorkspacePanel({
     C,
     editorRef,
     feedback,
+    formattedHint,
     isEvaluating,
     level,
     levelT,
