@@ -168,13 +168,6 @@ export default function OutputPanel({
           <p style={{ color: C.textDim, fontSize: 12, lineHeight: 1.7, margin: 0 }}>{levelT.explanation}</p>
         </div>
 
-        {feedback.correct && (
-          <div style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${C.border}` }}>
-            <p style={{ fontSize: 10, fontWeight: 700, color: C.amber, textTransform: "uppercase", letterSpacing: 0, margin: "0 0 6px" }}>{t("bonusChallenge")}</p>
-            <p style={{ color: C.textMuted, fontSize: 12, lineHeight: 1.7, margin: 0 }}>{t("bonusChallengeText")}</p>
-          </div>
-        )}
-
         {!feedback.correct && (
           <>
             <div style={{
