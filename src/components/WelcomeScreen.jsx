@@ -10,8 +10,6 @@ export default function WelcomeScreen({
   tagline,
   typedChars,
 }) {
-  const welcomePoints = [t("welcomeNoInstall"), t("welcomeAiOptional"), t("welcomeFirstStep")];
-
   return (
     <div style={{ ...pageStyle, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 32, position: "relative", overflow: "hidden" }}>
       <div style={{ position: "absolute", top: "25%", left: "50%", transform: "translate(-50%,-50%)", width: 700, height: 700, background: C.accentGlowSoft, borderRadius: "50%", filter: "blur(180px)", pointerEvents: "none" }} />
@@ -33,30 +31,7 @@ export default function WelcomeScreen({
           {tagline.substring(0, typedChars).split("\n").map((line, index, arr) => <span key={index}>{line}{index < arr.length - 1 && <br />}</span>)}
           <span style={{ display: "inline-block", width: 2, height: "1em", background: C.accent, marginLeft: 2, animation: "blink 1s step-end infinite", verticalAlign: "text-bottom" }} />
         </p>
-        <p style={{ color: C.accentTextDim, fontSize: 12, margin: "0 0 18px", letterSpacing: 0, textTransform: "uppercase" }}>{t("subtitle")}</p>
-
-        <div style={{
-          display: "flex",
-          flexWrap: "wrap",
-          justifyContent: "center",
-          gap: 8,
-          maxWidth: 420,
-          marginBottom: 44,
-        }}>
-          {welcomePoints.map((point) => (
-            <span key={point} style={{
-              color: C.textMuted,
-              fontSize: 12,
-              lineHeight: 1.5,
-              padding: "6px 10px",
-              borderRadius: 8,
-              border: `1px solid ${C.borderLight}`,
-              background: "rgba(255,255,255,0.025)",
-            }}>
-              {point}
-            </span>
-          ))}
-        </div>
+        <p style={{ color: C.accentTextDim, fontSize: 12, marginBottom: 48, letterSpacing: 0, textTransform: "uppercase" }}>{t("subtitle")}</p>
 
         <button type="button" className="ui-pop" onClick={onStartLearning} style={{
           padding: "16px 52px", borderRadius: 14, fontWeight: 700, color: C.btnText, fontSize: 16,
