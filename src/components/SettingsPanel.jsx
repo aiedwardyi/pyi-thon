@@ -126,7 +126,7 @@ export default function SettingsPanel({
             <p id="offline-mode-desc" style={{ color: C.textDim, fontSize: 12, margin: "2px 0 0" }}>{offlineMode ? `${t("offlineDesc")}${pyodideStatus === "loading" ? ` (${t("loading")})` : pyodideStatus === "ready" ? ` (${t("ready")})` : ""}` : t("onlineDesc")}</p>
           </div>
           <button type="button" className="ui-pop" role="switch" aria-checked={offlineMode} aria-labelledby="offline-mode-label" aria-describedby="offline-mode-desc" onClick={() => setOfflineMode(!offlineMode)} style={toggleStyle(offlineMode, C, darkMode)}>
-            <div className="ui-toggle-knob" style={{ width: 20, height: 20, borderRadius: "50%", background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.2)", transform: offlineMode ? "translateX(20px)" : "translateX(0)" }} />
+            <div className="ui-toggle-knob" style={{ width: 20, height: 20, borderRadius: "50%", background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.2)", transform: `${offlineMode ? "translateX(20px)" : "translateX(0)"} scale(var(--toggle-knob-scale, 1))` }} />
           </button>
         </div>
 
