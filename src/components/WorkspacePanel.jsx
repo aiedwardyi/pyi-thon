@@ -105,7 +105,6 @@ export default function WorkspacePanel({
           border: `1px solid ${C.amberBorder}`,
           borderRadius: 12,
           padding: "12px 16px",
-          animation: "fadeSlideUp 0.3s ease-out",
         }}>
           <p style={{ color: C.amberText, fontSize: 12, lineHeight: 1.7, margin: 0, whiteSpace: "pre-wrap" }}>
             <span style={{ fontWeight: 700, marginRight: 6 }}>{t("hint")}:</span>

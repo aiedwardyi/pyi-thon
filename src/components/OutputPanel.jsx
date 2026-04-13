@@ -77,6 +77,20 @@ export default function OutputPanel({
     );
   }
 
+  const statusIconStyle = {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+    background: feedback.correct ? C.green : C.red,
+    cursor: feedback.correct ? "default" : "pointer",
+    border: "none",
+    padding: 0,
+  };
+
   return (
     <div style={{ flex: 1, minHeight: 200 }}>
       <div className="ui-panel-pop" style={{
@@ -88,30 +102,15 @@ export default function OutputPanel({
         background: C.bgCard,
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16, paddingBottom: 16, borderBottom: `1px solid ${C.border}` }}>
-          <button
-            type="button"
-            className="ui-icon-pop"
-            onClick={() => {
-              if (!feedback.correct) setTab("editor");
-            }}
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 10,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-              background: feedback.correct ? C.green : C.red,
-              cursor: feedback.correct ? "default" : "pointer",
-              border: "none",
-              padding: 0,
-            }}
-          >
-            {feedback.correct
-              ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-              : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>}
-          </button>
+          {feedback.correct ? (
+            <span aria-hidden="true" style={statusIconStyle}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+            </span>
+          ) : (
+            <button type="button" className="ui-icon-pop" aria-label={t("tryAgain")} onClick={() => setTab("editor")} style={statusIconStyle}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+            </button>
+          )}
           <div style={{ flex: 1 }}>
             <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{feedback.correct ? t("correct") : t("notQuite")}</span>
             <p style={{ fontSize: 13, color: C.textMuted, margin: "4px 0 0", lineHeight: 1.6 }}>{feedback.aiExplanation || feedback.message}</p>

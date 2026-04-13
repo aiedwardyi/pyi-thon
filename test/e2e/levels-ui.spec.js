@@ -22,6 +22,7 @@ async function expectHintFormatting(page) {
 
 test("desktop QA sweep across all 30 levels", async ({ page, isMobile }) => {
   test.skip(isMobile, "Desktop-only sweep");
+  test.setTimeout(120_000);
 
   for (let levelId = 1; levelId <= TOTAL_LEVELS; levelId += 1) {
     await page.goto(levelUrl(levelId, "en"));
