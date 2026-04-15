@@ -11,6 +11,7 @@ export default function WorkspacePanel({
   filename,
   formattedHint,
   highlightRef,
+  isCompactMobile,
   isEvaluating,
   isWide,
   level,
@@ -44,7 +45,6 @@ export default function WorkspacePanel({
     C,
     editorRef,
     feedback,
-    formattedHint,
     isEvaluating,
     level,
     levelT,
@@ -99,7 +99,7 @@ export default function WorkspacePanel({
         </>
       )}
 
-      {showHint && (
+      {showHint && !isCompactMobile && (
         <div className="ui-panel-pop" data-testid="hint-panel" style={{
           marginTop: 10,
           background: C.amberBg,

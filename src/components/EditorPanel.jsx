@@ -107,6 +107,12 @@ export default function EditorPanel({
             </pre>
             <textarea
               ref={editorRef}
+              autoCapitalize="off"
+              autoComplete="off"
+              autoCorrect="off"
+              autoSave="off"
+              enterKeyHint="enter"
+              inputMode="text"
               value={code}
               onChange={(event) => setCode(event.target.value)}
               spellCheck={false}

@@ -6,6 +6,7 @@ import "./client-secrets.test.js";
 import "./hint-formatting.test.js";
 import "./preferences-storage.test.js";
 import "./public-assets.test.js";
+import "./python-error-localization.test.js";
 
 const STRINGS = {
   offlineLineDiff: 'Line {line}: got "{got}" but expected "{exp}".',

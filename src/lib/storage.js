@@ -24,6 +24,26 @@ export function safeLocalStorageSet(key, value) {
   }
 }
 
+export function safeSessionStorageGet(key, fallback = "") {
+  if (typeof window === "undefined") return fallback;
+  try {
+    const value = window.sessionStorage.getItem(key);
+    return value ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+export function safeSessionStorageSet(key, value) {
+  if (typeof window === "undefined") return false;
+  try {
+    window.sessionStorage.setItem(key, value);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function safeLocalStorageRemove(key) {
   if (typeof window === "undefined") return;
   try {

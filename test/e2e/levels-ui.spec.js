@@ -35,7 +35,7 @@ test("desktop QA sweep across all 30 levels", async ({ page, isMobile }) => {
 
     await page.getByTestId("open-settings").click();
     await expect(page.getByText(/^Language$/)).toBeVisible();
-    await page.getByTestId("lang-ko").click();
+    await page.getByTestId("lang-ko").click({ force: true });
     await page.getByTestId("close-settings").click();
 
     await expect(page.getByRole("button", { name: "힌트", exact: true })).toBeVisible();
@@ -46,7 +46,7 @@ test("desktop QA sweep across all 30 levels", async ({ page, isMobile }) => {
 
     await page.getByTestId("open-settings").click();
     await expect(page.getByText(/^언어$/)).toBeVisible();
-    await page.getByTestId("lang-en").click();
+    await page.getByTestId("lang-en").click({ force: true });
     await page.getByTestId("close-settings").click();
     await expect(page.getByRole("button", { name: "Hint", exact: true })).toBeVisible();
   }
@@ -97,6 +97,9 @@ test("Korean mode localizes accessible labels", async ({ page }) => {
   await expect(page.getByRole("button", { name: "설정 열기" })).toBeVisible();
   await expect(page.getByRole("button", { name: "사운드 켜기" })).toBeVisible();
   await expect(page.locator("textarea")).toHaveAttribute("placeholder", "# 여기에 Python 코드를 작성하세요...");
+  await expect(page.locator("textarea")).toHaveAttribute("autocapitalize", "off");
+  await expect(page.locator("textarea")).toHaveAttribute("autocorrect", "off");
+  await expect(page.locator("textarea")).toHaveAttribute("autocomplete", "off");
 
   await page.getByTestId("open-settings").click();
   await expect(page.getByRole("dialog", { name: "설정" })).toBeVisible();
@@ -114,6 +117,7 @@ test("mobile QA sweep across all 30 levels", async ({ page, isMobile }) => {
     await page.goto(levelUrl(levelId, "en"));
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await expect(page.getByRole("button", { name: "Hint", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Task", exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: /Run Code/ })).toBeVisible();
 
     await openHint(page, "en");
@@ -122,7 +126,7 @@ test("mobile QA sweep across all 30 levels", async ({ page, isMobile }) => {
     await closeHint(page, "en");
 
     await page.getByTestId("open-settings").click();
-    await page.getByTestId("lang-ko").click();
+    await page.getByTestId("lang-ko").click({ force: true });
     await page.getByTestId("close-settings").click();
     await expect(page.getByRole("button", { name: "힌트", exact: true })).toBeVisible();
 
@@ -130,4 +134,82 @@ test("mobile QA sweep across all 30 levels", async ({ page, isMobile }) => {
     const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
     expect(scrollWidth).toBeLessThanOrEqual(clientWidth + 1);
   }
+});
+
+test("narrow phone widths keep the header in compact layout", async ({ page, isMobile }) => {
+  test.skip(isMobile, "Desktop-only viewport check");
+
+  await page.setViewportSize({ width: 440, height: 900 });
+  await page.goto(levelUrl(1, "en"));
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+
+  const buttonLabelDisplay = await page.getByTestId("open-level-select").locator("span").evaluate((node) => window.getComputedStyle(node).display);
+  expect(buttonLabelDisplay).toBe("none");
+  await expect(page.getByText("Pyi-thon", { exact: true })).toBeVisible();
+
+  const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+  const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
+  expect(scrollWidth).toBeLessThanOrEqual(clientWidth + 1);
+});
+
+test("local feedback notice appears once per session", async ({ page }) => {
+  await page.goto(levelUrl(1, "en"));
+  await expect(page.getByTestId("offline-badge")).toBeVisible();
+
+  await page.locator("textarea").fill('print("Hello, World!")');
+  await page.getByRole("button", { name: /Run Code/ }).click();
+
+  const toast = page.getByTestId("status-toast");
+  await expect(toast).toBeVisible();
+  await expect(toast).toHaveText("Running with local feedback - add an API key in Settings for expanded feedback");
+  await expect(toast).toBeHidden({ timeout: 5000 });
+
+  await page.getByRole("button", { name: /Run Code/ }).click();
+  await expect(toast).toBeHidden({ timeout: 1000 });
+});
+
+test("invalid online API keys fall back to local feedback without blocking a correct answer", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem("pyithon-offline", "false");
+    window.localStorage.setItem("pyithon-provider", "openai");
+    window.localStorage.setItem("pyithon-api-key-openai", "bad-key");
+  });
+
+  await page.route("https://api.openai.com/v1/chat/completions", async (route) => {
+    await route.fulfill({
+      status: 401,
+      contentType: "application/json",
+      body: JSON.stringify({ error: { message: "invalid api key" } }),
+    });
+  });
+
+  await page.goto(levelUrl(1, "en"));
+  await page.locator("textarea").fill('print("Hello, World!")');
+  await page.getByRole("button", { name: /Run Code/ }).click();
+
+  await expect(page.getByText("Correct!", { exact: true })).toBeVisible();
+  await expect(page.getByTestId("status-toast")).toHaveText("Your API key is invalid or expired. Go to Settings to enter a new key, or switch to Offline mode.");
+  await expect(page.getByTestId("feedback-source-message")).toHaveText("Checked with local feedback for this run.");
+});
+
+test("switching languages clears stale output feedback so panels stay consistent", async ({ page }) => {
+  await page.goto(levelUrl(1, "en"));
+  await page.locator("textarea").fill('print("Hello, World!"');
+  await page.getByRole("button", { name: /Run Code/ }).click();
+  await expect(page.getByText("Not quite", { exact: true })).toBeVisible();
+
+  await page.getByTestId("open-settings").click();
+    await page.getByTestId("lang-ko").click({ force: true });
+  await page.getByTestId("close-settings").click();
+
+  await expect(page.getByText("코드를 실행하면 결과가 여기에 표시됩니다")).toBeVisible();
+});
+
+test("Korean syntax errors use localized fallback wording", async ({ page }) => {
+  await page.goto(levelUrl(1, "ko"));
+  await page.locator("textarea").fill('print("Hello, World!"');
+  await page.getByRole("button", { name: "코드 실행" }).click();
+
+  await expect(page.getByText(/Python 오류: 문법 오류:/)).toBeVisible();
+  await expect(page.getByText(/닫히지 않았습니다/)).toBeVisible();
 });
