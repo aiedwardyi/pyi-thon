@@ -944,7 +944,7 @@ export default function PyithonApp() {
       })}
       {statusToast && (
         <div data-testid="status-toast" style={{
-          position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)",
+          position: "fixed", bottom: isCompactMobile ? 136 : 96, left: "50%", transform: "translateX(-50%)",
           background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 12,
           padding: "10px 20px", fontSize: 13, color: C.textDim, fontWeight: 500,
           boxShadow: `0 8px 32px rgba(0,0,0,0.3)`, zIndex: 9999,

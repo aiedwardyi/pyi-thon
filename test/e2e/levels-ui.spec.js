@@ -192,6 +192,30 @@ test("invalid online API keys fall back to local feedback without blocking a cor
   await expect(page.getByTestId("feedback-source-message")).toHaveText("Checked with local feedback for this run.");
 });
 
+test("Korean invalid online API keys fall back to local feedback without blocking a correct answer", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem("pyithon-offline", "false");
+    window.localStorage.setItem("pyithon-provider", "openai");
+    window.localStorage.setItem("pyithon-api-key-openai", "bad-key");
+  });
+
+  await page.route("https://api.openai.com/v1/chat/completions", async (route) => {
+    await route.fulfill({
+      status: 401,
+      contentType: "application/json",
+      body: JSON.stringify({ error: { message: "invalid api key" } }),
+    });
+  });
+
+  await page.goto(levelUrl(1, "ko"));
+  await page.locator("textarea").fill('print("Hello, World!")');
+  await page.getByRole("button", { name: "코드 실행" }).click();
+
+  await expect(page.getByText("정답!", { exact: true })).toBeVisible();
+  await expect(page.getByTestId("status-toast")).toHaveText("API 키가 잘못되었거나 만료되었습니다. 설정에서 새 키를 입력하거나 오프라인 모드로 전환하세요.");
+  await expect(page.getByTestId("feedback-source-message")).toHaveText("이번 실행은 로컬 피드백으로 채점했습니다.");
+});
+
 test("switching languages clears stale output feedback so panels stay consistent", async ({ page }) => {
   await page.goto(levelUrl(1, "en"));
   await page.locator("textarea").fill('print("Hello, World!"');
@@ -212,4 +236,15 @@ test("Korean syntax errors use localized fallback wording", async ({ page }) => 
 
   await expect(page.getByText(/Python 오류: 문법 오류:/)).toBeVisible();
   await expect(page.getByText(/닫히지 않았습니다/)).toBeVisible();
+});
+
+test("Korean unterminated string literal errors stay fully localized", async ({ page }) => {
+  await page.goto(levelUrl(1, "ko"));
+  await page.locator("textarea").fill('print("Hello, World!)');
+  await page.getByRole("button", { name: "코드 실행" }).click();
+
+  await expect(page.getByText("아쉬워요", { exact: true })).toBeVisible();
+  await expect(page.getByText(/Python 오류: 문법 오류: 닫히지 않은 문자열입니다/)).toBeVisible();
+  await expect(page.getByText(/번째 줄에서 감지됨/)).toBeVisible();
+  await expect(page.getByText(/unterminated string literal/)).toBeHidden();
 });

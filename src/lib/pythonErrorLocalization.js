@@ -52,6 +52,9 @@ export function localizePythonError(errorMessage, lang) {
     message = message.replace(from, to);
   }
 
+  message = message.replace(/unterminated triple-quoted string literal/g, "닫히지 않은 삼중 따옴표 문자열입니다");
+  message = message.replace(/unterminated string literal/g, "닫히지 않은 문자열입니다");
+  message = message.replace(/\(detected at line (\d+)\)/g, "($1번째 줄에서 감지됨)");
   message = message.replace(/['"](.+?)['"] was never closed/g, (_, token) => `${formatUnclosedTokenKo(token)}가 닫히지 않았습니다`);
   message = message.replace(/name ['"](.+?)['"] is not defined/g, (_, name) => `'${name}' 이름이 정의되지 않았습니다`);
   message = message.replace(/can only concatenate str \(not "(.+?)"\) to str/g, (_, typeName) => `문자열에는 문자열만 이어붙일 수 있습니다 ("${typeName}" 타입은 바로 이어붙일 수 없습니다)`);
