@@ -187,13 +187,39 @@ export function getGlobalStyles(theme) {
     0%, 100% { opacity: 0.4; transform: scale(1); }
     50% { opacity: 1; transform: scale(1.15); }
   }
-  @keyframes headerLogoFloat {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-2px); }
+  @keyframes bubbleIn {
+    0% { opacity: 0; scale: 0.94; translate: 0 14px; }
+    62% { opacity: 1; scale: 1.025; translate: 0 -2px; }
+    100% { opacity: 1; scale: 1; translate: 0 0; }
   }
-  @keyframes headerLogoGlow {
-    0%, 100% { opacity: 0.9; }
-    50% { opacity: 1; }
+  @keyframes surfaceSettle {
+    0% { opacity: 0; scale: 0.98; translate: 0 8px; }
+    100% { opacity: 1; scale: 1; translate: 0 0; }
+  }
+  @keyframes logoFloat {
+    0%, 100% { translate: 0 0; rotate: -1deg; }
+    50% { translate: 0 -6px; rotate: 1deg; }
+  }
+  @keyframes logoStroke {
+    from { stroke-dashoffset: 170; }
+    to { stroke-dashoffset: 0; }
+  }
+  @keyframes shimmerSweep {
+    0% { transform: translateX(-130%); opacity: 0; }
+    18%, 70% { opacity: 0.7; }
+    100% { transform: translateX(130%); opacity: 0; }
+  }
+  @keyframes backdropIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes currentDotPulse {
+    0%, 100% { scale: 1; opacity: 0.8; }
+    50% { scale: 1.45; opacity: 1; }
+  }
+  @keyframes trafficGlow {
+    0%, 100% { scale: 1; filter: brightness(1); }
+    50% { scale: 1.16; filter: brightness(1.25); }
   }
   @keyframes dotBounce {
     0%, 80%, 100% { transform: scale(0.6); opacity: 0.3; }
@@ -213,8 +239,183 @@ export function getGlobalStyles(theme) {
   textarea::-webkit-scrollbar-track { background: transparent; }
   textarea::-webkit-scrollbar-thumb { background: rgba(129,140,248,0.15); border-radius: 4px; }
   textarea::-webkit-scrollbar-thumb:hover { background: rgba(129,140,248,0.3); }
-  .ui-logo-float { animation: headerLogoFloat 4s ease-in-out infinite; transform-origin: center; }
-  .ui-logo-line { animation: headerLogoGlow 4s ease-in-out infinite; }
+
+  .ui-bounce-in {
+    animation: bubbleIn 0.58s cubic-bezier(0.2, 0.9, 0.2, 1.2) both;
+  }
+
+  .ui-panel-pop,
+  .ui-panel-subtle,
+  .ui-modal-pop {
+    animation: surfaceSettle 0.42s cubic-bezier(0.2, 0.9, 0.2, 1.1) both;
+    transform-origin: center;
+  }
+
+  .ui-settings-backdrop {
+    animation: backdropIn 0.22s ease-out both;
+  }
+
+  .ui-pop,
+  .ui-pop-soft,
+  .ui-pop-subtle,
+  .ui-icon-pop,
+  .ui-badge-pop,
+  .ui-chip-pop,
+  .ui-level-card,
+  .ui-panel-pop,
+  .ui-panel-subtle,
+  .ui-editor-shell {
+    transform-origin: center;
+    transition-property: scale, translate, rotate, filter, box-shadow, background-color, border-color, color, opacity;
+    transition-duration: 220ms;
+    transition-timing-function: cubic-bezier(0.2, 0.9, 0.2, 1.15);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .ui-pop:hover:not(:disabled),
+    .ui-pop-soft:hover:not(:disabled),
+    .ui-pop-subtle:hover:not(:disabled),
+    .ui-icon-pop:hover:not(:disabled),
+    .ui-badge-pop:hover,
+    .ui-chip-pop:hover,
+    .ui-level-card:hover:not(:disabled),
+    .ui-panel-pop:hover,
+    .ui-panel-subtle:hover,
+    .ui-editor-shell:focus-within {
+      will-change: transform, filter;
+    }
+
+    .ui-pop:hover:not(:disabled) {
+      scale: 1.035;
+      translate: 0 -1px;
+      filter: brightness(1.06) saturate(1.08);
+    }
+
+    .ui-pop-soft:hover:not(:disabled) {
+      scale: 1.02;
+      translate: 0 -1px;
+      filter: brightness(1.05);
+    }
+
+    .ui-pop-subtle:hover:not(:disabled) {
+      scale: 1.015;
+      translate: 0 -0.5px;
+      filter: brightness(1.03);
+    }
+
+    .ui-icon-pop:hover:not(:disabled) {
+      scale: 1.18;
+      rotate: 4deg;
+      filter: drop-shadow(0 6px 14px ${theme.accentGlow});
+    }
+
+    .ui-badge-pop:hover,
+    .ui-chip-pop:hover {
+      scale: 1.06;
+      translate: 0 -1px;
+      filter: brightness(1.08) saturate(1.08);
+    }
+
+    .ui-level-card:hover:not(:disabled) {
+      scale: 1.015;
+      translate: 6px -1px;
+    }
+
+    .ui-panel-pop:hover,
+    .ui-editor-shell:focus-within {
+      scale: 1.004;
+      filter: brightness(1.03);
+    }
+
+    .ui-panel-subtle:hover {
+      scale: 1.002;
+      filter: brightness(1.015);
+    }
+  }
+
+  .ui-pop:active:not(:disabled),
+  .ui-pop-soft:active:not(:disabled) {
+    scale: 0.94;
+    translate: 0 1px;
+    filter: brightness(0.96);
+    transition-duration: 90ms;
+  }
+
+  .ui-pop-subtle:active:not(:disabled) {
+    scale: 0.97;
+    translate: 0 0.5px;
+    filter: brightness(0.98);
+    transition-duration: 90ms;
+  }
+
+  .ui-icon-pop:active:not(:disabled) {
+    scale: 0.86;
+    rotate: -7deg;
+    transition-duration: 90ms;
+  }
+
+  .ui-level-card:active:not(:disabled) {
+    scale: 0.985;
+    translate: 3px 1px;
+    transition-duration: 90ms;
+  }
+
+  .ui-logo-float {
+    animation: logoFloat 3.6s ease-in-out infinite;
+    transform-origin: center;
+  }
+
+  .ui-logo-line {
+    stroke-dasharray: 170;
+    stroke-dashoffset: 170;
+    animation: logoStroke 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  }
+
+  .ui-logo-line:nth-of-type(2) { animation-delay: 0.07s; }
+  .ui-logo-line:nth-of-type(3) { animation-delay: 0.14s; }
+  .ui-logo-line:nth-of-type(4) { animation-delay: 0.21s; }
+
+  .ui-progress-glow {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ui-progress-glow::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.45), transparent);
+    transform: translateX(-130%);
+    animation: shimmerSweep 2.6s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  .ui-current-dot {
+    animation: currentDotPulse 1.8s ease-in-out infinite;
+  }
+
+  .ui-toggle-knob {
+    transition: transform 180ms cubic-bezier(0.2, 0.9, 0.2, 1.2), scale 180ms cubic-bezier(0.2, 0.9, 0.2, 1.2), box-shadow 180ms ease;
+  }
+
+  .ui-pop:focus-visible .ui-toggle-knob {
+    scale: 1.08;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.25);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .ui-pop:hover .ui-toggle-knob {
+      scale: 1.08;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.25);
+    }
+  }
+
+  .ui-traffic-dot {
+    animation: trafficGlow 3s ease-in-out infinite;
+  }
+
+  .ui-traffic-dot:nth-child(2) { animation-delay: 0.18s; }
+  .ui-traffic-dot:nth-child(3) { animation-delay: 0.36s; }
 
   button { transition: all 0.2s ease; }
   button:focus-visible,

@@ -36,6 +36,7 @@ export default function GameHeader({
         <div style={{ display: "flex", alignItems: "center", gap: isCompactHeader ? 6 : 8, minWidth: 0 }}>
           <button
             type="button"
+            className="ui-pop"
             aria-label={t("openLevelSelect")}
             data-testid="open-level-select"
             onClick={onOpenLevelSelect}
@@ -70,7 +71,7 @@ export default function GameHeader({
             <path className="ui-logo-line" d="M140 160 L140 60 L110 90" fill="none" stroke="url(#pyithonHeaderLogoGradient)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
             <path className="ui-logo-line" d="M175 160 L175 80 L145 110" fill="none" stroke="url(#pyithonHeaderLogoGradient)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          <span style={{ fontSize: isCompactHeader ? 13 : 14, fontWeight: 800, color: C.accent, letterSpacing: -0.5, display: "inline", whiteSpace: "nowrap" }}>Pyi-thon</span>
+          <span style={{ fontSize: isCompactHeader ? 13 : 14, fontWeight: 800, color: C.accent, letterSpacing: 0, display: "inline", whiteSpace: "nowrap" }}>Pyi-thon</span>
         </div>
 
         <div style={{
@@ -85,7 +86,7 @@ export default function GameHeader({
             <span style={{ fontSize: 11, color: C.accentTextDim }}>{completedCount}/{totalLevels}</span>
           </div>
           <div style={{ height: 5, background: "rgba(255,255,255,0.04)", borderRadius: 8, overflow: "hidden" }}>
-            <div style={{
+            <div className="ui-progress-glow" style={{
               height: "100%",
               borderRadius: 8,
               transition: "width 0.7s ease-out",
@@ -99,6 +100,7 @@ export default function GameHeader({
         <div style={{ display: "flex", alignItems: "center", gap: isCompactHeader ? 8 : 14, flexShrink: 0, marginLeft: "auto" }}>
           {showOfflineBadge && (
             <div
+              className="ui-badge-pop"
               data-testid="offline-badge"
               title={t("offlineFallback")}
               style={{
@@ -116,7 +118,7 @@ export default function GameHeader({
             </div>
           )}
           {streak > 0 && (
-            <div style={{
+            <div className="ui-badge-pop" style={{
               display: "flex",
               alignItems: "center",
               gap: 5,
@@ -130,7 +132,7 @@ export default function GameHeader({
               <span style={{ fontSize: 12, fontWeight: 700 }}>{streak}</span>
             </div>
           )}
-          <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 5, color: C.accentText, background: C.accentBg, padding: isCompactHeader ? "4px 8px" : "4px 10px", borderRadius: 8, border: `1px solid ${C.accentBorder}` }}>
+          <div className="ui-badge-pop" style={{ position: "relative", display: "flex", alignItems: "center", gap: 5, color: C.accentText, background: C.accentBg, padding: isCompactHeader ? "4px 8px" : "4px 10px", borderRadius: 8, border: `1px solid ${C.accentBorder}` }}>
             <span style={{ fontSize: 13 }}>&#x26A1;</span>
             <span style={{ fontSize: 12, fontWeight: 700 }}>{totalXP}</span>
             {showXPFloat && (
@@ -141,6 +143,7 @@ export default function GameHeader({
           </div>
           <button
             type="button"
+            className="ui-icon-pop"
             aria-label={soundEnabled ? t("disableSound") : t("enableSound")}
             aria-pressed={soundEnabled}
             onClick={onToggleSound}
@@ -166,6 +169,7 @@ export default function GameHeader({
           </button>
           <button
             type="button"
+            className="ui-icon-pop"
             aria-label={t("openSettings")}
             data-testid="open-settings"
             onClick={onOpenSettings}

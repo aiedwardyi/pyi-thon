@@ -670,9 +670,12 @@ export default function PyithonApp() {
       return;
     }
     const expected = level.expectedOutput.trim();
+    const localModeMessage = !offlineMode && apiKey ? t("localFallbackNotice") : t("offlineFallback");
     setIsEvaluating(true); setFeedback(null); setTab("output");
     try {
       let result;
+      let feedbackSource = useOffline ? "local" : "provider";
+      let sourceMessage = useOffline ? localModeMessage : "";
       if (useOffline) {
         result = await evaluateOffline(userCode, level, lang);
       } else {
@@ -680,12 +683,14 @@ export default function PyithonApp() {
         if (aiResult.fallbackToLocal) {
           showLocalFallbackNotice();
           result = await evaluateOffline(userCode, level, lang);
+          feedbackSource = "local";
+          sourceMessage = aiResult.feedback || t("localFallbackNotice");
         } else {
           result = aiResult;
         }
       }
       if (result.correct) {
-        setFeedback({ correct: true, message: result.feedback || t("correct"), expected, aiExplanation: result.explanation });
+        setFeedback({ correct: true, message: result.feedback || t("correct"), expected, aiExplanation: result.explanation, source: feedbackSource, sourceMessage });
         const isNew = !completedLevels.has(level.id);
         if (isNew) {
           const nc = new Set(completedLevels); nc.add(level.id); setCompletedLevels(nc);
@@ -697,7 +702,7 @@ export default function PyithonApp() {
         setEditorGlow(true); setTimeout(() => setEditorGlow(false), 1500);
         playTone(523.25, 0.1); setTimeout(() => playTone(659.25, 0.1), 100); setTimeout(() => playTone(783.99, 0.15), 200);
       } else {
-        setFeedback({ correct: false, message: result.feedback || t("notQuite"), expected, aiExplanation: result.explanation });
+        setFeedback({ correct: false, message: result.feedback || t("notQuite"), expected, aiExplanation: result.explanation, source: feedbackSource, sourceMessage });
         setStreak(0); setShakeEditor(true); setTimeout(() => setShakeEditor(false), 500);
         playTone(330, 0.15, "triangle");
       }
@@ -922,7 +927,7 @@ export default function PyithonApp() {
         totalLevels,
       })}
       {statusToast && (
-        <div style={{
+        <div data-testid="status-toast" style={{
           position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)",
           background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 12,
           padding: "10px 20px", fontSize: 13, color: C.textDim, fontWeight: 500,

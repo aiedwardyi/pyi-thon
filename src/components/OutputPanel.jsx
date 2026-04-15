@@ -119,6 +119,18 @@ export default function OutputPanel({
               : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>}
           </button>
           <div style={{ flex: 1 }}>
+            {feedback.source === "local" && (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
+                <span data-testid="feedback-source-local" style={{ fontSize: 11, fontWeight: 700, color: C.amber, background: C.amberBg, padding: "4px 8px", borderRadius: 999, border: `1px solid ${C.amberBorder}` }}>
+                  {t("localFeedbackLabel")}
+                </span>
+                {feedback.sourceMessage && (
+                  <span data-testid="feedback-source-message" style={{ fontSize: 12, color: C.textDim, lineHeight: 1.5 }}>
+                    {feedback.sourceMessage}
+                  </span>
+                )}
+              </div>
+            )}
             <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{feedback.correct ? t("correct") : t("notQuite")}</span>
             <p style={{ fontSize: 13, color: C.textMuted, margin: "4px 0 0", lineHeight: 1.6 }}>{feedback.aiExplanation || feedback.message}</p>
           </div>

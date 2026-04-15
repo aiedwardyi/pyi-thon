@@ -158,10 +158,35 @@ test("local feedback notice appears once per session", async ({ page }) => {
   await page.locator("textarea").fill('print("Hello, World!")');
   await page.getByRole("button", { name: /Run Code/ }).click();
 
-  const toast = page.getByText("Running with local feedback - add an API key in Settings for expanded feedback");
+  const toast = page.getByTestId("status-toast");
   await expect(toast).toBeVisible();
+  await expect(toast).toHaveText("Running with local feedback - add an API key in Settings for expanded feedback");
   await expect(toast).toBeHidden({ timeout: 5000 });
 
   await page.getByRole("button", { name: /Run Code/ }).click();
   await expect(toast).toBeHidden({ timeout: 1000 });
+});
+
+test("invalid online API keys fall back to local feedback without blocking a correct answer", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem("pyithon-offline", "false");
+    window.localStorage.setItem("pyithon-provider", "openai");
+    window.localStorage.setItem("pyithon-api-key-openai", "bad-key");
+  });
+
+  await page.route("https://api.openai.com/v1/chat/completions", async (route) => {
+    await route.fulfill({
+      status: 401,
+      contentType: "application/json",
+      body: JSON.stringify({ error: { message: "invalid api key" } }),
+    });
+  });
+
+  await page.goto(levelUrl(1, "en"));
+  await page.locator("textarea").fill('print("Hello, World!")');
+  await page.getByRole("button", { name: /Run Code/ }).click();
+
+  await expect(page.getByText("Correct!", { exact: true })).toBeVisible();
+  await expect(page.getByTestId("feedback-source-local")).toHaveText("Local feedback");
+  await expect(page.getByTestId("feedback-source-message")).toContainText("invalid or expired");
 });
