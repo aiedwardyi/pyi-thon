@@ -1,11 +1,17 @@
 export default function LevelInfoPanel({
   C,
   conceptCollapsed,
+  formattedHint,
+  isCompactMobile,
   level,
   levelT,
   monoFont,
+  onScrollToEditor,
+  onToggleHint,
   onToggleConcept,
   phaseColors,
+  showHint,
+  taskCardRef,
   t,
 }) {
   const phasePalette = phaseColors[level.phase];
@@ -58,7 +64,10 @@ export default function LevelInfoPanel({
         </div>
       </button>
 
-      <div style={{ background: "rgba(255,255,255,0.015)", border: `1px solid ${C.border}`, borderRadius: 12, padding: "12px 16px" }}>
+      <div
+        ref={taskCardRef}
+        style={{ background: "rgba(255,255,255,0.015)", border: `1px solid ${C.border}`, borderRadius: 12, padding: "12px 16px" }}
+      >
         <p style={{ fontSize: 10, fontWeight: 700, color: C.accent, textTransform: "uppercase", letterSpacing: 1.5, margin: "0 0 6px" }}>{t("task")}</p>
         <p style={{ color: C.textMuted, fontSize: 13, lineHeight: 1.7, margin: 0 }}>{levelT.task}</p>
         {level.simulatedInput && (
@@ -76,6 +85,62 @@ export default function LevelInfoPanel({
               padding: "10px 12px",
               border: `1px solid ${C.borderLight}`,
             }}>{level.simulatedInput}</pre>
+          </div>
+        )}
+        {isCompactMobile && (
+          <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
+            <button
+              type="button"
+              onClick={onToggleHint}
+              style={{
+                padding: "9px 14px",
+                borderRadius: 10,
+                fontSize: 12,
+                fontWeight: 600,
+                background: C.amberBg,
+                color: C.amber,
+                border: `1px solid ${C.amberBorder}`,
+                cursor: "pointer",
+                fontFamily: "inherit",
+              }}
+            >
+              {showHint ? t("hideHint") : t("hint")}
+            </button>
+            <button
+              type="button"
+              onClick={onScrollToEditor}
+              style={{
+                padding: "9px 14px",
+                borderRadius: 10,
+                fontSize: 12,
+                fontWeight: 600,
+                background: C.accentBg,
+                color: C.accentText,
+                border: `1px solid ${C.accentBorder}`,
+                cursor: "pointer",
+                fontFamily: "inherit",
+              }}
+            >
+              {t("editor")}
+            </button>
+          </div>
+        )}
+        {isCompactMobile && showHint && (
+          <div
+            data-testid="hint-panel"
+            style={{
+              marginTop: 10,
+              background: C.amberBg,
+              border: `1px solid ${C.amberBorder}`,
+              borderRadius: 12,
+              padding: "12px 16px",
+              animation: "fadeSlideUp 0.3s ease-out",
+            }}
+          >
+            <p style={{ color: C.amberText, fontSize: 12, lineHeight: 1.7, margin: 0, whiteSpace: "pre-wrap" }}>
+              <span style={{ fontWeight: 700, marginRight: 6 }}>{t("hint")}:</span>
+              {formattedHint}
+            </p>
           </div>
         )}
       </div>

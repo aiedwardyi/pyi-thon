@@ -96,6 +96,9 @@ test("Korean mode localizes accessible labels", async ({ page }) => {
   await expect(page.getByRole("button", { name: "설정 열기" })).toBeVisible();
   await expect(page.getByRole("button", { name: "사운드 켜기" })).toBeVisible();
   await expect(page.locator("textarea")).toHaveAttribute("placeholder", "# 여기에 Python 코드를 작성하세요...");
+  await expect(page.locator("textarea")).toHaveAttribute("autocapitalize", "off");
+  await expect(page.locator("textarea")).toHaveAttribute("autocorrect", "off");
+  await expect(page.locator("textarea")).toHaveAttribute("autocomplete", "off");
 
   await page.getByTestId("open-settings").click();
   await expect(page.getByRole("dialog", { name: "설정" })).toBeVisible();
@@ -113,6 +116,7 @@ test("mobile QA sweep across all 30 levels", async ({ page, isMobile }) => {
     await page.goto(levelUrl(levelId, "en"));
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await expect(page.getByRole("button", { name: "Hint", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Task", exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: /Run Code/ })).toBeVisible();
 
     await openHint(page, "en");
@@ -129,4 +133,19 @@ test("mobile QA sweep across all 30 levels", async ({ page, isMobile }) => {
     const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
     expect(scrollWidth).toBeLessThanOrEqual(clientWidth + 1);
   }
+});
+
+test("local feedback notice appears once per session", async ({ page }) => {
+  await page.goto(levelUrl(1, "en"));
+  await expect(page.getByTestId("offline-badge")).toBeVisible();
+
+  await page.locator("textarea").fill('print("Hello, World!")');
+  await page.getByRole("button", { name: /Run Code/ }).click();
+
+  const toast = page.getByText("Running with local feedback - add an API key in Settings for expanded feedback");
+  await expect(toast).toBeVisible();
+  await expect(toast).toBeHidden({ timeout: 5000 });
+
+  await page.getByRole("button", { name: /Run Code/ }).click();
+  await expect(toast).toBeHidden({ timeout: 1000 });
 });

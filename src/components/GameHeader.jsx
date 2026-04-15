@@ -8,6 +8,7 @@ export default function GameHeader({
   onOpenSettings,
   onToggleSound,
   progressPercent,
+  showOfflineBadge,
   showXPFloat,
   soundEnabled,
   streak,
@@ -97,6 +98,24 @@ export default function GameHeader({
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: isCompactMobile ? 8 : 14, flexShrink: 0, marginLeft: "auto" }}>
+          {showOfflineBadge && (
+            <div
+              data-testid="offline-badge"
+              title={t("offlineFallback")}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 5,
+                color: C.accentText,
+                background: "rgba(255,255,255,0.04)",
+                padding: isCompactMobile ? "4px 8px" : "4px 10px",
+                borderRadius: 8,
+                border: `1px solid ${C.border}`,
+              }}
+            >
+              <span style={{ fontSize: 11, fontWeight: 700 }}>{t("localBadge")}</span>
+            </div>
+          )}
           {streak > 0 && (
             <div style={{
               display: "flex",

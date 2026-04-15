@@ -8,6 +8,7 @@ export default function ActionBar({
   isEvaluating,
   isMac,
   onGoNextLevel,
+  onScrollToTask,
   onToggleHint,
   showHint,
   t,
@@ -29,7 +30,7 @@ export default function ActionBar({
     }}>
       <button
         type="button"
-        onClick={onToggleHint}
+        onClick={isCompactMobile ? onScrollToTask : onToggleHint}
         style={{
           padding: "10px 16px",
           borderRadius: 12,
@@ -52,7 +53,7 @@ export default function ActionBar({
           event.currentTarget.style.transform = "translateY(0)";
         }}
       >
-        {showHint ? t("hideHint") : t("hint")}
+        {isCompactMobile ? t("task") : showHint ? t("hideHint") : t("hint")}
       </button>
 
       <button

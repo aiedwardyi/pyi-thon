@@ -18,6 +18,8 @@ import {
   loadStoredProvider,
   safeLocalStorageGet,
   safeLocalStorageSet,
+  safeSessionStorageGet,
+  safeSessionStorageSet,
   saveProgress,
 } from "./lib/storage";
 import { getGlobalStyles, THEMES } from "./theme/themes";
@@ -29,6 +31,7 @@ let _pyodide = null;
 let _pyodideLoading = false;
 let _pyodideReady = false;
 const _pyodideCallbacks = [];
+const OFFLINE_FALLBACK_NOTICE_SESSION_KEY = "pyithon-offline-fallback-notice-shown";
 
 async function loadPyodideRuntime() {
   if (_pyodideReady) return _pyodide;
@@ -476,7 +479,9 @@ export default function PyithonApp() {
   const darkMode = THEMES[themeKey].palette.scheme === "dark";
   const editorRef = useRef(null);
   const highlightRef = useRef(null);
+  const taskCardRef = useRef(null);
   const audioCtxRef = useRef(null);
+  const offlineFallbackToastTimerRef = useRef(null);
   const [tab, setTab] = useState("editor");
   const [isWide, setIsWide] = useState(window.innerWidth >= 900);
   const [isCompactMobile, setIsCompactMobile] = useState(window.innerWidth < 430);
@@ -491,6 +496,7 @@ export default function PyithonApp() {
   const [offlineFallbackToast, setOfflineFallbackToast] = useState(false);
 
   const t = useCallback((key) => STRINGS[lang]?.[key] || STRINGS.en[key] || key, [lang]);
+  const isUsingLocalFeedback = offlineMode || !apiKey;
 
   const level = LEVELS[currentLevel];
   const levelT = getLocalizedLevel(level, lang);
@@ -582,6 +588,11 @@ export default function PyithonApp() {
   }, [showWelcome, typedChars, tagline]);
   // Reset typing animation when language changes
   useEffect(() => { setTypedChars(0); }, [lang]);
+  useEffect(() => {
+    return () => {
+      if (offlineFallbackToastTimerRef.current) clearTimeout(offlineFallbackToastTimerRef.current);
+    };
+  }, []);
 
   // Sound helper
   const playTone = useCallback((frequency, duration, type = "sine", volume = 0.12) => {
@@ -610,12 +621,35 @@ export default function PyithonApp() {
     }
   };
 
+  const showOfflineFallbackNotice = useCallback(() => {
+    if (safeSessionStorageGet(OFFLINE_FALLBACK_NOTICE_SESSION_KEY) === "true") return;
+    safeSessionStorageSet(OFFLINE_FALLBACK_NOTICE_SESSION_KEY, "true");
+    setOfflineFallbackToast(true);
+    if (offlineFallbackToastTimerRef.current) clearTimeout(offlineFallbackToastTimerRef.current);
+    offlineFallbackToastTimerRef.current = setTimeout(() => {
+      setOfflineFallbackToast(false);
+      offlineFallbackToastTimerRef.current = null;
+    }, 4000);
+  }, []);
+
+  const handleScrollToTask = useCallback(() => {
+    editorRef.current?.blur?.();
+    taskCardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
+  const handleScrollToEditor = useCallback(() => {
+    setTab("editor");
+    setTimeout(() => {
+      editorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      editorRef.current?.focus();
+    }, 60);
+  }, []);
+
   const handleSubmit = useCallback(async () => {
     if (isEvaluating) return;
-    const useOffline = offlineMode || !apiKey;
+    const useOffline = isUsingLocalFeedback;
     if (!offlineMode && !apiKey) {
-      setOfflineFallbackToast(true);
-      setTimeout(() => setOfflineFallbackToast(false), 4000);
+      showOfflineFallbackNotice();
     }
     const userCode = code.trim();
     if (!userCode || userCode === level.starterCode.trim()) {
@@ -648,7 +682,7 @@ export default function PyithonApp() {
     } catch (err) {
       setFeedback({ correct: false, message: `${t("generalError")}: ${err.message}`, expected });
     } finally { setIsEvaluating(false); }
-  }, [apiKey, bestStreak, code, completedLevels, isEvaluating, lang, level, offlineMode, playTone, provider, t]);
+  }, [apiKey, bestStreak, code, completedLevels, isEvaluating, isUsingLocalFeedback, lang, level, offlineMode, playTone, provider, showOfflineFallbackNotice, t]);
 
   // Ctrl+Enter to run
   useEffect(() => {
@@ -791,6 +825,7 @@ export default function PyithonApp() {
         onOpenSettings: () => setShowApiSetup(true),
         onToggleSound: () => setSoundEnabled((prev) => !prev),
         progressPercent,
+        showOfflineBadge: isUsingLocalFeedback,
         showXPFloat,
         soundEnabled,
         streak,
@@ -806,11 +841,17 @@ export default function PyithonApp() {
         {createElement(LevelInfoPanel, {
           C,
           conceptCollapsed,
+          formattedHint,
+          isCompactMobile,
           level,
           levelT,
           monoFont,
+          onScrollToEditor: handleScrollToEditor,
+          onToggleHint: () => setShowHint((prev) => !prev),
           onToggleConcept: () => setConceptCollapsed((prev) => !prev),
           phaseColors,
+          showHint,
+          taskCardRef,
           t,
         })}
 
@@ -823,6 +864,7 @@ export default function PyithonApp() {
           filename,
           formattedHint,
           highlightRef,
+          isCompactMobile,
           isEvaluating,
           isWide,
           level,
@@ -850,6 +892,7 @@ export default function PyithonApp() {
         isEvaluating,
         isMac,
         onGoNextLevel: () => setCurrentLevel((prev) => Math.min(prev + 1, totalLevels - 1)),
+        onScrollToTask: handleScrollToTask,
         onToggleHint: () => setShowHint((prev) => !prev),
         showHint,
         t,
