@@ -651,8 +651,8 @@ export default function PyithonApp() {
     showStatusToast(t("offlineFallback"), OFFLINE_FALLBACK_NOTICE_SESSION_KEY);
   }, [showStatusToast, t]);
 
-  const showLocalFallbackNotice = useCallback((message = t("localFallbackNotice")) => {
-    showStatusToast(message, LOCAL_FALLBACK_NOTICE_SESSION_KEY);
+  const showLocalFallbackNotice = useCallback(() => {
+    showStatusToast(t("localFallbackNotice"), LOCAL_FALLBACK_NOTICE_SESSION_KEY);
   }, [showStatusToast, t]);
 
   const handleScrollToTask = useCallback(() => {
@@ -674,14 +674,14 @@ export default function PyithonApp() {
     if (!offlineMode && !apiKey) {
       showOfflineFallbackNotice();
     }
+    const expected = level.expectedOutput.trim();
     const userCode = code.trim();
     if (!userCode || userCode === level.starterCode.trim()) {
-      setFeedback({ correct: false, message: t("writeCodeFirst"), expected: level.expectedOutput });
+      setFeedback({ correct: false, message: t("writeCodeFirst"), expected });
       setShakeEditor(true); setTimeout(() => setShakeEditor(false), 500);
       playTone(330, 0.15, "triangle");
       return;
     }
-    const expected = level.expectedOutput.trim();
     setIsEvaluating(true); setFeedback(null); setTab("output");
     try {
       let result;
@@ -692,7 +692,7 @@ export default function PyithonApp() {
       } else {
         const aiResult = await evaluateWithAI(userCode, level, apiKey, lang, provider);
         if (aiResult.fallbackToLocal) {
-          showLocalFallbackNotice(aiResult.feedback || t("localFallbackNotice"));
+          showLocalFallbackNotice();
           result = await evaluateOffline(userCode, level, lang);
           feedbackSource = "local";
           sourceMessage = aiResult.sourceMessage || t("localFallbackInline");

@@ -96,6 +96,8 @@ test("Korean mode localizes accessible labels", async ({ page }) => {
 
   await expect(page.getByRole("button", { name: "설정 열기" })).toBeVisible();
   await expect(page.getByRole("button", { name: "사운드 켜기" })).toBeVisible();
+  await expect(page.getByTestId("offline-badge")).toHaveAttribute("role", "status");
+  await expect(page.getByTestId("offline-badge")).toHaveAttribute("aria-label", "로컬 피드백");
   await expect(page.locator("textarea")).toHaveAttribute("placeholder", "# 여기에 Python 코드를 작성하세요...");
   await expect(page.locator("textarea")).toHaveAttribute("autocapitalize", "off");
   await expect(page.locator("textarea")).toHaveAttribute("autocorrect", "off");
@@ -219,6 +221,7 @@ test("switching languages clears stale output feedback so panels stay consistent
   await page.locator("textarea").fill('print("Hello, World!"');
   await page.getByRole("button", { name: /Run Code/ }).click();
   await expect(page.getByText("Not quite", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Return to editor" })).toBeVisible();
 
   await page.getByTestId("open-settings").click();
     await page.getByTestId("lang-ko").click({ force: true });

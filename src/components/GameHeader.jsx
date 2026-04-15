@@ -101,6 +101,8 @@ export default function GameHeader({
             <div
               className="ui-badge-pop"
               data-testid="offline-badge"
+              role="status"
+              aria-label={t("localFeedbackLabel")}
               title={t("offlineFallback")}
               style={{
                 display: "flex",

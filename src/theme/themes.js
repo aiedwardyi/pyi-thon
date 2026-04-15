@@ -413,17 +413,17 @@ export function getGlobalStyles(theme) {
   }
 
   .ui-toggle-knob {
-    transition: transform 180ms cubic-bezier(0.2, 0.9, 0.2, 1.2), scale 180ms cubic-bezier(0.2, 0.9, 0.2, 1.2), box-shadow 180ms ease;
+    transition: transform 180ms cubic-bezier(0.2, 0.9, 0.2, 1.2), box-shadow 180ms ease;
   }
 
   .ui-pop:focus-visible .ui-toggle-knob {
-    scale: 1.08;
+    --toggle-knob-scale: 1.08;
     box-shadow: 0 3px 10px rgba(0,0,0,0.25);
   }
 
   @media (hover: hover) and (pointer: fine) {
     .ui-pop:hover .ui-toggle-knob {
-      scale: 1.08;
+      --toggle-knob-scale: 1.08;
       box-shadow: 0 3px 10px rgba(0,0,0,0.25);
     }
   }
