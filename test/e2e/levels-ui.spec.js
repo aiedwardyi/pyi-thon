@@ -187,6 +187,28 @@ test("invalid online API keys fall back to local feedback without blocking a cor
   await page.getByRole("button", { name: /Run Code/ }).click();
 
   await expect(page.getByText("Correct!", { exact: true })).toBeVisible();
-  await expect(page.getByTestId("feedback-source-local")).toHaveText("Local feedback");
-  await expect(page.getByTestId("feedback-source-message")).toContainText("invalid or expired");
+  await expect(page.getByTestId("status-toast")).toHaveText("Your API key is invalid or expired. Go to Settings to enter a new key, or switch to Offline mode.");
+  await expect(page.getByTestId("feedback-source-message")).toHaveText("Checked with local feedback for this run.");
+});
+
+test("switching languages clears stale output feedback so panels stay consistent", async ({ page }) => {
+  await page.goto(levelUrl(1, "en"));
+  await page.locator("textarea").fill('print("Hello, World!"');
+  await page.getByRole("button", { name: /Run Code/ }).click();
+  await expect(page.getByText("Not quite", { exact: true })).toBeVisible();
+
+  await page.getByTestId("open-settings").click();
+  await page.getByTestId("lang-ko").click();
+  await page.getByTestId("close-settings").click();
+
+  await expect(page.getByText("코드를 실행하면 결과가 여기에 표시됩니다")).toBeVisible();
+});
+
+test("Korean syntax errors use localized fallback wording", async ({ page }) => {
+  await page.goto(levelUrl(1, "ko"));
+  await page.locator("textarea").fill('print("Hello, World!"');
+  await page.getByRole("button", { name: "코드 실행" }).click();
+
+  await expect(page.getByText(/Python 오류: 문법 오류:/)).toBeVisible();
+  await expect(page.getByText(/닫히지 않았습니다/)).toBeVisible();
 });

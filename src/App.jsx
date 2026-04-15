@@ -11,6 +11,7 @@ import { formatHintText } from "./hintFormatting";
 import { STRINGS } from "./data/appConfig";
 import { LEVELS, getLocalizedLevel, getPhaseColors } from "./data/levels";
 import { evaluateWithAI } from "./lib/aiEvaluation";
+import { localizePythonError } from "./lib/pythonErrorLocalization";
 import {
   getApiKeyStorageKey,
   loadProgress,
@@ -286,14 +287,15 @@ async function evaluateOffline(userCode, level, lang) {
   try {
     const result = await runPython(code, level.simulatedInput || "");
     if (!result.success) {
+      const localizedPythonError = localizePythonError(result.error, lang);
       // Check for common mistakes to give better error hints
       const mistakes = (COMMON_MISTAKES[lang] || COMMON_MISTAKES.en)[level.id] || COMMON_MISTAKES.en[level.id] || [];
       for (const [pattern, hint] of mistakes) {
         if (pattern.test(code)) {
-          return { correct: false, feedback: `${_t("offlinePyError")}${result.error}\n\n${_t("hint")}: ${hint}`, explanation: "" };
+          return { correct: false, feedback: `${_t("offlinePyError")}${localizedPythonError}\n\n${_t("hint")}: ${hint}`, explanation: "" };
         }
       }
-      return { correct: false, feedback: `${_t("offlinePyError")}${result.error}`, explanation: "" };
+      return { correct: false, feedback: `${_t("offlinePyError")}${localizedPythonError}`, explanation: "" };
     }
 
     const actual = result.output.trim();
@@ -590,7 +592,11 @@ export default function PyithonApp() {
     return () => clearInterval(timer);
   }, [showWelcome, typedChars, tagline]);
   // Reset typing animation when language changes
-  useEffect(() => { setTypedChars(0); }, [lang]);
+  useEffect(() => {
+    setTypedChars(0);
+    setFeedback(null);
+    setStatusToast("");
+  }, [lang]);
   useEffect(() => {
     return () => {
       if (offlineFallbackToastTimerRef.current) clearTimeout(offlineFallbackToastTimerRef.current);
@@ -639,8 +645,8 @@ export default function PyithonApp() {
     showStatusToast(t("offlineFallback"), OFFLINE_FALLBACK_NOTICE_SESSION_KEY);
   }, [showStatusToast, t]);
 
-  const showLocalFallbackNotice = useCallback(() => {
-    showStatusToast(t("localFallbackNotice"), LOCAL_FALLBACK_NOTICE_SESSION_KEY);
+  const showLocalFallbackNotice = useCallback((message = t("localFallbackNotice")) => {
+    showStatusToast(message, LOCAL_FALLBACK_NOTICE_SESSION_KEY);
   }, [showStatusToast, t]);
 
   const handleScrollToTask = useCallback(() => {
@@ -670,7 +676,7 @@ export default function PyithonApp() {
       return;
     }
     const expected = level.expectedOutput.trim();
-    const localModeMessage = !offlineMode && apiKey ? t("localFallbackNotice") : t("offlineFallback");
+    const localModeMessage = !offlineMode && apiKey ? t("localFallbackInline") : "";
     setIsEvaluating(true); setFeedback(null); setTab("output");
     try {
       let result;
@@ -681,10 +687,10 @@ export default function PyithonApp() {
       } else {
         const aiResult = await evaluateWithAI(userCode, level, apiKey, lang, provider);
         if (aiResult.fallbackToLocal) {
-          showLocalFallbackNotice();
+          showLocalFallbackNotice(aiResult.feedback || t("localFallbackNotice"));
           result = await evaluateOffline(userCode, level, lang);
           feedbackSource = "local";
-          sourceMessage = aiResult.feedback || t("localFallbackNotice");
+          sourceMessage = t("localFallbackInline");
         } else {
           result = aiResult;
         }
