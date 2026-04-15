@@ -135,6 +135,21 @@ test("mobile QA sweep across all 30 levels", async ({ page, isMobile }) => {
   }
 });
 
+test("narrow phone widths keep the header in compact layout", async ({ page, isMobile }) => {
+  test.skip(isMobile, "Desktop-only viewport check");
+
+  await page.setViewportSize({ width: 440, height: 900 });
+  await page.goto(levelUrl(1, "en"));
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+
+  const buttonLabelDisplay = await page.getByTestId("open-level-select").locator("span").evaluate((node) => window.getComputedStyle(node).display);
+  expect(buttonLabelDisplay).toBe("none");
+
+  const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+  const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
+  expect(scrollWidth).toBeLessThanOrEqual(clientWidth + 1);
+});
+
 test("local feedback notice appears once per session", async ({ page }) => {
   await page.goto(levelUrl(1, "en"));
   await expect(page.getByTestId("offline-badge")).toBeVisible();

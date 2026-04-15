@@ -484,6 +484,7 @@ export default function PyithonApp() {
   const offlineFallbackToastTimerRef = useRef(null);
   const [tab, setTab] = useState("editor");
   const [isWide, setIsWide] = useState(window.innerWidth >= 900);
+  const [isCompactHeader, setIsCompactHeader] = useState(window.innerWidth < 560);
   const [isCompactMobile, setIsCompactMobile] = useState(window.innerWidth < 430);
   const [conceptCollapsed, setConceptCollapsed] = useState(false);
   const [levelTransition, setLevelTransition] = useState(false);
@@ -553,6 +554,7 @@ export default function PyithonApp() {
   useEffect(() => {
     const onResize = () => {
       setIsWide(window.innerWidth >= 900);
+      setIsCompactHeader(window.innerWidth < 560);
       setIsCompactMobile(window.innerWidth < 430);
     };
     window.addEventListener("resize", onResize);
@@ -818,6 +820,7 @@ export default function PyithonApp() {
       {createElement(GameHeader, {
         C,
         completedCount: completedLevels.size,
+        isCompactHeader,
         isCompactMobile,
         isWide,
         levelId: level.id,

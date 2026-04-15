@@ -1,7 +1,7 @@
 export default function GameHeader({
   C,
   completedCount,
-  isCompactMobile,
+  isCompactHeader,
   isWide,
   levelId,
   onOpenLevelSelect,
@@ -29,12 +29,12 @@ export default function GameHeader({
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        flexWrap: isCompactMobile ? "wrap" : "nowrap",
-        rowGap: isCompactMobile ? 10 : 0,
-        columnGap: isCompactMobile ? 8 : 0,
-        padding: isCompactMobile ? "10px 14px" : "10px 20px",
+        flexWrap: isCompactHeader ? "wrap" : "nowrap",
+        rowGap: isCompactHeader ? 10 : 0,
+        columnGap: isCompactHeader ? 8 : 0,
+        padding: isCompactHeader ? "10px 14px" : "10px 20px",
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: isCompactMobile ? 6 : 8, minWidth: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: isCompactHeader ? 6 : 8, minWidth: 0 }}>
           <button
             type="button"
             aria-label={t("openLevelSelect")}
@@ -45,7 +45,7 @@ export default function GameHeader({
               background: "rgba(255,255,255,0.03)",
               border: `1px solid ${C.border}`,
               cursor: "pointer",
-              padding: isCompactMobile ? "7px 9px" : "7px 10px",
+              padding: isCompactHeader ? "7px 9px" : "7px 10px",
               borderRadius: 10,
               transition: "all 0.2s",
               display: "flex",
@@ -62,7 +62,7 @@ export default function GameHeader({
             }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></svg>
-            <span style={{ fontSize: 11, fontWeight: 600, display: isCompactMobile ? "none" : "inline" }}>{t("levels")}</span>
+            <span style={{ fontSize: 11, fontWeight: 600, display: isCompactHeader ? "none" : "inline" }}>{t("levels")}</span>
           </button>
           <svg viewBox="0 0 200 200" style={{ width: 20, height: 20, flexShrink: 0, filter: `drop-shadow(0 0 6px ${C.accentGlow})` }}>
             <defs><linearGradient id="pyithonHeaderLogoGradient" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stopColor={C.accentDeep} /><stop offset="100%" stopColor={C.accentLight} /></linearGradient></defs>
@@ -71,15 +71,15 @@ export default function GameHeader({
             <path d="M140 160 L140 60 L110 90" fill="none" stroke="url(#pyithonHeaderLogoGradient)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
             <path d="M175 160 L175 80 L145 110" fill="none" stroke="url(#pyithonHeaderLogoGradient)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          <span style={{ fontSize: 14, fontWeight: 800, color: C.accent, letterSpacing: -0.5, display: isWide && !isCompactMobile ? "inline" : "none" }}>Pyi-thon</span>
+          <span style={{ fontSize: 14, fontWeight: 800, color: C.accent, letterSpacing: -0.5, display: isWide && !isCompactHeader ? "inline" : "none" }}>Pyi-thon</span>
         </div>
 
         <div style={{
-          flex: isCompactMobile ? "1 1 100%" : 1,
-          order: isCompactMobile ? 3 : 0,
-          width: isCompactMobile ? "100%" : "auto",
-          margin: isCompactMobile ? 0 : "0 20px",
-          maxWidth: isCompactMobile ? "none" : 280,
+          flex: isCompactHeader ? "1 1 100%" : 1,
+          order: isCompactHeader ? 3 : 0,
+          width: isCompactHeader ? "100%" : "auto",
+          margin: isCompactHeader ? 0 : "0 20px",
+          maxWidth: isCompactHeader ? "none" : 280,
         }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
             <span style={{ fontSize: 11, color: C.accentTextDim, fontWeight: 600 }}>{t("levels")} {levelId}</span>
@@ -97,7 +97,7 @@ export default function GameHeader({
           </div>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: isCompactMobile ? 8 : 14, flexShrink: 0, marginLeft: "auto" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: isCompactHeader ? 8 : 14, flexShrink: 0, marginLeft: "auto" }}>
           {showOfflineBadge && (
             <div
               data-testid="offline-badge"
@@ -108,7 +108,7 @@ export default function GameHeader({
                 gap: 5,
                 color: C.accentText,
                 background: "rgba(255,255,255,0.04)",
-                padding: isCompactMobile ? "4px 8px" : "4px 10px",
+                padding: isCompactHeader ? "4px 8px" : "4px 10px",
                 borderRadius: 8,
                 border: `1px solid ${C.border}`,
               }}
@@ -123,7 +123,7 @@ export default function GameHeader({
               gap: 5,
               color: C.amber,
               background: C.amberBg,
-              padding: isCompactMobile ? "4px 8px" : "4px 10px",
+              padding: isCompactHeader ? "4px 8px" : "4px 10px",
               borderRadius: 8,
               border: `1px solid ${C.amberBorder}`,
             }}>
@@ -131,7 +131,7 @@ export default function GameHeader({
               <span style={{ fontSize: 12, fontWeight: 700 }}>{streak}</span>
             </div>
           )}
-          <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 5, color: C.accentText, background: C.accentBg, padding: isCompactMobile ? "4px 8px" : "4px 10px", borderRadius: 8, border: `1px solid ${C.accentBorder}` }}>
+          <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 5, color: C.accentText, background: C.accentBg, padding: isCompactHeader ? "4px 8px" : "4px 10px", borderRadius: 8, border: `1px solid ${C.accentBorder}` }}>
             <span style={{ fontSize: 13 }}>&#x26A1;</span>
             <span style={{ fontSize: 12, fontWeight: 700 }}>{totalXP}</span>
             {showXPFloat && (
