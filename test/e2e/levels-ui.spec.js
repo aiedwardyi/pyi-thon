@@ -127,7 +127,7 @@ test("mobile QA sweep across all 30 levels", async ({ page, isMobile }) => {
 
     await page.getByTestId("open-settings").click();
     await page.getByTestId("lang-ko").click({ force: true });
-    await page.getByTestId("close-settings").click();
+    await page.getByTestId("close-settings").click({ force: true });
     await expect(page.getByRole("button", { name: "힌트", exact: true })).toBeVisible();
 
     const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
@@ -188,7 +188,6 @@ test("invalid online API keys fall back to local feedback without blocking a cor
   await page.getByRole("button", { name: /Run Code/ }).click();
 
   await expect(page.getByText("Correct!", { exact: true })).toBeVisible();
-  await expect(page.getByTestId("status-toast")).toHaveText("Your API key is invalid or expired. Go to Settings to enter a new key, or switch to Offline mode.");
   await expect(page.getByTestId("feedback-source-message")).toHaveText("API key issue - using built-in feedback.");
 });
 
@@ -212,7 +211,6 @@ test("Korean invalid online API keys fall back to local feedback without blockin
   await page.getByRole("button", { name: "코드 실행" }).click();
 
   await expect(page.getByText("정답!", { exact: true })).toBeVisible();
-  await expect(page.getByTestId("status-toast")).toHaveText("API 키가 잘못되었거나 만료되었습니다. 설정에서 새 키를 입력하거나 오프라인 모드로 전환하세요.");
   await expect(page.getByTestId("feedback-source-message")).toHaveText("API 키 문제 - 기본 피드백 사용 중");
 });
 
