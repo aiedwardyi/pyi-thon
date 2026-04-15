@@ -4,9 +4,17 @@ import { AI_PROVIDERS, STRINGS } from "../data/appConfig.js";
 export async function evaluateWithAI(userCode, level, apiKey, lang, provider) {
   const _t = (key) => STRINGS[lang]?.[key] || STRINGS.en[key] || key;
   const providerConfig = AI_PROVIDERS[provider];
+  const fallback = (feedback, sourceMessage = _t("localFallbackInline"), extra = {}) => ({
+    correct: false,
+    feedback,
+    explanation: "",
+    fallbackToLocal: true,
+    sourceMessage,
+    ...extra,
+  });
 
   if (!providerConfig) {
-    return { correct: false, feedback: _t("apiGenericError"), explanation: "", fallbackToLocal: true };
+    return fallback(_t("apiGenericError"));
   }
 
   const prompt = `You are a Python code evaluator for an educational platform. Evaluate if the student's code is correct AND uses the concept being taught.
@@ -88,10 +96,10 @@ Does this code use the required concept AND produce the correct output? Respond 
 
     if (!response.ok) {
       const status = response.status;
-      if (status === 401) return { correct: false, feedback: _t("apiKeyInvalidExpired"), explanation: "", fallbackToLocal: true };
-      if (status === 429) return { correct: false, feedback: _t("apiRateLimited"), explanation: "", fallbackToLocal: true };
-      if (status === 529 || status === 503) return { correct: false, feedback: _t("apiOverloaded").replace("{provider}", providerConfig.name), explanation: "", fallbackToLocal: true };
-      return { correct: false, feedback: _t("apiStatusError").replace("{status}", status), explanation: "", fallbackToLocal: true };
+      if (status === 401) return fallback(_t("apiKeyInvalidExpired"), _t("apiKeyFallbackInline"));
+      if (status === 429) return fallback(_t("apiRateLimited"));
+      if (status === 529 || status === 503) return fallback(_t("apiOverloaded").replace("{provider}", providerConfig.name));
+      return fallback(_t("apiStatusError").replace("{status}", status));
     }
 
     const data = await response.json();
@@ -100,24 +108,24 @@ Does this code use the required concept AND produce the correct output? Respond 
     if (provider === "claude") {
       if (data.error) {
         const msg = data.error.message || "";
-        if (msg.includes("invalid") || msg.includes("auth")) return { correct: false, feedback: _t("apiKeyInvalid"), explanation: "", fallbackToLocal: true };
-        return { correct: false, feedback: _t("apiGenericError"), explanation: "", fallbackToLocal: true };
+        if (msg.includes("invalid") || msg.includes("auth")) return fallback(_t("apiKeyInvalid"), _t("apiKeyFallbackInline"));
+        return fallback(_t("apiGenericError"));
       }
       text = (data.content || []).map(b => b.text || "").join("").trim();
     } else if (provider === "openai") {
       if (data.error) {
-        return { correct: false, feedback: _t("apiGenericError"), explanation: "", fallbackToLocal: true };
+        return fallback(_t("apiGenericError"));
       }
       text = data.choices?.[0]?.message?.content?.trim() || "";
     } else if (provider === "gemini") {
       if (data.error) {
-        return { correct: false, feedback: _t("apiGenericError"), explanation: "", fallbackToLocal: true };
+        return fallback(_t("apiGenericError"));
       }
       text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
     }
 
     if (!text) {
-      return { correct: false, feedback: _t("apiEmptyResponse").replace("{provider}", providerConfig.name), explanation: "", fallbackToLocal: true };
+      return fallback(_t("apiEmptyResponse").replace("{provider}", providerConfig.name));
     }
 
     const clean = text.replace(/```json|```/g, "").trim();
@@ -127,13 +135,13 @@ Does this code use the required concept AND produce the correct output? Respond 
       if (text.toLowerCase().includes('"correct": true') || text.toLowerCase().includes('"correct":true')) {
         return { correct: true, feedback: _t("niceWork"), explanation: "" };
       }
-      return { correct: false, feedback: _t("apiParseError"), explanation: `${_t("apiParseRaw")}: ${text.substring(0, 200)}`, fallbackToLocal: true };
+      return fallback(_t("apiParseError"), _t("localFallbackInline"), { explanation: `${_t("apiParseRaw")}: ${text.substring(0, 200)}` });
     }
   } catch (err) {
     clearTimeout(timeout);
     if (err.name === "AbortError") {
-      return { correct: false, feedback: _t("apiTimeout"), explanation: "", fallbackToLocal: true };
+      return fallback(_t("apiTimeout"));
     }
-    return { correct: false, feedback: `${_t("apiGenericError")} (${providerConfig.name})`, explanation: "", fallbackToLocal: true };
+    return fallback(`${_t("apiGenericError")} (${providerConfig.name})`);
   }
 }

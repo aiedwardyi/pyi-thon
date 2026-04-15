@@ -33,6 +33,7 @@ await run("evaluateWithAI rejects an unknown provider before fetching", async ()
     assert.equal(result.correct, false);
     assert.equal(result.feedback, "Something went wrong with the API. Try again, or switch to Offline mode.");
     assert.equal(result.fallbackToLocal, true);
+    assert.equal(result.sourceMessage, "Online check unavailable - using built-in feedback.");
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -57,6 +58,7 @@ await run("evaluateWithAI marks authentication failures as local-fallback eligib
     assert.equal(result.correct, false);
     assert.equal(result.feedback, "Your API key is invalid or expired. Go to Settings to enter a new key, or switch to Offline mode.");
     assert.equal(result.fallbackToLocal, true);
+    assert.equal(result.sourceMessage, "API key issue - using built-in feedback.");
   } finally {
     globalThis.fetch = originalFetch;
   }

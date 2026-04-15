@@ -682,12 +682,11 @@ export default function PyithonApp() {
       return;
     }
     const expected = level.expectedOutput.trim();
-    const localModeMessage = !offlineMode && apiKey ? t("localFallbackInline") : "";
     setIsEvaluating(true); setFeedback(null); setTab("output");
     try {
       let result;
       let feedbackSource = useOffline ? "local" : "provider";
-      let sourceMessage = useOffline ? localModeMessage : "";
+      let sourceMessage = "";
       if (useOffline) {
         result = await evaluateOffline(userCode, level, lang);
       } else {
@@ -696,7 +695,7 @@ export default function PyithonApp() {
           showLocalFallbackNotice(aiResult.feedback || t("localFallbackNotice"));
           result = await evaluateOffline(userCode, level, lang);
           feedbackSource = "local";
-          sourceMessage = t("localFallbackInline");
+          sourceMessage = aiResult.sourceMessage || t("localFallbackInline");
         } else {
           result = aiResult;
         }

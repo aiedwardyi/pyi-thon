@@ -189,7 +189,7 @@ test("invalid online API keys fall back to local feedback without blocking a cor
 
   await expect(page.getByText("Correct!", { exact: true })).toBeVisible();
   await expect(page.getByTestId("status-toast")).toHaveText("Your API key is invalid or expired. Go to Settings to enter a new key, or switch to Offline mode.");
-  await expect(page.getByTestId("feedback-source-message")).toHaveText("Checked with local feedback for this run.");
+  await expect(page.getByTestId("feedback-source-message")).toHaveText("API key issue - using built-in feedback.");
 });
 
 test("Korean invalid online API keys fall back to local feedback without blocking a correct answer", async ({ page }) => {
@@ -213,7 +213,7 @@ test("Korean invalid online API keys fall back to local feedback without blockin
 
   await expect(page.getByText("정답!", { exact: true })).toBeVisible();
   await expect(page.getByTestId("status-toast")).toHaveText("API 키가 잘못되었거나 만료되었습니다. 설정에서 새 키를 입력하거나 오프라인 모드로 전환하세요.");
-  await expect(page.getByTestId("feedback-source-message")).toHaveText("이번 실행은 로컬 피드백으로 채점했습니다.");
+  await expect(page.getByTestId("feedback-source-message")).toHaveText("API 키 문제 - 기본 피드백 사용 중");
 });
 
 test("switching languages clears stale output feedback so panels stay consistent", async ({ page }) => {
