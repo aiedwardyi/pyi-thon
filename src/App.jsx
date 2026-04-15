@@ -13,13 +13,13 @@ import { LEVELS, getLocalizedLevel, getPhaseColors } from "./data/levels";
 import { evaluateWithAI } from "./lib/aiEvaluation";
 import {
   getApiKeyStorageKey,
-  loadProgress,
   loadStoredApiKey,
   loadStoredProvider,
   safeLocalStorageGet,
   safeLocalStorageSet,
   saveProgress,
 } from "./lib/storage";
+import { buildInitialAppState } from "./lib/startupState";
 import { DEFAULT_THEME_KEY, getGlobalStyles, resolveStoredThemeKey, THEMES } from "./theme/themes";
 
 let C = { ...THEMES[DEFAULT_THEME_KEY].palette };
@@ -448,26 +448,38 @@ function getQaConfig() {
 
 // ─── MAIN APP ───
 export default function PyithonApp() {
-  const qaConfigRef = useRef(getQaConfig());
+  const qaConfigRef = useRef(null);
+  const initialAppStateRef = useRef(null);
+  if (qaConfigRef.current === null) {
+    qaConfigRef.current = getQaConfig();
+  }
+  if (initialAppStateRef.current === null) {
+    initialAppStateRef.current = buildInitialAppState({
+      qaConfig: qaConfigRef.current,
+      supportedLanguages: STRINGS,
+    });
+  }
+  const initialAppState = initialAppStateRef.current;
   const qaAutorunRef = useRef(false);
-  const [currentLevel, setCurrentLevel] = useState(0);
-  const [code, setCode] = useState(LEVELS[0].starterCode);
+  const hasInitializedLevelRef = useRef(false);
+  const [currentLevel, setCurrentLevel] = useState(initialAppState.currentLevel);
+  const [code, setCode] = useState(initialAppState.code);
   const [showHint, setShowHint] = useState(false);
   const [feedback, setFeedback] = useState(null);
   const [failedAttemptsByLevel, setFailedAttemptsByLevel] = useState({});
-  const [completedLevels, setCompletedLevels] = useState(() => new Set());
-  const [streak, setStreak] = useState(0);
-  const [bestStreak, setBestStreak] = useState(0);
+  const [completedLevels, setCompletedLevels] = useState(() => new Set(initialAppState.completedLevels));
+  const [streak, setStreak] = useState(initialAppState.streak);
+  const [bestStreak, setBestStreak] = useState(initialAppState.bestStreak);
   const [showLevelSelect, setShowLevelSelect] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(true);
-  const [totalXP, setTotalXP] = useState(0);
+  const [showWelcome, setShowWelcome] = useState(initialAppState.showWelcome);
+  const [totalXP, setTotalXP] = useState(initialAppState.totalXP);
   const [showConfetti, setShowConfetti] = useState(false);
   const [shakeEditor, setShakeEditor] = useState(false);
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [apiKey, setApiKey] = useState(() => loadStoredApiKey(loadStoredProvider()));
   const [showApiSetup, setShowApiSetup] = useState(false);
   const [apiKeyInput, setApiKeyInput] = useState("");
-  const [offlineMode, setOfflineMode] = useState(() => safeLocalStorageGet("pyithon-offline") === "true");
+  const [offlineMode, setOfflineMode] = useState(initialAppState.offlineMode);
   const [pyodideStatus, setPyodideStatus] = useState("idle"); // idle, loading, ready, error
   const [themeKey, setThemeKey] = useState(() => {
     return resolveStoredThemeKey(safeLocalStorageGet("pyithon-theme"));
@@ -485,7 +497,7 @@ export default function PyithonApp() {
   const [typedChars, setTypedChars] = useState(0);
   const [editorGlow, setEditorGlow] = useState(false);
   const [showXPFloat, setShowXPFloat] = useState(false);
-  const [lang, setLang] = useState(() => safeLocalStorageGet("pyithon-lang", "en") || "en");
+  const [lang, setLang] = useState(initialAppState.lang);
   const [provider, setProvider] = useState(loadStoredProvider);
   const [offlineFallbackToast, setOfflineFallbackToast] = useState(false);
 
@@ -499,42 +511,16 @@ export default function PyithonApp() {
   const phaseColors = getPhaseColors(C);
 
   useEffect(() => {
-    const saved = loadProgress();
-    const qaConfig = qaConfigRef.current;
-    if (qaConfig?.enabled) {
-      if (qaConfig.completedLevels.length) setCompletedLevels(new Set(qaConfig.completedLevels));
-      if (qaConfig.levelId) {
-        const levelIndex = LEVELS.findIndex(l => l.id === qaConfig.levelId);
-        if (levelIndex >= 0) setCurrentLevel(levelIndex);
-      }
-      if (qaConfig.lang && STRINGS[qaConfig.lang]) setLang(qaConfig.lang);
-      if (qaConfig.offline) setOfflineMode(true);
-      if (qaConfig.skipWelcome) setShowWelcome(false);
-      return;
-    }
-    const hasSavedSession = saved?.hasStarted
-      || (saved?.completedLevels?.length > 0)
-      || (saved?.currentLevel > 0)
-      || (saved?.streak > 0)
-      || (saved?.bestStreak > 0)
-      || (saved?.totalXP > 0);
-    if (saved && hasSavedSession) {
-      if (saved.completedLevels) setCompletedLevels(new Set(saved.completedLevels));
-      if (saved.currentLevel !== undefined) setCurrentLevel(saved.currentLevel);
-      if (saved.streak !== undefined) setStreak(saved.streak);
-      if (saved.bestStreak !== undefined) setBestStreak(saved.bestStreak);
-      if (saved.totalXP !== undefined) setTotalXP(saved.totalXP);
-      setShowWelcome(false);
-    }
-  }, []);
-
-  useEffect(() => {
     const hasMeaningfulProgress = completedLevels.size > 0 || currentLevel !== 0 || streak !== 0 || bestStreak !== 0 || totalXP !== 0;
     if (showWelcome && !hasMeaningfulProgress) return;
     saveProgress({ completedLevels: [...completedLevels], currentLevel, streak, bestStreak, totalXP, hasStarted: !showWelcome || hasMeaningfulProgress });
   }, [bestStreak, completedLevels, currentLevel, showWelcome, streak, totalXP]);
 
   useEffect(() => {
+    if (!hasInitializedLevelRef.current) {
+      hasInitializedLevelRef.current = true;
+      return;
+    }
     setCode(LEVELS[currentLevel].starterCode);
     setFeedback(null); setShowHint(false); setTab("editor");
     setLevelTransition(true);
