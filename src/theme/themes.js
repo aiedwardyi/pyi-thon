@@ -187,6 +187,14 @@ export function getGlobalStyles(theme) {
     0%, 100% { opacity: 0.4; transform: scale(1); }
     50% { opacity: 1; transform: scale(1.15); }
   }
+  @keyframes headerLogoFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-2px); }
+  }
+  @keyframes headerLogoGlow {
+    0%, 100% { opacity: 0.9; }
+    50% { opacity: 1; }
+  }
   @keyframes dotBounce {
     0%, 80%, 100% { transform: scale(0.6); opacity: 0.3; }
     40% { transform: scale(1.2); opacity: 1; }
@@ -205,6 +213,8 @@ export function getGlobalStyles(theme) {
   textarea::-webkit-scrollbar-track { background: transparent; }
   textarea::-webkit-scrollbar-thumb { background: rgba(129,140,248,0.15); border-radius: 4px; }
   textarea::-webkit-scrollbar-thumb:hover { background: rgba(129,140,248,0.3); }
+  .ui-logo-float { animation: headerLogoFloat 4s ease-in-out infinite; transform-origin: center; }
+  .ui-logo-line { animation: headerLogoGlow 4s ease-in-out infinite; }
 
   button { transition: all 0.2s ease; }
   button:focus-visible,

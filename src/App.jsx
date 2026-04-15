@@ -32,6 +32,7 @@ let _pyodideLoading = false;
 let _pyodideReady = false;
 const _pyodideCallbacks = [];
 const OFFLINE_FALLBACK_NOTICE_SESSION_KEY = "pyithon-offline-fallback-notice-shown";
+const LOCAL_FALLBACK_NOTICE_SESSION_KEY = "pyithon-local-fallback-notice-shown";
 
 async function loadPyodideRuntime() {
   if (_pyodideReady) return _pyodide;
@@ -494,7 +495,7 @@ export default function PyithonApp() {
   const [showXPFloat, setShowXPFloat] = useState(false);
   const [lang, setLang] = useState(() => safeLocalStorageGet("pyithon-lang", "en") || "en");
   const [provider, setProvider] = useState(loadStoredProvider);
-  const [offlineFallbackToast, setOfflineFallbackToast] = useState(false);
+  const [statusToast, setStatusToast] = useState("");
 
   const t = useCallback((key) => STRINGS[lang]?.[key] || STRINGS.en[key] || key, [lang]);
   const isUsingLocalFeedback = offlineMode || !apiKey;
@@ -623,16 +624,24 @@ export default function PyithonApp() {
     }
   };
 
-  const showOfflineFallbackNotice = useCallback(() => {
-    if (safeSessionStorageGet(OFFLINE_FALLBACK_NOTICE_SESSION_KEY) === "true") return;
-    safeSessionStorageSet(OFFLINE_FALLBACK_NOTICE_SESSION_KEY, "true");
-    setOfflineFallbackToast(true);
+  const showStatusToast = useCallback((message, sessionKey) => {
+    if (sessionKey && safeSessionStorageGet(sessionKey) === "true") return;
+    if (sessionKey) safeSessionStorageSet(sessionKey, "true");
+    setStatusToast(message);
     if (offlineFallbackToastTimerRef.current) clearTimeout(offlineFallbackToastTimerRef.current);
     offlineFallbackToastTimerRef.current = setTimeout(() => {
-      setOfflineFallbackToast(false);
+      setStatusToast("");
       offlineFallbackToastTimerRef.current = null;
     }, 4000);
   }, []);
+
+  const showOfflineFallbackNotice = useCallback(() => {
+    showStatusToast(t("offlineFallback"), OFFLINE_FALLBACK_NOTICE_SESSION_KEY);
+  }, [showStatusToast, t]);
+
+  const showLocalFallbackNotice = useCallback(() => {
+    showStatusToast(t("localFallbackNotice"), LOCAL_FALLBACK_NOTICE_SESSION_KEY);
+  }, [showStatusToast, t]);
 
   const handleScrollToTask = useCallback(() => {
     editorRef.current?.blur?.();
@@ -663,7 +672,18 @@ export default function PyithonApp() {
     const expected = level.expectedOutput.trim();
     setIsEvaluating(true); setFeedback(null); setTab("output");
     try {
-      const result = useOffline ? await evaluateOffline(userCode, level, lang) : await evaluateWithAI(userCode, level, apiKey, lang, provider);
+      let result;
+      if (useOffline) {
+        result = await evaluateOffline(userCode, level, lang);
+      } else {
+        const aiResult = await evaluateWithAI(userCode, level, apiKey, lang, provider);
+        if (aiResult.fallbackToLocal) {
+          showLocalFallbackNotice();
+          result = await evaluateOffline(userCode, level, lang);
+        } else {
+          result = aiResult;
+        }
+      }
       if (result.correct) {
         setFeedback({ correct: true, message: result.feedback || t("correct"), expected, aiExplanation: result.explanation });
         const isNew = !completedLevels.has(level.id);
@@ -684,7 +704,7 @@ export default function PyithonApp() {
     } catch (err) {
       setFeedback({ correct: false, message: `${t("generalError")}: ${err.message}`, expected });
     } finally { setIsEvaluating(false); }
-  }, [apiKey, bestStreak, code, completedLevels, isEvaluating, isUsingLocalFeedback, lang, level, offlineMode, playTone, provider, showOfflineFallbackNotice, t]);
+  }, [apiKey, bestStreak, code, completedLevels, isEvaluating, isUsingLocalFeedback, lang, level, offlineMode, playTone, provider, showLocalFallbackNotice, showOfflineFallbackNotice, t]);
 
   // Ctrl+Enter to run
   useEffect(() => {
@@ -901,7 +921,7 @@ export default function PyithonApp() {
         t,
         totalLevels,
       })}
-      {offlineFallbackToast && (
+      {statusToast && (
         <div style={{
           position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)",
           background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 12,
@@ -912,7 +932,7 @@ export default function PyithonApp() {
           maxWidth: "min(92vw, 480px)",
           textAlign: "center",
         }}>
-          {t("offlineFallback")}
+          {statusToast}
         </div>
       )}
       <footer style={{

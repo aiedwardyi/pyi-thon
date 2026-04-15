@@ -2,7 +2,6 @@ export default function GameHeader({
   C,
   completedCount,
   isCompactHeader,
-  isWide,
   levelId,
   onOpenLevelSelect,
   onOpenSettings,
@@ -64,14 +63,14 @@ export default function GameHeader({
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></svg>
             <span style={{ fontSize: 11, fontWeight: 600, display: isCompactHeader ? "none" : "inline" }}>{t("levels")}</span>
           </button>
-          <svg viewBox="0 0 200 200" style={{ width: 20, height: 20, flexShrink: 0, filter: `drop-shadow(0 0 6px ${C.accentGlow})` }}>
+          <svg className="ui-logo-float" viewBox="0 0 200 200" style={{ width: 20, height: 20, flexShrink: 0, filter: `drop-shadow(0 0 6px ${C.accentGlow})` }}>
             <defs><linearGradient id="pyithonHeaderLogoGradient" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stopColor={C.accentDeep} /><stop offset="100%" stopColor={C.accentLight} /></linearGradient></defs>
-            <path d="M60 160 L60 60 L30 90" fill="none" stroke="url(#pyithonHeaderLogoGradient)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M100 160 L100 40 L70 70" fill="none" stroke="url(#pyithonHeaderLogoGradient)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M140 160 L140 60 L110 90" fill="none" stroke="url(#pyithonHeaderLogoGradient)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M175 160 L175 80 L145 110" fill="none" stroke="url(#pyithonHeaderLogoGradient)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
+            <path className="ui-logo-line" d="M60 160 L60 60 L30 90" fill="none" stroke="url(#pyithonHeaderLogoGradient)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
+            <path className="ui-logo-line" d="M100 160 L100 40 L70 70" fill="none" stroke="url(#pyithonHeaderLogoGradient)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
+            <path className="ui-logo-line" d="M140 160 L140 60 L110 90" fill="none" stroke="url(#pyithonHeaderLogoGradient)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
+            <path className="ui-logo-line" d="M175 160 L175 80 L145 110" fill="none" stroke="url(#pyithonHeaderLogoGradient)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          <span style={{ fontSize: 14, fontWeight: 800, color: C.accent, letterSpacing: -0.5, display: isWide && !isCompactHeader ? "inline" : "none" }}>Pyi-thon</span>
+          <span style={{ fontSize: isCompactHeader ? 13 : 14, fontWeight: 800, color: C.accent, letterSpacing: -0.5, display: "inline", whiteSpace: "nowrap" }}>Pyi-thon</span>
         </div>
 
         <div style={{

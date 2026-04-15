@@ -144,6 +144,7 @@ test("narrow phone widths keep the header in compact layout", async ({ page, isM
 
   const buttonLabelDisplay = await page.getByTestId("open-level-select").locator("span").evaluate((node) => window.getComputedStyle(node).display);
   expect(buttonLabelDisplay).toBe("none");
+  await expect(page.getByText("Pyi-thon", { exact: true })).toBeVisible();
 
   const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
   const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
