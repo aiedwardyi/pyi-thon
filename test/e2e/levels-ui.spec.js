@@ -224,7 +224,7 @@ test("switching languages clears stale output feedback so panels stay consistent
   await expect(page.getByRole("button", { name: "Return to editor" })).toBeVisible();
 
   await page.getByTestId("open-settings").click();
-    await page.getByTestId("lang-ko").click({ force: true });
+  await page.getByTestId("lang-ko").click({ force: true });
   await page.getByTestId("close-settings").click();
 
   await expect(page.getByText("코드를 실행하면 결과가 여기에 표시됩니다")).toBeVisible();

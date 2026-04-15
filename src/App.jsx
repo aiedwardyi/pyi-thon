@@ -862,7 +862,6 @@ export default function PyithonApp() {
         C,
         completedCount: completedLevels.size,
         isCompactHeader,
-        isCompactMobile,
         levelId: level.id,
         onOpenLevelSelect: () => setShowLevelSelect(true),
         onOpenSettings: () => setShowApiSetup(true),

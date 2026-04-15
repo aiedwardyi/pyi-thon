@@ -207,17 +207,17 @@ export function getGlobalStyles(theme) {
     100% { opacity: 0; transform: translateY(-40px) scale(0.8); }
   }
   @keyframes bubbleIn {
-    0% { opacity: 0; scale: 0.94; translate: 0 14px; }
-    62% { opacity: 1; scale: 1.025; translate: 0 -2px; }
-    100% { opacity: 1; scale: 1; translate: 0 0; }
+    0% { opacity: 0; transform: translateY(14px) scale(0.94); }
+    62% { opacity: 1; transform: translateY(-2px) scale(1.025); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
   }
   @keyframes surfaceSettle {
-    0% { opacity: 0; scale: 0.98; translate: 0 8px; }
-    100% { opacity: 1; scale: 1; translate: 0 0; }
+    0% { opacity: 0; transform: translateY(8px) scale(0.98); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
   }
   @keyframes logoFloat {
-    0%, 100% { translate: 0 0; rotate: -1deg; }
-    50% { translate: 0 -6px; rotate: 1deg; }
+    0%, 100% { transform: translateY(0) rotate(-1deg); }
+    50% { transform: translateY(-6px) rotate(1deg); }
   }
   @keyframes logoStroke {
     from { stroke-dashoffset: 170; }
@@ -233,12 +233,12 @@ export function getGlobalStyles(theme) {
     to { opacity: 1; }
   }
   @keyframes currentDotPulse {
-    0%, 100% { scale: 1; opacity: 0.8; }
-    50% { scale: 1.45; opacity: 1; }
+    0%, 100% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(1.45); opacity: 1; }
   }
   @keyframes trafficGlow {
-    0%, 100% { scale: 1; filter: brightness(1); }
-    50% { scale: 1.16; filter: brightness(1.25); }
+    0%, 100% { transform: scale(1); filter: brightness(1); }
+    50% { transform: scale(1.16); filter: brightness(1.25); }
   }
   textarea::placeholder { color: rgba(129,140,248,0.2) !important; }
   textarea::-webkit-scrollbar { width: 5px; }
@@ -284,7 +284,7 @@ export function getGlobalStyles(theme) {
   .ui-panel-subtle,
   .ui-editor-shell {
     transform-origin: center;
-    transition-property: scale, translate, rotate, filter, box-shadow, background-color, border-color, color, opacity;
+    transition-property: transform, filter, box-shadow, background-color, border-color, color, opacity;
     transition-duration: 220ms;
     transition-timing-function: cubic-bezier(0.2, 0.9, 0.2, 1.15);
   }
@@ -304,77 +304,67 @@ export function getGlobalStyles(theme) {
     }
 
     .ui-pop:hover:not(:disabled) {
-      scale: 1.035;
-      translate: 0 -1px;
+      transform: translateY(-1px) scale(1.035);
       filter: brightness(1.03) saturate(1.03);
     }
 
     .ui-pop-soft:hover:not(:disabled) {
-      scale: 1.02;
-      translate: 0 -1px;
+      transform: translateY(-1px) scale(1.02);
       filter: brightness(1.025);
     }
 
     .ui-pop-subtle:hover:not(:disabled) {
-      scale: 1.015;
-      translate: 0 -0.5px;
+      transform: translateY(-0.5px) scale(1.015);
       filter: brightness(1.02);
     }
 
     .ui-icon-pop:hover:not(:disabled) {
-      scale: 1.18;
-      rotate: 4deg;
+      transform: rotate(4deg) scale(1.18);
       filter: drop-shadow(0 3px 8px ${theme.accentGlow});
     }
 
     .ui-badge-pop:hover,
     .ui-chip-pop:hover {
-      scale: 1.06;
-      translate: 0 -1px;
+      transform: translateY(-1px) scale(1.06);
       filter: brightness(1.03) saturate(1.03);
     }
 
     .ui-level-card:hover:not(:disabled) {
-      scale: 1.015;
-      translate: 6px -1px;
+      transform: translate(6px, -1px) scale(1.015);
     }
 
     .ui-panel-pop:hover,
     .ui-editor-shell:focus-within {
-      scale: 1.004;
+      transform: scale(1.004);
       filter: brightness(1.015);
     }
 
     .ui-panel-subtle:hover {
-      scale: 1.002;
+      transform: scale(1.002);
       filter: brightness(1.01);
     }
   }
 
   .ui-pop:active:not(:disabled),
   .ui-pop-soft:active:not(:disabled) {
-    scale: 0.94;
-    translate: 0 1px;
+    transform: translateY(1px) scale(0.94);
     filter: brightness(0.96);
     transition-duration: 90ms;
   }
 
   .ui-pop-subtle:active:not(:disabled) {
-    scale: 0.97;
-    translate: 0 0.5px;
+    transform: translateY(0.5px) scale(0.97);
     filter: brightness(0.98);
     transition-duration: 90ms;
   }
 
   .ui-icon-pop:active:not(:disabled) {
-    scale: 0.86;
-    rotate: -7deg;
+    transform: rotate(-7deg) scale(0.86);
     transition-duration: 90ms;
   }
 
   .ui-level-card:active:not(:disabled) {
-    scale: 0.985;
-    translate: 3px 1px;
+    transform: translate(3px, 1px) scale(0.985);
     transition-duration: 90ms;
   }
 
