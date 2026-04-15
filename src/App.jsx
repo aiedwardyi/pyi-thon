@@ -11,6 +11,7 @@ import { formatHintText } from "./hintFormatting";
 import { STRINGS } from "./data/appConfig";
 import { LEVELS, getLocalizedLevel, getPhaseColors } from "./data/levels";
 import { evaluateWithAI } from "./lib/aiEvaluation";
+import { localizePythonError } from "./lib/pythonErrorLocalization";
 import {
   getApiKeyStorageKey,
   loadProgress,
@@ -18,6 +19,8 @@ import {
   loadStoredProvider,
   safeLocalStorageGet,
   safeLocalStorageSet,
+  safeSessionStorageGet,
+  safeSessionStorageSet,
   saveProgress,
 } from "./lib/storage";
 import { DEFAULT_THEME_KEY, getGlobalStyles, resolveStoredThemeKey, THEMES } from "./theme/themes";
@@ -29,6 +32,8 @@ let _pyodide = null;
 let _pyodideLoading = false;
 let _pyodideReady = false;
 const _pyodideCallbacks = [];
+const OFFLINE_FALLBACK_NOTICE_SESSION_KEY = "pyithon-offline-fallback-notice-shown";
+const LOCAL_FALLBACK_NOTICE_SESSION_KEY = "pyithon-local-fallback-notice-shown";
 
 async function loadPyodideRuntime() {
   if (_pyodideReady) return _pyodide;
@@ -282,14 +287,15 @@ async function evaluateOffline(userCode, level, lang) {
   try {
     const result = await runPython(code, level.simulatedInput || "");
     if (!result.success) {
+      const localizedPythonError = localizePythonError(result.error, lang);
       // Check for common mistakes to give better error hints
       const mistakes = (COMMON_MISTAKES[lang] || COMMON_MISTAKES.en)[level.id] || COMMON_MISTAKES.en[level.id] || [];
       for (const [pattern, hint] of mistakes) {
         if (pattern.test(code)) {
-          return { correct: false, feedback: `${_t("offlinePyError")}${result.error}\n\n${_t("hint")}: ${hint}`, explanation: "" };
+          return { correct: false, feedback: `${_t("offlinePyError")}${localizedPythonError}\n\n${_t("hint")}: ${hint}`, explanation: "" };
         }
       }
-      return { correct: false, feedback: `${_t("offlinePyError")}${result.error}`, explanation: "" };
+      return { correct: false, feedback: `${_t("offlinePyError")}${localizedPythonError}`, explanation: "" };
     }
 
     const actual = result.output.trim();
@@ -454,7 +460,6 @@ export default function PyithonApp() {
   const [code, setCode] = useState(LEVELS[0].starterCode);
   const [showHint, setShowHint] = useState(false);
   const [feedback, setFeedback] = useState(null);
-  const [failedAttemptsByLevel, setFailedAttemptsByLevel] = useState({});
   const [completedLevels, setCompletedLevels] = useState(() => new Set());
   const [streak, setStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
@@ -475,9 +480,12 @@ export default function PyithonApp() {
   const darkMode = THEMES[themeKey].palette.scheme === "dark";
   const editorRef = useRef(null);
   const highlightRef = useRef(null);
+  const taskCardRef = useRef(null);
   const audioCtxRef = useRef(null);
+  const offlineFallbackToastTimerRef = useRef(null);
   const [tab, setTab] = useState("editor");
   const [isWide, setIsWide] = useState(window.innerWidth >= 900);
+  const [isCompactHeader, setIsCompactHeader] = useState(window.innerWidth < 560);
   const [isCompactMobile, setIsCompactMobile] = useState(window.innerWidth < 430);
   const [conceptCollapsed, setConceptCollapsed] = useState(false);
   const [levelTransition, setLevelTransition] = useState(false);
@@ -487,9 +495,10 @@ export default function PyithonApp() {
   const [showXPFloat, setShowXPFloat] = useState(false);
   const [lang, setLang] = useState(() => safeLocalStorageGet("pyithon-lang", "en") || "en");
   const [provider, setProvider] = useState(loadStoredProvider);
-  const [offlineFallbackToast, setOfflineFallbackToast] = useState(false);
+  const [statusToast, setStatusToast] = useState("");
 
   const t = useCallback((key) => STRINGS[lang]?.[key] || STRINGS.en[key] || key, [lang]);
+  const isUsingLocalFeedback = offlineMode || !apiKey;
 
   const level = LEVELS[currentLevel];
   const levelT = getLocalizedLevel(level, lang);
@@ -554,6 +563,7 @@ export default function PyithonApp() {
   useEffect(() => {
     const onResize = () => {
       setIsWide(window.innerWidth >= 900);
+      setIsCompactHeader(window.innerWidth < 560);
       setIsCompactMobile(window.innerWidth < 430);
     };
     window.addEventListener("resize", onResize);
@@ -588,7 +598,16 @@ export default function PyithonApp() {
     return () => clearInterval(timer);
   }, [showWelcome, typedChars, tagline]);
   // Reset typing animation when language changes
-  useEffect(() => { setTypedChars(0); }, [lang]);
+  useEffect(() => {
+    setTypedChars(0);
+    setFeedback(null);
+    setStatusToast("");
+  }, [lang]);
+  useEffect(() => {
+    return () => {
+      if (offlineFallbackToastTimerRef.current) clearTimeout(offlineFallbackToastTimerRef.current);
+    };
+  }, []);
 
   // Sound helper
   const playTone = useCallback((frequency, duration, type = "sine", volume = 0.12) => {
@@ -617,34 +636,72 @@ export default function PyithonApp() {
     }
   };
 
+  const showStatusToast = useCallback((message, sessionKey) => {
+    if (sessionKey && safeSessionStorageGet(sessionKey) === "true") return;
+    if (sessionKey) safeSessionStorageSet(sessionKey, "true");
+    setStatusToast(message);
+    if (offlineFallbackToastTimerRef.current) clearTimeout(offlineFallbackToastTimerRef.current);
+    offlineFallbackToastTimerRef.current = setTimeout(() => {
+      setStatusToast("");
+      offlineFallbackToastTimerRef.current = null;
+    }, 4000);
+  }, []);
+
+  const showOfflineFallbackNotice = useCallback(() => {
+    showStatusToast(t("offlineFallback"), OFFLINE_FALLBACK_NOTICE_SESSION_KEY);
+  }, [showStatusToast, t]);
+
+  const showLocalFallbackNotice = useCallback(() => {
+    showStatusToast(t("localFallbackNotice"), LOCAL_FALLBACK_NOTICE_SESSION_KEY);
+  }, [showStatusToast, t]);
+
+  const handleScrollToTask = useCallback(() => {
+    editorRef.current?.blur?.();
+    taskCardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
+  const handleScrollToEditor = useCallback(() => {
+    setTab("editor");
+    setTimeout(() => {
+      editorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      editorRef.current?.focus();
+    }, 60);
+  }, []);
+
   const handleSubmit = useCallback(async () => {
     if (isEvaluating) return;
-    const useOffline = offlineMode || !apiKey;
+    const useOffline = isUsingLocalFeedback;
     if (!offlineMode && !apiKey) {
-      setOfflineFallbackToast(true);
-      setTimeout(() => setOfflineFallbackToast(false), 4000);
+      showOfflineFallbackNotice();
     }
-    const userCode = code.trim();
     const expected = level.expectedOutput.trim();
+    const userCode = code.trim();
     if (!userCode || userCode === level.starterCode.trim()) {
-      const attemptCount = (failedAttemptsByLevel[level.id] || 0) + 1;
-      setFailedAttemptsByLevel(prev => ({ ...prev, [level.id]: attemptCount }));
-      setFeedback({ correct: false, message: t("writeCodeFirst"), expected, attemptCount });
+      setFeedback({ correct: false, message: t("writeCodeFirst"), expected });
       setShakeEditor(true); setTimeout(() => setShakeEditor(false), 500);
       playTone(330, 0.15, "triangle");
       return;
     }
     setIsEvaluating(true); setFeedback(null); setTab("output");
     try {
-      const result = useOffline ? await evaluateOffline(userCode, level, lang) : await evaluateWithAI(userCode, level, apiKey, lang, provider);
+      let result;
+      let feedbackSource = useOffline ? "local" : "provider";
+      let sourceMessage = "";
+      if (useOffline) {
+        result = await evaluateOffline(userCode, level, lang);
+      } else {
+        const aiResult = await evaluateWithAI(userCode, level, apiKey, lang, provider);
+        if (aiResult.fallbackToLocal) {
+          showLocalFallbackNotice();
+          result = await evaluateOffline(userCode, level, lang);
+          feedbackSource = "local";
+          sourceMessage = aiResult.sourceMessage || t("localFallbackInline");
+        } else {
+          result = aiResult;
+        }
+      }
       if (result.correct) {
-        setFailedAttemptsByLevel(prev => {
-          if (!prev[level.id]) return prev;
-          const next = { ...prev };
-          delete next[level.id];
-          return next;
-        });
-        setFeedback({ correct: true, message: result.feedback || t("correct"), expected, aiExplanation: result.explanation, attemptCount: 0 });
+        setFeedback({ correct: true, message: result.feedback || t("correct"), expected, aiExplanation: result.explanation, source: feedbackSource, sourceMessage });
         const isNew = !completedLevels.has(level.id);
         if (isNew) {
           const nc = new Set(completedLevels); nc.add(level.id); setCompletedLevels(nc);
@@ -656,18 +713,14 @@ export default function PyithonApp() {
         setEditorGlow(true); setTimeout(() => setEditorGlow(false), 1500);
         playTone(523.25, 0.1); setTimeout(() => playTone(659.25, 0.1), 100); setTimeout(() => playTone(783.99, 0.15), 200);
       } else {
-        const attemptCount = (failedAttemptsByLevel[level.id] || 0) + 1;
-        setFailedAttemptsByLevel(prev => ({ ...prev, [level.id]: attemptCount }));
-        setFeedback({ correct: false, message: result.feedback || t("notQuite"), expected, aiExplanation: result.explanation, attemptCount });
+        setFeedback({ correct: false, message: result.feedback || t("notQuite"), expected, aiExplanation: result.explanation, source: feedbackSource, sourceMessage });
         setStreak(0); setShakeEditor(true); setTimeout(() => setShakeEditor(false), 500);
         playTone(330, 0.15, "triangle");
       }
     } catch (err) {
-      const attemptCount = (failedAttemptsByLevel[level.id] || 0) + 1;
-      setFailedAttemptsByLevel(prev => ({ ...prev, [level.id]: attemptCount }));
-      setFeedback({ correct: false, message: `${t("generalError")}: ${err.message}`, expected, attemptCount });
+      setFeedback({ correct: false, message: `${t("generalError")}: ${err.message}`, expected });
     } finally { setIsEvaluating(false); }
-  }, [apiKey, bestStreak, code, completedLevels, failedAttemptsByLevel, isEvaluating, lang, level, offlineMode, playTone, provider, t]);
+  }, [apiKey, bestStreak, code, completedLevels, isEvaluating, isUsingLocalFeedback, lang, level, offlineMode, playTone, provider, showLocalFallbackNotice, showOfflineFallbackNotice, t]);
 
   // Ctrl+Enter to run
   useEffect(() => {
@@ -681,12 +734,6 @@ export default function PyithonApp() {
     setFeedback(null);
     setShowHint(false);
     setTab("editor");
-    setFailedAttemptsByLevel(prev => {
-      if (!prev[level.id]) return prev;
-      const next = { ...prev };
-      delete next[level.id];
-      return next;
-    });
   };
   const goToLevel = (idx) => { if (idx < unlockedUpTo || completedLevels.has(LEVELS[idx].id)) { setCurrentLevel(idx); setShowLevelSelect(false); } };
 
@@ -814,13 +861,13 @@ export default function PyithonApp() {
       {createElement(GameHeader, {
         C,
         completedCount: completedLevels.size,
-        isCompactMobile,
-        isWide,
+        isCompactHeader,
         levelId: level.id,
         onOpenLevelSelect: () => setShowLevelSelect(true),
         onOpenSettings: () => setShowApiSetup(true),
         onToggleSound: () => setSoundEnabled((prev) => !prev),
         progressPercent,
+        showOfflineBadge: isUsingLocalFeedback,
         showXPFloat,
         soundEnabled,
         streak,
@@ -836,11 +883,17 @@ export default function PyithonApp() {
         {createElement(LevelInfoPanel, {
           C,
           conceptCollapsed,
+          formattedHint,
+          isCompactMobile,
           level,
           levelT,
           monoFont,
+          onScrollToEditor: handleScrollToEditor,
+          onToggleHint: () => setShowHint((prev) => !prev),
           onToggleConcept: () => setConceptCollapsed((prev) => !prev),
           phaseColors,
+          showHint,
+          taskCardRef,
           t,
         })}
 
@@ -853,6 +906,7 @@ export default function PyithonApp() {
           filename,
           formattedHint,
           highlightRef,
+          isCompactMobile,
           isEvaluating,
           isWide,
           level,
@@ -880,14 +934,15 @@ export default function PyithonApp() {
         isEvaluating,
         isMac,
         onGoNextLevel: () => setCurrentLevel((prev) => Math.min(prev + 1, totalLevels - 1)),
+        onScrollToTask: handleScrollToTask,
         onToggleHint: () => setShowHint((prev) => !prev),
         showHint,
         t,
         totalLevels,
       })}
-      {offlineFallbackToast && (
-        <div style={{
-          position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)",
+      {statusToast && (
+        <div data-testid="status-toast" style={{
+          position: "fixed", bottom: isCompactMobile ? 136 : 96, left: "50%", transform: "translateX(-50%)",
           background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 12,
           padding: "10px 20px", fontSize: 13, color: C.textDim, fontWeight: 500,
           boxShadow: `0 8px 32px rgba(0,0,0,0.3)`, zIndex: 9999,
@@ -896,7 +951,7 @@ export default function PyithonApp() {
           maxWidth: "min(92vw, 480px)",
           textAlign: "center",
         }}>
-          {t("offlineFallback")}
+          {statusToast}
         </div>
       )}
       <footer style={{

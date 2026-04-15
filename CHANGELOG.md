@@ -22,6 +22,9 @@ This project follows semantic versioning for public releases. The first official
 - Interactive hover handlers now apply style changes to the intended button elements.
 - Settings now has dialog semantics, Escape-key close behavior, clearer control states, and stronger mobile overflow handling.
 - Focus-visible and reduced-motion treatment now apply consistently across the app.
+- Mobile lesson flow now keeps hint access near the task card, adds a quick jump back to the editor, and replaces the footer hint shortcut with a task shortcut on compact screens.
+- Code entry now disables mobile auto-capitalization and text suggestions so Android keyboards are less likely to interfere with Python syntax.
+- Local-feedback notice behavior is now quieter, with a one-time session toast and a persistent header badge instead of repeating after every run.
 
 ### Planned
 

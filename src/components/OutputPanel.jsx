@@ -4,7 +4,6 @@ export default function OutputPanel({
   C,
   editorRef,
   feedback,
-  formattedHint,
   isEvaluating,
   level,
   levelT,
@@ -15,12 +14,17 @@ export default function OutputPanel({
   t,
 }) {
   const providerLabel = AI_PROVIDERS[provider]?.name || AI_PROVIDERS.gemini.name;
-  const failedAttemptCount = feedback?.attemptCount || 0;
-  const coachingText = failedAttemptCount >= 3
-    ? t("coachingThird")
-    : failedAttemptCount === 2
-      ? t("coachingSecond")
-      : t("coachingFirst");
+  const statusIconStyle = {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+    border: "none",
+    padding: 0,
+  };
 
   if (isEvaluating) {
     return (
@@ -55,7 +59,7 @@ export default function OutputPanel({
             </div>
             <span style={{ fontSize: 24, color: C.accent, animation: "bracketPulse 1.2s ease-in-out infinite 0.1s", display: "inline-block" }}>{`}`}</span>
           </div>
-          <p style={{ color: C.accentTextDim, fontSize: 13, fontWeight: 600, margin: 0, letterSpacing: 0 }}>
+          <p style={{ color: C.accentTextDim, fontSize: 13, fontWeight: 600, margin: 0, letterSpacing: 0.5 }}>
             {providerLabel} {t("isEvaluatingMsg")}
           </p>
         </div>
@@ -84,20 +88,6 @@ export default function OutputPanel({
     );
   }
 
-  const statusIconStyle = {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    flexShrink: 0,
-    background: feedback.correct ? C.green : C.red,
-    cursor: feedback.correct ? "default" : "pointer",
-    border: "none",
-    padding: 0,
-  };
-
   return (
     <div style={{ flex: 1, minHeight: 200 }}>
       <div className="ui-panel-pop" style={{
@@ -110,15 +100,36 @@ export default function OutputPanel({
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16, paddingBottom: 16, borderBottom: `1px solid ${C.border}` }}>
           {feedback.correct ? (
-            <span aria-hidden="true" style={statusIconStyle}>
+            <span
+              aria-hidden="true"
+              style={{
+                ...statusIconStyle,
+                background: C.green,
+              }}
+            >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
             </span>
           ) : (
-            <button type="button" className="ui-icon-pop" aria-label={t("tryAgain")} onClick={() => setTab("editor")} style={statusIconStyle}>
+            <button
+              type="button"
+              className="ui-icon-pop"
+              aria-label={t("returnToEditor")}
+              onClick={() => setTab("editor")}
+              style={{
+                ...statusIconStyle,
+                background: C.red,
+                cursor: "pointer",
+              }}
+            >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
             </button>
           )}
           <div style={{ flex: 1 }}>
+            {feedback.source === "local" && feedback.sourceMessage && (
+              <p data-testid="feedback-source-message" style={{ fontSize: 12, color: C.textDim, lineHeight: 1.45, margin: "0 0 6px" }}>
+                {feedback.sourceMessage}
+              </p>
+            )}
             <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{feedback.correct ? t("correct") : t("notQuite")}</span>
             <p style={{ fontSize: 13, color: C.textMuted, margin: "4px 0 0", lineHeight: 1.6 }}>{feedback.aiExplanation || feedback.message}</p>
           </div>
@@ -130,7 +141,7 @@ export default function OutputPanel({
         </div>
 
         <div style={{ marginBottom: 16 }}>
-          <p style={{ fontSize: 10, fontWeight: 700, color: C.textDim, textTransform: "uppercase", letterSpacing: 0, margin: "0 0 8px" }}>{t("expectedOutput")}</p>
+          <p style={{ fontSize: 10, fontWeight: 700, color: C.textDim, textTransform: "uppercase", letterSpacing: 1.5, margin: "0 0 8px" }}>{t("expectedOutput")}</p>
           <pre style={{
             background: C.codeBg,
             borderRadius: 10,
@@ -147,7 +158,7 @@ export default function OutputPanel({
 
         {level.simulatedInput && (
           <div style={{ marginBottom: 16 }}>
-            <p style={{ fontSize: 10, fontWeight: 700, color: C.textDim, textTransform: "uppercase", letterSpacing: 0, margin: "0 0 8px" }}>{t("sampleInputUsed")}</p>
+            <p style={{ fontSize: 10, fontWeight: 700, color: C.textDim, textTransform: "uppercase", letterSpacing: 1.5, margin: "0 0 8px" }}>{t("sampleInputUsed")}</p>
             <pre style={{
               background: C.codeBg,
               borderRadius: 10,
@@ -164,68 +175,41 @@ export default function OutputPanel({
         )}
 
         <div style={{ paddingTop: 16, borderTop: `1px solid ${C.border}` }}>
-          <p style={{ fontSize: 10, fontWeight: 700, color: C.textDim, textTransform: "uppercase", letterSpacing: 0, margin: "0 0 6px" }}>{t("concept")}</p>
+          <p style={{ fontSize: 10, fontWeight: 700, color: C.textDim, textTransform: "uppercase", letterSpacing: 1.5, margin: "0 0 6px" }}>{t("concept")}</p>
           <p style={{ color: C.textDim, fontSize: 12, lineHeight: 1.7, margin: 0 }}>{levelT.explanation}</p>
         </div>
 
         {!feedback.correct && (
-          <>
-            <div style={{
+          <button
+            type="button"
+            className="ui-pop"
+            onClick={() => {
+              setFeedback(null);
+              setTab("editor");
+              setTimeout(() => editorRef.current?.focus(), 50);
+            }}
+            style={{
+              width: "100%",
               marginTop: 16,
-              padding: "12px 14px",
+              padding: "12px 0",
               borderRadius: 10,
-              border: `1px solid ${C.accentBorder}`,
               background: C.accentBg,
-            }}>
-              <p style={{ fontSize: 10, fontWeight: 700, color: C.accent, textTransform: "uppercase", letterSpacing: 0, margin: "0 0 6px" }}>{t("nextStep")}</p>
-              <p style={{ color: C.accentText, fontSize: 12, lineHeight: 1.7, margin: 0 }}>{coachingText}</p>
-              {failedAttemptCount >= 3 && (
-                <pre style={{
-                  margin: "10px 0 0",
-                  whiteSpace: "pre-wrap",
-                  fontSize: 12,
-                  lineHeight: 1.6,
-                  color: C.codeText,
-                  fontFamily: monoFont,
-                  background: C.codeBg,
-                  borderRadius: 8,
-                  padding: "10px 12px",
-                  border: `1px solid ${C.borderLight}`,
-                }}>{formattedHint}</pre>
-              )}
-            </div>
-
-            <button
-              type="button"
-              className="ui-pop"
-              onClick={() => {
-                setFeedback(null);
-                setTab("editor");
-                setTimeout(() => editorRef.current?.focus(), 50);
-              }}
-              style={{
-                width: "100%",
-                marginTop: 16,
-                padding: "12px 0",
-                borderRadius: 10,
-                background: C.accentBg,
-                border: `1px solid ${C.accentBorder}`,
-                color: C.accentText,
-                fontSize: 13,
-                fontWeight: 600,
-                cursor: "pointer",
-                fontFamily: "inherit",
-              }}
-              onMouseEnter={(event) => {
-                event.currentTarget.style.background = C.accentBorder;
-              }}
-              onMouseLeave={(event) => {
-                event.currentTarget.style.background = C.accentBg;
-              }}
-            >
-              {t("tryAgain")}
-            </button>
-          </>
+              border: `1px solid ${C.accentBorder}`,
+              color: C.accentText,
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: "pointer",
+              fontFamily: "inherit",
+            }}
+            onMouseEnter={(event) => {
+              event.currentTarget.style.background = C.accentBorder;
+            }}
+            onMouseLeave={(event) => {
+              event.currentTarget.style.background = C.accentBg;
+            }}
+          >
+            {t("tryAgain")}
+          </button>
         )}
       </div>
     </div>
