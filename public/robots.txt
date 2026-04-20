@@ -1,2 +1,4 @@
 User-agent: *
 Allow: /
+
+Sitemap: https://pyithon.com/sitemap.xml
