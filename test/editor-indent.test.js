@@ -42,3 +42,20 @@ run("enter replaces a selection", () => {
   assert.equal(next.code, "\n");
   assert.equal(next.cursor, 1);
 });
+
+run("a comment ending in a colon stays at the same indent", () => {
+  const code = "# a comment:";
+  const next = indentOnEnter(code, code.length, code.length);
+  assert.equal(next.code, "# a comment:\n");
+});
+
+run("an empty line stays empty", () => {
+  const next = indentOnEnter("", 0, 0);
+  assert.equal(next.code, "\n");
+});
+
+run("a tabbed line keeps the tab", () => {
+  const code = "\tx = 1";
+  const next = indentOnEnter(code, code.length, code.length);
+  assert.equal(next.code, "\tx = 1\n\t");
+});

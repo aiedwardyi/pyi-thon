@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 
 import { indentOnEnter } from "../lib/editorIndent.js";
 
@@ -25,6 +25,29 @@ export default function EditorPanel({
   t,
 }) {
   const breakOwner = useRef("");
+
+  useEffect(() => {
+    const textarea = editorRef?.current;
+    if (!textarea) return undefined;
+
+    const onBeforeInput = (event) => {
+      const type = event.inputType;
+      if (type !== "insertLineBreak" && type !== "insertParagraph") return;
+      if (breakOwner.current === "key" || breakOwner.current === "run") {
+        breakOwner.current = "";
+        event.preventDefault();
+        return;
+      }
+      if (!event.cancelable || event.isComposing) return;
+      event.preventDefault();
+      breakOwner.current = "before";
+      insertEnter(textarea, setCode);
+    };
+
+    textarea.addEventListener("beforeinput", onBeforeInput);
+    return () => textarea.removeEventListener("beforeinput", onBeforeInput);
+  }, [editorRef, setCode]);
+
   const editorSharedStyle = {
     fontSize: 14,
     lineHeight: "1.75rem",
@@ -149,18 +172,6 @@ export default function EditorPanel({
                 highlightRef.current.scrollTop = event.currentTarget.scrollTop;
                 highlightRef.current.scrollLeft = event.currentTarget.scrollLeft;
               }}
-              onBeforeInput={(event) => {
-                const type = event.nativeEvent.inputType;
-                if (type !== "insertLineBreak" && type !== "insertParagraph") return;
-                if (breakOwner.current === "key" || breakOwner.current === "run") {
-                  breakOwner.current = "";
-                  event.preventDefault();
-                  return;
-                }
-                if (!event.cancelable || event.nativeEvent.isComposing) return;
-                event.preventDefault();
-                insertEnter(event.currentTarget, setCode);
-              }}
               onKeyDown={(event) => {
                 if (event.key === "Tab") {
                   event.preventDefault();
@@ -175,6 +186,11 @@ export default function EditorPanel({
                   return;
                 }
                 if (event.key !== "Enter" || event.altKey || event.isComposing) return;
+                if (breakOwner.current === "before") {
+                  breakOwner.current = "";
+                  event.preventDefault();
+                  return;
+                }
                 if (event.ctrlKey || event.metaKey) {
                   breakOwner.current = "run";
                   return;
