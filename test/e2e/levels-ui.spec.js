@@ -99,7 +99,7 @@ test("Korean mode localizes accessible labels", async ({ page }) => {
   await expect(page.getByTestId("offline-badge")).toHaveAttribute("role", "status");
   await expect(page.getByTestId("offline-badge")).toHaveAttribute("aria-label", "로컬 피드백");
   await expect(page.locator("textarea")).toHaveAttribute("placeholder", "# 여기에 Python 코드를 작성하세요...");
-  await expect(page.locator("textarea")).toHaveAttribute("autocapitalize", "off");
+  await expect(page.locator("textarea")).toHaveAttribute("autocapitalize", "none");
   await expect(page.locator("textarea")).toHaveAttribute("autocorrect", "off");
   await expect(page.locator("textarea")).toHaveAttribute("autocomplete", "off");
 
@@ -237,6 +237,22 @@ test("Korean syntax errors use localized fallback wording", async ({ page }) => 
 
   await expect(page.getByText(/Python 오류: 문법 오류:/)).toBeVisible();
   await expect(page.getByText(/닫히지 않았습니다/)).toBeVisible();
+});
+
+test("enter after a colon indents the next line", async ({ page }) => {
+  await page.goto(levelUrl(7, "en"));
+  const editor = page.locator("textarea");
+  await editor.fill("for i in range:");
+  await editor.press("Enter");
+  await expect(editor).toHaveValue("for i in range:\n    ");
+});
+
+test("enter keeps the indent of the current line", async ({ page }) => {
+  await page.goto(levelUrl(7, "en"));
+  const editor = page.locator("textarea");
+  await editor.fill("    x = 1");
+  await editor.press("Enter");
+  await expect(editor).toHaveValue("    x = 1\n    ");
 });
 
 test("Korean unterminated string literal errors stay fully localized", async ({ page }) => {

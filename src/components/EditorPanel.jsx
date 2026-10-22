@@ -1,3 +1,16 @@
+import { useEffect, useRef } from "react";
+
+import { indentOnEnter } from "../lib/editorIndent.js";
+
+function insertEnter(textarea, setCode) {
+  const next = indentOnEnter(textarea.value, textarea.selectionStart, textarea.selectionEnd);
+  setCode(next.code);
+  setTimeout(() => {
+    textarea.selectionStart = next.cursor;
+    textarea.selectionEnd = next.cursor;
+  }, 0);
+}
+
 export default function EditorPanel({
   C,
   code,
@@ -11,6 +24,30 @@ export default function EditorPanel({
   syntaxTokens,
   t,
 }) {
+  const breakOwner = useRef("");
+
+  useEffect(() => {
+    const textarea = editorRef?.current;
+    if (!textarea) return undefined;
+
+    const onBeforeInput = (event) => {
+      const type = event.inputType;
+      if (type !== "insertLineBreak" && type !== "insertParagraph") return;
+      if (breakOwner.current === "key" || breakOwner.current === "run") {
+        breakOwner.current = "";
+        event.preventDefault();
+        return;
+      }
+      if (!event.cancelable || event.isComposing) return;
+      event.preventDefault();
+      breakOwner.current = "before";
+      insertEnter(textarea, setCode);
+    };
+
+    textarea.addEventListener("beforeinput", onBeforeInput);
+    return () => textarea.removeEventListener("beforeinput", onBeforeInput);
+  }, [editorRef, setCode]);
+
   const editorSharedStyle = {
     fontSize: 14,
     lineHeight: "1.75rem",
@@ -107,7 +144,7 @@ export default function EditorPanel({
             </pre>
             <textarea
               ref={editorRef}
-              autoCapitalize="off"
+              autoCapitalize="none"
               autoComplete="off"
               autoCorrect="off"
               autoSave="off"
@@ -136,15 +173,33 @@ export default function EditorPanel({
                 highlightRef.current.scrollLeft = event.currentTarget.scrollLeft;
               }}
               onKeyDown={(event) => {
-                if (event.key !== "Tab") return;
+                if (event.key === "Tab") {
+                  event.preventDefault();
+                  const textarea = event.currentTarget;
+                  const start = textarea.selectionStart;
+                  const end = textarea.selectionEnd;
+                  setCode(`${textarea.value.substring(0, start)}    ${textarea.value.substring(end)}`);
+                  setTimeout(() => {
+                    textarea.selectionStart = start + 4;
+                    textarea.selectionEnd = start + 4;
+                  }, 0);
+                  return;
+                }
+                if (event.key !== "Enter" || event.altKey || event.isComposing || event.nativeEvent?.keyCode === 229) return;
+                if (breakOwner.current === "before") {
+                  breakOwner.current = "";
+                  event.preventDefault();
+                  return;
+                }
+                if (event.ctrlKey || event.metaKey) {
+                  breakOwner.current = "run";
+                  return;
+                }
                 event.preventDefault();
-                const textarea = event.currentTarget;
-                const start = textarea.selectionStart;
-                const end = textarea.selectionEnd;
-                setCode(`${code.substring(0, start)}    ${code.substring(end)}`);
+                breakOwner.current = "key";
+                insertEnter(event.currentTarget, setCode);
                 setTimeout(() => {
-                  textarea.selectionStart = start + 4;
-                  textarea.selectionEnd = start + 4;
+                  if (breakOwner.current === "key") breakOwner.current = "";
                 }, 0);
               }}
             />
