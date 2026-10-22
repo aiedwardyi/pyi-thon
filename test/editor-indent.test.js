@@ -59,3 +59,9 @@ run("a tabbed line keeps the tab", () => {
   const next = indentOnEnter(code, code.length, code.length);
   assert.equal(next.code, "\tx = 1\n\t");
 });
+
+run("a colon with a trailing comment still indents", () => {
+  const code = "if ready:  # explain";
+  const next = indentOnEnter(code, code.length, code.length);
+  assert.equal(next.code, "if ready:  # explain\n    ");
+});

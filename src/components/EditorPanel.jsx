@@ -185,7 +185,7 @@ export default function EditorPanel({
                   }, 0);
                   return;
                 }
-                if (event.key !== "Enter" || event.altKey || event.isComposing) return;
+                if (event.key !== "Enter" || event.altKey || event.isComposing || event.nativeEvent?.keyCode === 229) return;
                 if (breakOwner.current === "before") {
                   breakOwner.current = "";
                   event.preventDefault();
@@ -198,6 +198,9 @@ export default function EditorPanel({
                 event.preventDefault();
                 breakOwner.current = "key";
                 insertEnter(event.currentTarget, setCode);
+                setTimeout(() => {
+                  if (breakOwner.current === "key") breakOwner.current = "";
+                }, 0);
               }}
             />
           </div>
