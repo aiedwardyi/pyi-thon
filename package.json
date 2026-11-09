@@ -1,7 +1,7 @@
 {
   "name": "pyi-thon",
   "private": true,
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Interactive Python coding challenges with AI-powered feedback, Pyodide-powered offline mode, and bilingual lessons.",
   "type": "module",
   "homepage": "https://pyithon.com",
