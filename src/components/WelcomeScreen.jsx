@@ -4,7 +4,7 @@ import { getIntroStyles } from "../theme/introTheme";
 function makeSpecks() {
   let seed = 20261109;
   const rand = () => (seed = (seed * 1664525 + 1013904223) % 4294967296) / 4294967296;
-  const count = Math.round((window.innerWidth * window.innerHeight) / 7000);
+  const count = Math.min(300, Math.round((window.innerWidth * window.innerHeight) / 7000));
   return Array.from({ length: count }, () => {
     const accent = rand() < 0.14;
     const size = 1.2 + rand() * (accent ? 1.8 : 1.6);
