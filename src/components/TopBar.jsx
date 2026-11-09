@@ -8,9 +8,9 @@ const iconButton = (C) => ({
 
 export function Logo({ color, size = 22 }) {
   return (
-    <svg viewBox="0 0 200 200" width={size} height={size} aria-hidden="true">
+    <svg className="ui-head-logo" viewBox="0 0 200 200" width={size} height={size} aria-hidden="true" style={{ filter: `drop-shadow(0 0 6px ${mix(color, 45)})` }}>
       <g fill="none" stroke={color} strokeWidth="14" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M60 160 L60 60 L30 90" /><path d="M90 160 L90 40 L60 70" /><path d="M120 160 L120 60 L90 90" /><path d="M150 160 L150 80 L120 110" />
+        <path className="ui-head-logo-line" d="M60 160 L60 60 L30 90" /><path className="ui-head-logo-line" d="M90 160 L90 40 L60 70" /><path className="ui-head-logo-line" d="M120 160 L120 60 L90 90" /><path className="ui-head-logo-line" d="M150 160 L150 80 L120 110" />
       </g>
     </svg>
   );
