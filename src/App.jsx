@@ -1,4 +1,5 @@
 import { createElement, useCallback, useEffect, useState } from "react";
+import HistoryScreen from "./components/HistoryScreen";
 import LevelSelectScreen from "./components/LevelSelectScreen";
 import RepScreen from "./components/RepScreen";
 import SetDone from "./components/SetDone";
@@ -11,6 +12,7 @@ import {
   advanceRep, emptyProgress, hasProgress, isUnlocked, migrateProgress, recordMiss, recordPass, startTopic, topicState,
 } from "./lib/progress";
 import { loadPyodideRuntime } from "./lib/pythonRunner";
+import { dayKey, streakStats } from "./lib/streak";
 import { setSoundEnabled as setSoundOn, unlockAudio } from "./lib/sound";
 import {
   getApiKeyStorageKey,
@@ -68,6 +70,7 @@ export default function PyithonApp() {
   const [progress, setProgress] = useState(() => initialProgress(qa) || emptyProgress());
   const [showWelcome, setShowWelcome] = useState(() => (qa ? !qa.skipWelcome : !hasProgress(progress)));
   const [view, setView] = useState("rep");
+  const [backTo, setBackTo] = useState("rep");
   const [setDoneInfo, setSetDoneInfo] = useState(null);
   const [repKey, setRepKey] = useState(0);
   const [showApiSetup, setShowApiSetup] = useState(false);
@@ -144,8 +147,9 @@ export default function PyithonApp() {
   }, [progress]);
 
   const onPass = useCallback((outcome) => {
-    setProgress((prev) => recordPass(prev, set, repIndex, outcome).progress);
-    return recordPass(progress, set, repIndex, outcome).reward;
+    const today = dayKey();
+    setProgress((prev) => recordPass(prev, set, repIndex, outcome, today).progress);
+    return recordPass(progress, set, repIndex, outcome, today).reward;
   }, [progress, repIndex, set]);
 
   const onMiss = useCallback(() => setProgress((prev) => recordMiss(prev)), []);
@@ -201,6 +205,7 @@ export default function PyithonApp() {
     });
   }
 
+  const today = dayKey();
   const doneSet = setDoneInfo && SETS[setDoneInfo.index];
   return (
     <div style={{ ...getPageStyle(C), display: "flex", flexDirection: "column" }}>
@@ -209,16 +214,18 @@ export default function PyithonApp() {
         chip: view === "rep" ? `${set.id} · ${pick(set.title, lang)}` : null,
         combo: progress.combo,
         current: repIndex,
+        onOpenHistory: () => { if (view !== "history") setBackTo(view); setView("history"); },
         onOpenLevels: () => setView("levels"),
         onOpenSettings: () => setShowApiSetup(true),
         onToggleSound: () => setSoundEnabled((prev) => !prev),
         outcomes: view === "rep" ? topic.outcomes : null,
         soundEnabled,
+        streak: streakStats(progress.days, today).current,
         t,
         xp: progress.xp,
         xpRef: setXpEl,
       })}
-      {view !== "setDone" && createElement(RepScreen, {
+      {view !== "setDone" && !(view === "history" && backTo === "setDone") && createElement(RepScreen, {
         key: `${set.id}-${repIndex}-${repKey}`,
         ai: { enabled: !offlineMode && Boolean(apiKey), apiKey, provider },
         C,
@@ -236,6 +243,7 @@ export default function PyithonApp() {
         xpEl,
       })}
       {view === "levels" && createElement(LevelSelectScreen, { C, goToTopic, lang, onBack: () => setView("rep"), progress, sets: SETS, t })}
+      {view === "history" && createElement(HistoryScreen, { C, days: progress.days, lang, onBack: () => setView(backTo), t, today })}
       {view === "setDone" && doneSet && createElement(SetDone, {
         C,
         bonus: setDoneInfo.bonus,

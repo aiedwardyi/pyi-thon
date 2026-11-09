@@ -9,6 +9,7 @@ import "./preferences-storage.test.js";
 import "./public-assets.test.js";
 import "./python-error-localization.test.js";
 import "./progress.test.js";
+import "./streak.test.js";
 
 const STRINGS = {
   offlineLineDiff: 'Line {line}: got "{got}" but expected "{exp}".',

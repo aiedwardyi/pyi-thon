@@ -12,7 +12,7 @@ export default function WinOverlay({ C, isLast, onNext, onStay, repIndex, repTot
   const totalRef = useRef(null);
   const [shown, setShown] = useState(0);
   const doneRef = useRef(false);
-  const { outcome, parts, combo } = reward;
+  const { outcome, parts, combo, dayStreak } = reward;
 
   const finish = (action) => {
     if (doneRef.current) return;
@@ -83,6 +83,11 @@ export default function WinOverlay({ C, isLast, onNext, onStay, repIndex, repTot
             </li>
           ))}
         </ul>
+        {dayStreak > 0 && (
+          <div data-testid="win-day-streak" style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 8, fontWeight: 700, color: C.text, fontSize: 14 }}>
+            <span style={{ color: C.accentLine, display: "flex" }}>{createElement(Flame)}</span>{t("dayStreakWin").replace("{n}", dayStreak)}
+          </div>
+        )}
         {combo >= 2 && (
           <div data-testid="win-combo" style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 8, fontWeight: 700, color: C.text, background: mix(C.accent, 16), borderRadius: 999, padding: "6px 14px", fontSize: 14 }}>
             <span style={{ color: C.xp, display: "flex" }}>{createElement(Flame)}</span>{t("cleanInARow").replace("{n}", combo)}

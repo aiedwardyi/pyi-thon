@@ -38,9 +38,9 @@ export function RepDots({ C, outcomes, current, label }) {
   );
 }
 
-export default function TopBar({ C, chip, combo, current, onOpenLevels, onOpenSettings, onToggleSound, outcomes, soundEnabled, t, xp, xpRef }) {
+export default function TopBar({ C, chip, combo, current, onOpenHistory, onOpenLevels, onOpenSettings, onToggleSound, outcomes, soundEnabled, streak, t, xp, xpRef }) {
   return (
-    <header style={{ height: 56, display: "flex", alignItems: "center", gap: 12, padding: "0 16px", borderBottom: `1px solid ${C.line}`, flexShrink: 0, minWidth: 0 }}>
+    <header className="ui-head" style={{ height: 56, display: "flex", alignItems: "center", gap: 12, padding: "0 16px", borderBottom: `1px solid ${C.line}`, flexShrink: 0, minWidth: 0 }}>
       <button type="button" className="ui-btn" data-testid="open-level-select" aria-label={t("openLevelSelect")} onClick={onOpenLevels} style={{
         display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", color: C.text, cursor: "pointer", padding: 0, fontWeight: 800, fontSize: 17, flexShrink: 0,
       }}>
@@ -66,6 +66,12 @@ export default function TopBar({ C, chip, combo, current, onOpenLevels, onOpenSe
           {createElement(Flame)}{combo}
         </span>
       )}
+      <button type="button" className="ui-btn" data-testid="streak" aria-label={`${t("openHistory")}: ${t("streakLabel").replace("{n}", streak)}`} onClick={onOpenHistory} style={{
+        display: "flex", alignItems: "center", gap: 4, background: "none", border: "none", cursor: "pointer", padding: 0, height: 34, fontFamily: "inherit",
+        fontWeight: 800, fontSize: 15, flexShrink: 0, fontVariantNumeric: "tabular-nums", color: streak > 0 ? C.accentLine : C.dim,
+      }}>
+        {createElement(Flame)}{streak}
+      </button>
       <button type="button" className="ui-btn" aria-label={soundEnabled ? t("disableSound") : t("enableSound")} aria-pressed={soundEnabled} onClick={onToggleSound} style={iconButton(C)}>
         {soundEnabled
           ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z" /><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14" /></svg>
