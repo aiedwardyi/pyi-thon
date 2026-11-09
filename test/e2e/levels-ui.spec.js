@@ -146,8 +146,18 @@ test("a runaway loop shows the loop tip without flooding the output", async ({ p
   await setCode(page, "i = 0\ncount = 0\nwhile i < 6:\n    count += 1\n    print(i)");
   await page.getByTestId("run-button").click();
   await expect(page.getByTestId("feedback-message")).toContainText("Your loop never stops", { timeout: RUN_TIMEOUT });
-  expect(await page.getByTestId("output-row").count()).toBeLessThanOrEqual(21);
+  await expect(page.getByTestId("output-row")).toHaveCount(21);
   await expect(page.getByTestId("output-more")).toContainText("more lines");
+});
+
+test("twenty lines then an error show every row and no more-lines note", async ({ page }) => {
+  await page.goto(levelUrl(8, "en", [1, 2, 3, 4, 5, 6, 7]));
+  await startRep(page);
+  await setCode(page, "for n in range(20):\n    print(n)\nprint(total)");
+  await page.getByTestId("run-button").click();
+  await expect(page.getByTestId("feedback-message")).toBeVisible({ timeout: RUN_TIMEOUT });
+  await expect(page.getByTestId("output-row")).toHaveCount(21);
+  await expect(page.getByTestId("output-more")).toHaveCount(0);
 });
 
 test("showing the answer makes the rep DONE for 5 XP", async ({ page }) => {

@@ -24,10 +24,11 @@ function outputRows(result) {
     if (wrong >= 0) rows[wrong].message = result.message;
     else rows.push({ text: "", ok: false, message: result.message });
   }
-  if (rows.length <= MAX_ROWS) return rows;
   const tip = rows.findIndex((row) => row.message);
   const tail = tip >= MAX_ROWS ? [rows[tip]] : [];
-  return [...rows.slice(0, MAX_ROWS), { more: rows.length - MAX_ROWS - tail.length }, ...tail];
+  const more = rows.length - MAX_ROWS - tail.length;
+  if (more <= 0) return rows;
+  return [...rows.slice(0, MAX_ROWS), { more }, ...tail];
 }
 
 export default function RepScreen({ ai, C, hidden, isLast, lang, onMiss, onNext, onPass, rep, repIndex, set, startWithSee, t, xpEl }) {
