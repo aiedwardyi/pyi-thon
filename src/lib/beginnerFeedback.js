@@ -105,7 +105,7 @@ function nameErrorMessage(name, { code, expected, codeLine }) {
   if (known.includes(lower)) return { key: "spelling", args: [name] };
   if (hasWord(expected, name)) return { key: "quotes", args: [name] };
   if (known.some((item) => editDistance(lower, item) <= 2)) return { key: "spelling", args: [name] };
-  const inCall = codeLine !== null && new RegExp(`print\\(.*\\b${name}\\b|=\\s*${name}\\b`).test(codeLine);
+  const inCall = codeLine !== null && new RegExp(`print\\(\\s*${name}\\s*\\)|=\\s*${name}\\s*(?:#.*)?$`).test(codeLine);
   if (/^[A-Z]/.test(name) || inCall) return { key: "quotes", args: [name] };
   return { key: "create", args: [name] };
 }
@@ -152,7 +152,7 @@ function pickMessage(message, lang) {
 export function checkRep({ code, stdout, errorText, expected, mustUse = [], mustNotUse = [], topic = 1, lang = "en" }) {
   const text = MESSAGES[lang] || MESSAGES.en;
   const expectedLines = expected ? expected.trimEnd().split(/\r?\n/) : [];
-  const gotLines = stdout ? stdout.split(/\r?\n/) : [];
+  const gotLines = stdout ? stdout.trimEnd().split(/\r?\n/) : [];
   const lines = gotLines.map((line, i) => ({ text: line, ok: i < expectedLines.length && line.trimEnd() === expectedLines[i].trimEnd() }));
   const missing = Math.max(0, expectedLines.length - gotLines.length);
   const result = (passed, message, errorLine = null) => ({ passed, lines, missing, errorLine, message });

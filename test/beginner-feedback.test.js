@@ -20,6 +20,8 @@ const errorCases = [
   ["typoCase", { topic: 2, expected: "x" }, 2, "Line 2: Python doesn't know Name. Check the spelling.", "2번째 줄: 파이썬이 Name 이름을 몰라요. 철자를 확인하세요."],
   ["undefinedVar", { topic: 2, expected: "1" }, 1, "Line 1: Python doesn't know total yet. Create it first.", "1번째 줄: 파이썬이 total 이름을 아직 몰라요. 먼저 만드세요."],
   ["useBeforeSet", { topic: 2, expected: "5" }, 1, "Line 1: Python doesn't know score yet. Create it first.", "1번째 줄: 파이썬이 score 이름을 아직 몰라요. 먼저 만드세요."],
+  ["arithOperand", { topic: 2, expected: "11" }, 1, "Line 1: Python doesn't know total yet. Create it first.", "1번째 줄: 파이썬이 total 이름을 아직 몰라요. 먼저 만드세요."],
+  ["concatOperand", { topic: 3, expected: "Hello, Sam" }, 1, "Line 1: Python doesn't know name yet. Create it first.", "1번째 줄: 파이썬이 name 이름을 아직 몰라요. 먼저 만드세요."],
   ["unquotedSam", { topic: 2, expected: "Hello, Sam" }, 1, "Line 1: Sam is text, so it needs quotes.", "1번째 줄: 글자 Sam에는 따옴표가 필요해요."],
   ["unquotedJane", { topic: 2, expected: "Jane" }, 1, "Line 1: Jane is text, so it needs quotes.", "1번째 줄: 글자 Jane에는 따옴표가 필요해요."],
   ["unquotedCat", { topic: 2, expected: "Cat" }, 1, "Line 1: Cat is text, so it needs quotes.", "1번째 줄: 글자 Cat에는 따옴표가 필요해요."],
@@ -140,6 +142,12 @@ run("checkRep reports lines, ok flags and missing count", () => {
 run("checkRep ignores trailing spaces on each line", () => {
   const result = checkRep({ code: "", stdout: "a  \nb", errorText: null, expected: "a\nb  " });
   assert.equal(result.passed, true);
+});
+
+run("checkRep ignores the trailing newline from print()", () => {
+  const result = checkRep({ code: 'print("Hi")', stdout: "Hi\n", errorText: null, expected: "Hi\n" });
+  assert.equal(result.passed, true);
+  assert.deepEqual(result.lines, [{ text: "Hi", ok: true }]);
 });
 
 run("checkRep passes a correct run with an empty message", () => {

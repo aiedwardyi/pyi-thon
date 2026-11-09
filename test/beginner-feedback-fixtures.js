@@ -52,6 +52,14 @@ export const FIXTURES = {
     code: "print(score)\nscore = 5\n",
     errorText: "Traceback (most recent call last):\n  File \"/lib/python312.zip/_pyodide/_base.py\", line 574, in eval_code\n    .run(globals, locals)\n         ^^^^^^^^^^^^^^^^\n  File \"/lib/python312.zip/_pyodide/_base.py\", line 396, in run\n    coroutine = eval(self.code, globals, locals)\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<exec>\", line 1, in <module>\nNameError: name 'score' is not defined",
   },
+  arithOperand: {
+    code: "print(total + 1)\n",
+    errorText: "Traceback (most recent call last):\n  File \"/lib/python312.zip/_pyodide/_base.py\", line 574, in eval_code\n    .run(globals, locals)\n         ^^^^^^^^^^^^^^^^\n  File \"/lib/python312.zip/_pyodide/_base.py\", line 396, in run\n    coroutine = eval(self.code, globals, locals)\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<exec>\", line 1, in <module>\nNameError: name 'total' is not defined",
+  },
+  concatOperand: {
+    code: "print(\"Hello, \" + name)\n",
+    errorText: "Traceback (most recent call last):\n  File \"/lib/python312.zip/_pyodide/_base.py\", line 574, in eval_code\n    .run(globals, locals)\n         ^^^^^^^^^^^^^^^^\n  File \"/lib/python312.zip/_pyodide/_base.py\", line 396, in run\n    coroutine = eval(self.code, globals, locals)\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<exec>\", line 1, in <module>\nNameError: name 'name' is not defined",
+  },
   unterminated: {
     code: "print(\"Hello)\n",
     errorText: "Traceback (most recent call last):\n  File \"/lib/python312.zip/_pyodide/_base.py\", line 574, in eval_code\n    .run(globals, locals)\n         ^^^^^^^^^^^^^^^^\n  File \"/lib/python312.zip/_pyodide/_base.py\", line 396, in run\n    coroutine = eval(self.code, globals, locals)\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<exec>\", line 1\n    print(\"Hello)\n          ^\nSyntaxError: unterminated string literal (detected at line 1)",
