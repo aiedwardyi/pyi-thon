@@ -439,3 +439,111 @@ for (const lang of ["en", "ko"]) {
     await expect(page.getByTestId("win-overlay")).toBeVisible({ timeout: RUN_TIMEOUT });
   });
 }
+
+const FIXED_NOW = new Date(2026, 4, 10, 12, 0, 0);
+
+function seedProgress(page, days, lang = "en", theme = "dark", extra = {}) {
+  return page.addInitScript(({ days: seeded, lang: seededLang, theme: seededTheme, extra: more }) => {
+    window.localStorage.setItem("pyithon-progress", JSON.stringify({
+      version: 2, current: 0, topics: {}, xp: 40, combo: 0, bestCombo: 0, hasStarted: true, days: seeded, ...more,
+    }));
+    window.localStorage.setItem("pyithon-lang", seededLang);
+    window.localStorage.setItem("pyithon-theme", seededTheme);
+  }, { days, lang, theme, extra });
+}
+
+test("History rolls over to a new day at local midnight", async ({ page }) => {
+  await page.clock.install({ time: new Date(2026, 4, 10, 23, 58, 0) });
+  await seedProgress(page, { "2026-05-10": { reps: 3, clean: 2 } });
+  await page.goto("/");
+  await startRep(page);
+  await page.getByTestId("streak").click();
+  await expect(page.getByTestId("today-line")).toHaveText("Today: 3 reps, 2 clean");
+  await page.clock.runFor("03:00");
+  await expect(page.getByTestId("today-line")).toHaveText("Nothing yet today. One rep starts the streak clock.");
+  await expect(page.getByTestId("streak-now")).toHaveText("1");
+});
+
+test("first pass of a day starts the streak and fills today in History", async ({ page }) => {
+  await page.clock.setFixedTime(FIXED_NOW);
+  await page.goto(levelUrl(1));
+  await startRep(page);
+  await expect(page.getByTestId("streak")).toHaveAccessibleName("Open history: 0-day streak");
+  await setCode(page, TOPIC_1[0]);
+  await page.getByTestId("run-button").click();
+  await expect(page.getByTestId("win-overlay")).toBeVisible({ timeout: RUN_TIMEOUT });
+  await expect(page.getByTestId("win-day-streak")).toHaveText("Day 1 streak");
+  await expect(page.getByTestId("streak")).toHaveText("1");
+  await expectNoHorizontalScroll(page);
+
+  await page.getByTestId("win-next").click();
+  await setCode(page, TOPIC_1[1]);
+  await page.getByTestId("run-button").click();
+  await expect(page.getByTestId("win-overlay")).toBeVisible({ timeout: RUN_TIMEOUT });
+  await expect(page.getByTestId("win-day-streak")).toHaveCount(0);
+  await page.getByTestId("win-next").click();
+
+  await page.getByTestId("streak").click();
+  await expect(page.getByTestId("streak-now")).toHaveText("1");
+  await expect(page.getByTestId("streak-best")).toHaveText("1");
+  await expect(page.getByTestId("today-line")).toHaveText("Today: 2 reps, 2 clean");
+  const today = page.locator('[data-testid="heat-cell"][data-date="2026-05-10"]');
+  await expect(today).toHaveAttribute("data-level", "1");
+  await expect(today).toHaveAttribute("aria-label", "May 10: 2 reps, 2 clean");
+  await expect(page.getByTestId("heat-cell")).toHaveCount(84);
+  await expectNoHorizontalScroll(page);
+
+  await page.getByRole("button", { name: "Back" }).click();
+  await expect(page.getByTestId("rep-count")).toHaveText("3/4");
+});
+
+for (const theme of ["dark", "light"]) {
+  test(`a seeded save shows streak and best (${theme})`, async ({ page }) => {
+    await page.clock.setFixedTime(FIXED_NOW);
+    await seedProgress(page, {
+      "2026-04-01": { reps: 1, clean: 1 }, "2026-04-02": { reps: 2, clean: 0 }, "2026-04-03": { reps: 4, clean: 4 }, "2026-04-04": { reps: 12, clean: 6 },
+      "2026-05-08": { reps: 1, clean: 0 }, "2026-05-09": { reps: 3, clean: 3 },
+    }, "en", theme);
+    await page.goto("/");
+    await startRep(page);
+    await expect(page.getByTestId("streak")).toHaveText("2");
+    await expectNoHorizontalScroll(page);
+
+    await page.getByTestId("streak").click();
+    await expect(page.getByTestId("streak-now")).toHaveText("2");
+    await expect(page.getByTestId("streak-best")).toHaveText("4");
+    await expect(page.getByTestId("today-line")).toHaveText("Nothing yet today. One rep starts the streak clock.");
+    const level = (date) => page.locator(`[data-testid="heat-cell"][data-date="${date}"]`);
+    await expect(level("2026-04-04")).toHaveAttribute("data-level", "4");
+    await expect(level("2026-04-03")).toHaveAttribute("data-level", "2");
+    await expect(level("2026-05-09")).toHaveAttribute("data-level", "2");
+    await expect(level("2026-05-10")).toHaveAttribute("data-level", "0");
+    await expect(level("2026-05-10")).toHaveAttribute("aria-label", "May 10: rest day");
+    await expectNoHorizontalScroll(page);
+  });
+}
+
+test("a missed full day resets the streak but keeps best (ko)", async ({ page }) => {
+  await page.clock.setFixedTime(FIXED_NOW);
+  await seedProgress(page, { "2026-05-06": { reps: 1, clean: 0 }, "2026-05-07": { reps: 1, clean: 0 }, "2026-05-08": { reps: 1, clean: 0 } }, "ko");
+  await page.goto("/");
+  await startRep(page, "ko");
+  await expect(page.getByTestId("streak")).toHaveText("0");
+  await page.getByTestId("streak").click();
+  await expect(page.getByRole("heading", { name: "기록" })).toBeVisible();
+  await expect(page.getByTestId("streak-now")).toHaveText("0");
+  await expect(page.getByTestId("streak-best")).toHaveText("3");
+  await expect(page.getByTestId("today-line")).toHaveText("오늘은 아직 없어요. 한 문제면 연속이 시작돼요.");
+});
+
+test("the top bar fits a 384px phone with xp, combo and streak", async ({ page }) => {
+  await page.setViewportSize({ width: 384, height: 800 });
+  await page.clock.setFixedTime(FIXED_NOW);
+  await seedProgress(page, { "2026-05-09": { reps: 3, clean: 3 }, "2026-05-10": { reps: 1, clean: 1 } }, "en", "dark", { xp: 5240, combo: 3 });
+  await page.goto("/");
+  await startRep(page);
+  await expect(page.getByTestId("streak")).toHaveText("2");
+  await expect(page.getByTestId("combo")).toBeVisible();
+  await expect(page.getByTestId("open-settings")).toBeVisible();
+  await expectNoHorizontalScroll(page);
+});

@@ -1,7 +1,9 @@
+import { dayKey, streakStats } from "./streak.js";
+
 export const XP = { solved: 20, firstTry: 10, done: 5, setDone: 50 };
 
 export function emptyProgress() {
-  return { version: 2, current: 0, topics: {}, xp: 0, combo: 0, bestCombo: 0, hasStarted: false };
+  return { version: 2, current: 0, topics: {}, xp: 0, combo: 0, bestCombo: 0, hasStarted: false, days: {} };
 }
 
 function blankTopic(set) {
@@ -25,7 +27,8 @@ const clampIndex = (value, sets) => Math.min(Math.max(Number(value) || 0, 0), se
 export function migrateProgress(saved, sets) {
   if (!saved || typeof saved !== "object") return emptyProgress();
   if (saved.version === 2) {
-    const progress = { ...emptyProgress(), ...saved, current: clampIndex(saved.current, sets) };
+    const days = saved.days && typeof saved.days === "object" && !Array.isArray(saved.days) ? saved.days : {};
+    const progress = { ...emptyProgress(), ...saved, days, current: clampIndex(saved.current, sets) };
     const topics = {};
     for (const set of sets) if (saved.topics?.[set.id]) topics[set.id] = topicState(progress, set);
     return { ...progress, topics };
@@ -76,7 +79,7 @@ export function recordMiss(progress) {
   return { ...progress, combo: 0 };
 }
 
-export function recordPass(progress, set, repIndex, outcome) {
+export function recordPass(progress, set, repIndex, outcome, today = dayKey()) {
   const parts = outcome === "clean"
     ? [{ key: "solved", xp: XP.solved }, { key: "firstTry", xp: XP.firstTry }]
     : outcome === "solved" ? [{ key: "solved", xp: XP.solved }] : [{ key: "done", xp: XP.done }];
@@ -85,9 +88,11 @@ export function recordPass(progress, set, repIndex, outcome) {
   const topic = topicState(progress, set);
   const outcomes = topic.outcomes.map((value, index) => (index === repIndex ? outcome : value));
   const next = withTopic(progress, set, { ...topic, outcomes });
+  const before = progress.days[today];
+  const days = { ...progress.days, [today]: { reps: (before?.reps || 0) + 1, clean: (before?.clean || 0) + (outcome === "clean" ? 1 : 0) } };
   return {
-    progress: { ...next, xp: progress.xp + total, combo, bestCombo: Math.max(progress.bestCombo, combo), hasStarted: true },
-    reward: { outcome, parts, total, combo },
+    progress: { ...next, xp: progress.xp + total, combo, bestCombo: Math.max(progress.bestCombo, combo), hasStarted: true, days },
+    reward: { outcome, parts, total, combo, dayStreak: before?.reps > 0 ? 0 : streakStats(days, today).current },
   };
 }
 

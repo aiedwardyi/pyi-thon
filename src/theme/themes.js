@@ -95,7 +95,7 @@ export function getGlobalStyles(theme) {
   }
   .ui-btn:active:not(:disabled) { transform: translateY(1px) scale(0.98); }
   @media (pointer: coarse) { .ui-kbd { display: none !important; } }
-  @media (max-width: 560px) { .ui-wide-only { display: none !important; } }
+  @media (max-width: 560px) { .ui-wide-only { display: none !important; } .ui-head { gap: 6px !important; padding: 0 12px !important; } }
 
   .ui-shake { animation: shake 0.35s ease-in-out; }
   .ui-pop { animation: pop 0.35s cubic-bezier(0.2, 1.6, 0.4, 1) both; }
