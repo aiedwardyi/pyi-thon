@@ -2,7 +2,7 @@
   "name": "pyi-thon",
   "private": true,
   "version": "2.0.0",
-  "description": "Interactive Python coding challenges with AI-powered feedback, Pyodide-powered offline mode, and bilingual lessons.",
+  "description": "Interactive Python coding challenges with instant feedback, Python running in the browser, and bilingual lessons.",
   "type": "module",
   "homepage": "https://pyithon.com",
   "repository": {
