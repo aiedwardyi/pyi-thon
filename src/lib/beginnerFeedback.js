@@ -116,7 +116,7 @@ function errorMessage(ctx) {
   const { type, detail } = parseError(errorText);
 
   if (type === "NameError") {
-    const name = detail.match(/name '(.+?)' is not defined/)?.[1];
+    const name = detail.match(/name '([\p{L}\p{N}_]+)' is not defined/u)?.[1];
     if (name) return nameErrorMessage(name, { code, expected, codeLine });
   }
   if (type === "SyntaxError") {

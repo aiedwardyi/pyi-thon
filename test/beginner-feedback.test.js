@@ -22,6 +22,7 @@ const errorCases = [
   ["useBeforeSet", { topic: 2, expected: "5" }, 1, "Line 1: Python doesn't know score yet. Create it first.", "1번째 줄: 파이썬이 score 이름을 아직 몰라요. 먼저 만드세요."],
   ["arithOperand", { topic: 2, expected: "11" }, 1, "Line 1: Python doesn't know total yet. Create it first.", "1번째 줄: 파이썬이 total 이름을 아직 몰라요. 먼저 만드세요."],
   ["concatOperand", { topic: 3, expected: "Hello, Sam" }, 1, "Line 1: Python doesn't know name yet. Create it first.", "1번째 줄: 파이썬이 name 이름을 아직 몰라요. 먼저 만드세요."],
+  ["raisedSymbol", { topic: 2, expected: "Hi" }, 1, "Line 1: Python error: NameError. Read this line again.", "1번째 줄: Python 오류: NameError. 이 줄을 다시 읽어 보세요."],
   ["unquotedSam", { topic: 2, expected: "Hello, Sam" }, 1, "Line 1: Sam is text, so it needs quotes.", "1번째 줄: 글자 Sam에는 따옴표가 필요해요."],
   ["unquotedJane", { topic: 2, expected: "Jane" }, 1, "Line 1: Jane is text, so it needs quotes.", "1번째 줄: 글자 Jane에는 따옴표가 필요해요."],
   ["unquotedCat", { topic: 2, expected: "Cat" }, 1, "Line 1: Cat is text, so it needs quotes.", "1번째 줄: 글자 Cat에는 따옴표가 필요해요."],
