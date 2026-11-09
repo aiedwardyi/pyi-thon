@@ -38,6 +38,7 @@ __builtins__.input = input
     // Loop guard: stops runaway loops before they freeze the tab.
     py.runPython(`
 import sys
+sys.settrace(None)
 _loop_limit = 100000
 _original_trace = sys.gettrace()
 _loop_counter = 0

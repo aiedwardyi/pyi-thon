@@ -54,6 +54,7 @@ export default function WinOverlay({ C, isLast, onNext, onStay, repIndex, repTot
     const timer = window.setTimeout(() => { armed = true; }, 450);
     const onKey = (event) => {
       if (event.key !== "Enter" || event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) return;
+      if (armed && event.target.closest?.("a, button, input, select, textarea")) return;
       event.preventDefault();
       event.stopPropagation();
       if (armed) finish(onNext);

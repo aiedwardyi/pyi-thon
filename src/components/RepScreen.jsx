@@ -24,12 +24,13 @@ function outputRows(result) {
   return rows;
 }
 
-export default function RepScreen({ ai, C, isLast, lang, onMiss, onNext, onPass, rep, repIndex, set, startWithSee, t, xpEl }) {
+export default function RepScreen({ ai, C, hidden, isLast, lang, onMiss, onNext, onPass, rep, repIndex, set, startWithSee, t, xpEl }) {
   const editorRef = useRef(null);
   const outputRef = useRef(null);
   const shakeRef = useRef(null);
   const codeRef = useRef(rep.starterCode);
   const missesRef = useRef(0);
+  const aliveRef = useRef(true);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState(null);
   const [hintStep, setHintStep] = useState(0);
@@ -65,6 +66,7 @@ export default function RepScreen({ ai, C, isLast, lang, onMiss, onNext, onPass,
     } catch {
       verdict = { passed: false, lines: [], errorLine: null, message: t("pythonLoadError"), isError: true };
     }
+    if (!aliveRef.current) return;
     setBusy(false);
     setResult(verdict);
     editorRef.current?.markError(verdict.errorLine);
@@ -90,6 +92,12 @@ export default function RepScreen({ ai, C, isLast, lang, onMiss, onNext, onPass,
   }, [ai, answerShown, busy, hintStep, hints, lang, onMiss, onPass, passed, rep, seeOpen, set, t, win, xpEl]);
 
   useEffect(() => {
+    aliveRef.current = true;
+    return () => { aliveRef.current = false; };
+  }, []);
+
+  useEffect(() => {
+    if (hidden) return;
     const onKey = (event) => {
       if (event.defaultPrevented || !(event.ctrlKey || event.metaKey) || event.key !== "Enter") return;
       event.preventDefault();
@@ -97,7 +105,7 @@ export default function RepScreen({ ai, C, isLast, lang, onMiss, onNext, onPass,
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [run]);
+  }, [hidden, run]);
 
   useEffect(() => {
     if (!result || win || window.innerWidth >= 900) return;
@@ -113,14 +121,17 @@ export default function RepScreen({ ai, C, isLast, lang, onMiss, onNext, onPass,
   }, [shake]);
 
   useEffect(() => {
-    if (!seeOpen && window.matchMedia?.("(pointer: fine)").matches) requestAnimationFrame(() => editorRef.current?.focus());
+    if (seeOpen || !window.matchMedia?.("(pointer: fine)").matches) return;
+    const focused = document.activeElement;
+    // A late frame must not pull focus from anything opened since (e.g. Settings).
+    requestAnimationFrame(() => { if (document.activeElement === focused) editorRef.current?.focus(); });
   }, [seeOpen]);
 
   const rows = result ? outputRows(result) : [];
   const hintLabel = hintStep >= hints.length ? t("noMoreHints") : t(HINT_BUTTON[hintStep]);
 
   return (
-    <main style={{ flex: 1, width: "100%", maxWidth: 732, margin: "0 auto", padding: "28px 16px 0", display: "flex", flexDirection: "column", gap: 16 }}>
+    <main style={{ flex: 1, width: "100%", maxWidth: 732, margin: "0 auto", padding: "28px 16px 0", display: hidden ? "none" : "flex", flexDirection: "column", gap: 16 }}>
       <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
         <h1 data-testid="rep-goal" style={{ margin: 0, fontSize: "clamp(20px, 5.4vw, 26px)", fontWeight: 800, lineHeight: 1.3, color: C.text, flex: 1, minWidth: 0 }}>{pick(rep.goal, lang)}</h1>
         <button type="button" className="ui-btn" data-testid="open-see" aria-label={t("showLesson")} onClick={() => setSeeOpen(true)} style={{
@@ -192,8 +203,8 @@ export default function RepScreen({ ai, C, isLast, lang, onMiss, onNext, onPass,
         </section>
       )}
 
-      {seeOpen && createElement(SeeCard, { C, lang, onStart: () => setSeeOpen(false), set, t })}
-      {win && (
+      {!hidden && seeOpen && createElement(SeeCard, { C, lang, onStart: () => setSeeOpen(false), set, t })}
+      {!hidden && win && (
         createElement(WinOverlay, { C, isLast, onNext, onStay: () => setWin(null), repIndex, repTotal: set.reps.length, reward: win, t })
       )}
     </main>

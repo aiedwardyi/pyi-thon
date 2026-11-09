@@ -146,6 +146,59 @@ test("showing the answer makes the rep DONE for 5 XP", async ({ page }) => {
   await expect(page.getByTestId("win-xp")).toHaveText("+5");
 });
 
+test("enter on a focused See code button stays on the rep", async ({ page }) => {
+  await page.goto(levelUrl(1));
+  await startRep(page);
+  await setCode(page, TOPIC_1[0]);
+  await page.getByTestId("run-button").click();
+  await expect(page.getByTestId("win-overlay")).toBeVisible({ timeout: RUN_TIMEOUT });
+
+  await page.waitForTimeout(500);
+  await page.getByRole("button", { name: "See code" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByTestId("win-overlay")).toBeHidden();
+  await expect(page.getByTestId("rep-count")).toHaveText("1/4");
+  await expect(page.getByTestId("next-rep")).toBeVisible();
+});
+
+test("the level list round trip keeps the current attempt", async ({ page }) => {
+  await page.goto(levelUrl(1));
+  await startRep(page);
+  await page.getByTestId("hint-button").click();
+  await setCode(page, TOPIC_1[0]);
+  await page.getByTestId("run-button").click();
+  await expect(page.getByTestId("win-overlay")).toBeVisible({ timeout: RUN_TIMEOUT });
+  await page.getByRole("button", { name: "See code" }).click();
+
+  await page.getByTestId("open-level-select").click();
+  await page.getByRole("button", { name: "Back to current level" }).click();
+  expect(await editorLines(page)).toEqual([TOPIC_1[0]]);
+  await expect(page.getByTestId("hint-panel")).toBeVisible();
+  await expect(page.getByTestId("next-rep")).toBeVisible();
+  await expect(page.getByTestId("win-overlay")).toBeHidden();
+});
+
+test("a run left for another topic does not pull progress back", async ({ page }) => {
+  let release;
+  const held = new Promise((resolve) => { release = resolve; });
+  await page.route("**/pyodide.asm.wasm", async (route) => { await held; await route.continue(); });
+  await page.goto(levelUrl(1, "en", [1]));
+  await startRep(page);
+  await setCode(page, TOPIC_1[0]);
+  await page.getByTestId("run-button").click();
+  await expect(page.getByTestId("run-button")).toBeDisabled();
+
+  await page.getByTestId("open-level-select").click();
+  await page.getByTestId("topic-2").click();
+  await expect(page.getByTestId("set-chip")).toHaveText("2 · Variables");
+  release();
+  await startRep(page);
+  await page.getByTestId("run-button").click();
+  await expect(page.getByTestId("output-row").first()).toBeVisible({ timeout: RUN_TIMEOUT });
+  await expect(page.getByTestId("set-chip")).toHaveText("2 · Variables");
+  await expect(page.getByTestId("xp")).toHaveText(/(^|\D)0$/);
+});
+
 test("enter after a colon indents 4 spaces and backspace removes one unit", async ({ page, isMobile }) => {
   test.skip(!isMobile, "Mobile-only editor check");
   await page.goto(levelUrl(5));
@@ -274,6 +327,18 @@ test("settings dialog supports keyboard close and theme switch", async ({ page }
   await expect(dialog).toBeHidden();
   await expect(page.getByTestId("rep-goal")).toBeVisible();
   expect(await page.evaluate(() => window.localStorage.getItem("pyithon-theme"))).toBe("light");
+});
+
+test("a late editor focus never steals focus from settings", async ({ page }) => {
+  await page.addInitScript(() => {
+    const raf = window.requestAnimationFrame.bind(window);
+    window.requestAnimationFrame = (cb) => raf((ts) => setTimeout(() => cb(ts), 200));
+  });
+  await page.goto(levelUrl(1));
+  await startRep(page);
+  await page.getByTestId("open-settings").click();
+  await page.waitForTimeout(400);
+  await expect(page.getByTestId("close-settings")).toBeFocused();
 });
 
 test("Korean mode localizes labels and content", async ({ page }) => {

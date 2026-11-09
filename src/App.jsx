@@ -144,9 +144,8 @@ export default function PyithonApp() {
   }, [progress]);
 
   const onPass = useCallback((outcome) => {
-    const { progress: next, reward } = recordPass(progress, set, repIndex, outcome);
-    setProgress(next);
-    return reward;
+    setProgress((prev) => recordPass(prev, set, repIndex, outcome).progress);
+    return recordPass(progress, set, repIndex, outcome).reward;
   }, [progress, repIndex, set]);
 
   const onMiss = useCallback(() => setProgress((prev) => recordMiss(prev)), []);
@@ -219,10 +218,11 @@ export default function PyithonApp() {
         xp: progress.xp,
         xpRef: setXpEl,
       })}
-      {view === "rep" && createElement(RepScreen, {
+      {view !== "setDone" && createElement(RepScreen, {
         key: `${set.id}-${repIndex}-${repKey}`,
         ai: { enabled: !offlineMode && Boolean(apiKey), apiKey, provider },
         C,
+        hidden: view !== "rep",
         isLast,
         lang,
         onMiss,
