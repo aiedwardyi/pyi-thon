@@ -62,8 +62,8 @@ export default function TopBar({ C, chip, combo, current, onOpenHistory, onOpenL
         {createElement(Bolt)}{xp.toLocaleString("en-US")}
       </span>
       {combo >= 1 && (
-        <span data-testid="combo" aria-label={`${t("comboLabel")}: ${combo}`} style={{ display: "flex", alignItems: "center", gap: 4, fontWeight: 800, fontSize: 15, color: C.xp, flexShrink: 0 }}>
-          {createElement(Flame)}{combo}
+        <span data-testid="combo" aria-label={`${t("comboLabel")}: ${combo}`} style={{ display: "flex", alignItems: "center", fontWeight: 800, fontSize: 15, color: C.xp, flexShrink: 0, fontVariantNumeric: "tabular-nums" }}>
+          ×{combo}
         </span>
       )}
       <button type="button" className="ui-btn" data-testid="streak" aria-label={`${t("openHistory")}: ${t("streakLabel").replace("{n}", streak)}`} onClick={onOpenHistory} style={{
