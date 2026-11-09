@@ -52,7 +52,7 @@ Most Python tutorials make you read. Pyi-thon makes you write.
   </tr>
   <tr>
     <td><img src="screenshots/welcome.png" width="400" /></td>
-    <td><img src="screenshots/correct-dark.png" width="400" /></td>
+    <td><img src="screenshots/win-overlay.png" width="400" /></td>
   </tr>
   <tr>
     <td align="center"><strong>Fix the Bug</strong></td>
@@ -87,7 +87,7 @@ Two themes, Dark and Light, switchable from Settings.
 <table>
   <tr>
     <td align="center"><img src="screenshots/theme-dark.png" width="400" /><br /><img src="https://img.shields.io/badge/-Dark-121214?style=flat-square&labelColor=121214" /></td>
-    <td align="center"><img src="screenshots/theme-light.png" width="400" /><br /><img src="https://img.shields.io/badge/-Light-f3f4f6?style=flat-square&labelColor=f3f4f6" /></td>
+    <td align="center"><img src="screenshots/theme-light.png" width="400" /><br /><img src="https://img.shields.io/badge/-Light-d1d5db?style=flat-square&labelColor=d1d5db" /></td>
   </tr>
 </table>
 
