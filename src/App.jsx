@@ -70,6 +70,11 @@ export default function PyithonApp() {
   const [progress, setProgress] = useState(() => initialProgress(qa) || emptyProgress());
   const [showWelcome, setShowWelcome] = useState(() => (qa ? !qa.skipWelcome : !hasProgress(progress)));
   const [view, setView] = useState("rep");
+  const [, setDay] = useState(dayKey);
+  useEffect(() => {
+    const timer = window.setInterval(() => setDay(dayKey()), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
   const [backTo, setBackTo] = useState("rep");
   const [setDoneInfo, setSetDoneInfo] = useState(null);
   const [repKey, setRepKey] = useState(0);

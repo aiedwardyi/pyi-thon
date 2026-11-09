@@ -16,10 +16,10 @@ export default function HistoryScreen({ C, days, lang, onBack, t, today }) {
   const cellLabel = (cell) => (cell.reps
     ? t("heatCell").replace("{date}", dateLabel(cell.key)).replace("{reps}", reps(cell.reps)).replace("{clean}", clean(cell.clean))
     : t("heatRest").replace("{date}", dateLabel(cell.key)));
-  const big = (value, label, testId, color) => (
+  const big = (value, label, testId, color, showFlame) => (
     <div style={{ flex: 1, background: C.surface, border: `1px solid ${C.line}`, borderRadius: 14, padding: "16px 14px", textAlign: "center" }}>
       <div data-testid={testId} style={{ fontSize: 44, fontWeight: 900, lineHeight: 1, color, fontVariantNumeric: "tabular-nums", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-        {testId === "streak-now" && <span style={{ display: "flex", transform: "scale(1.5)" }}>{createElement(Flame)}</span>}{value}
+        {showFlame && <span style={{ display: "flex", transform: "scale(1.5)" }}>{createElement(Flame)}</span>}{value}
       </div>
       <div style={{ fontSize: 13, color: C.muted, fontWeight: 700, marginTop: 8 }}>{label}</div>
     </div>
@@ -35,8 +35,8 @@ export default function HistoryScreen({ C, days, lang, onBack, t, today }) {
         <h1 style={{ color: C.text, fontSize: 20, fontWeight: 800, margin: 0, flex: 1 }}>{t("history")}</h1>
       </div>
       <div style={{ display: "flex", gap: 10 }}>
-        {big(stats.current, t("streakNow"), "streak-now", stats.current > 0 ? C.accentLine : C.dim)}
-        {big(stats.best, t("streakBest"), "streak-best", C.text)}
+        {big(stats.current, t("streakNow"), "streak-now", stats.current > 0 ? C.accentLine : C.dim, true)}
+        {big(stats.best, t("streakBest"), "streak-best", C.text, false)}
       </div>
       <p data-testid="today-line" style={{ color: C.muted, fontWeight: 600, fontSize: 15, margin: "20px 0 24px" }}>
         {stats.today.reps ? t("todayLine").replace("{reps}", reps(stats.today.reps)).replace("{clean}", clean(stats.today.clean)) : t("todayNone")}

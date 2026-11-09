@@ -452,6 +452,18 @@ function seedProgress(page, days, lang = "en", theme = "dark", extra = {}) {
   }, { days, lang, theme, extra });
 }
 
+test("History rolls over to a new day at local midnight", async ({ page }) => {
+  await page.clock.install({ time: new Date(2026, 4, 10, 23, 58, 0) });
+  await seedProgress(page, { "2026-05-10": { reps: 3, clean: 2 } });
+  await page.goto("/");
+  await startRep(page);
+  await page.getByTestId("streak").click();
+  await expect(page.getByTestId("today-line")).toHaveText("Today: 3 reps, 2 clean");
+  await page.clock.runFor("03:00");
+  await expect(page.getByTestId("today-line")).toHaveText("Nothing yet today. One rep starts the streak clock.");
+  await expect(page.getByTestId("streak-now")).toHaveText("1");
+});
+
 test("first pass of a day starts the streak and fills today in History", async ({ page }) => {
   await page.clock.setFixedTime(FIXED_NOW);
   await page.goto(levelUrl(1));
