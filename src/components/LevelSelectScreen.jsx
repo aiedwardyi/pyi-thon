@@ -1,104 +1,51 @@
-import { LEVELS, PHASE_ICONS, getLocalizedLevel } from "../data/levels";
-import { getGlobalStyles } from "../theme/themes";
+import { pick } from "../data/sets";
+import { doneCount, isUnlocked } from "../lib/progress";
+import { mix } from "../theme/themes";
 
-export default function LevelSelectScreen({
-  C,
-  completedLevels,
-  currentLevel,
-  goToLevel,
-  lang,
-  pageStyle,
-  phaseColors,
-  progressPercent,
-  setShowLevelSelect,
-  t,
-  unlockedUpTo,
-}) {
+export default function LevelSelectScreen({ C, goToTopic, lang, onBack, progress, sets, t }) {
+  const totalDone = sets.filter((set) => progress.topics[set.id]?.done).length;
   return (
-    <div style={{ ...pageStyle, padding: "20px 20px 100px", overflowY: "auto", position: "relative" }}>
-      <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: 300, background: `linear-gradient(to bottom, ${C.accentGlowSoft}, transparent)`, pointerEvents: "none", zIndex: 0 }} />
-      <div style={{ maxWidth: 640, margin: "0 auto", position: "relative", zIndex: 10 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32 }}>
-          <button type="button" className="ui-pop" aria-label={t("backToCurrentLevel")} onClick={() => setShowLevelSelect(false)} style={{
-            color: C.accentText, background: "rgba(255,255,255,0.03)", border: `1px solid ${C.border}`,
-            cursor: "pointer", padding: "8px 12px", borderRadius: 10,
-          }}
-            onMouseEnter={(event) => { event.currentTarget.style.background = "rgba(255,255,255,0.06)"; event.currentTarget.style.borderColor = C.borderFocus; }}
-            onMouseLeave={(event) => { event.currentTarget.style.background = "rgba(255,255,255,0.03)"; event.currentTarget.style.borderColor = C.border; }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
-          </button>
-          <h2 style={{ color: C.text, fontSize: 20, fontWeight: 700, letterSpacing: 0 }}>{t("allLevels")}</h2>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: 12, color: C.accentTextDim }}>{completedLevels.size}/{LEVELS.length}</span>
-            <div style={{ width: 60, height: 4, background: "rgba(255,255,255,0.06)", borderRadius: 4, overflow: "hidden" }}>
-              <div className="ui-progress-glow" style={{ height: "100%", borderRadius: 4, width: `${progressPercent}%`, background: `linear-gradient(90deg, ${C.accentDeep}, ${C.accent})`, transition: "width 0.5s" }} />
-            </div>
-          </div>
-        </div>
-
-        {[1, 2, 3].map((phase) => (
-          <div key={phase} style={{ marginBottom: 32 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-              <div className="ui-chip-pop" style={{
-                width: 32, height: 32, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 11, fontWeight: 800, letterSpacing: 0,
-                background: `linear-gradient(135deg, ${phaseColors[phase][0]}, ${phaseColors[phase][1]})`,
-                color: C.btnText,
-              }}>{PHASE_ICONS[phase]}</div>
-              <span style={{ fontSize: 14, fontWeight: 700, color: C.text, letterSpacing: 0 }}>{t("phaseName" + phase)}</span>
-              <div style={{ flex: 1, height: 1, background: C.border }} />
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {LEVELS.filter((level) => level.phase === phase).map((level) => {
-                const idx = LEVELS.indexOf(level);
-                const done = completedLevels.has(level.id);
-                const unlocked = idx < unlockedUpTo || done;
-                const isCurrent = idx === currentLevel;
-                const localizedLevel = getLocalizedLevel(level, lang);
-                return (
-                  <button key={level.id} type="button" className="ui-level-card" onClick={() => unlocked && goToLevel(idx)} disabled={!unlocked} aria-current={isCurrent ? "true" : undefined} style={{
-                    display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderRadius: 14, textAlign: "left", fontFamily: "inherit",
-                    border: `1px solid ${isCurrent ? C.accentBorder : done ? C.greenBorder : C.border}`,
-                    background: isCurrent ? C.accentBg : done ? C.bgSubtle : "rgba(255,255,255,0.015)",
-                    cursor: unlocked ? "pointer" : "not-allowed", opacity: unlocked ? 1 : 0.3,
-                  }}
-                    onMouseEnter={(event) => {
-                      if (!unlocked) return;
-                      event.currentTarget.style.background = isCurrent ? C.accentBg : done ? C.bgSubtle : "rgba(255,255,255,0.04)";
-                      event.currentTarget.style.borderColor = isCurrent ? C.accent : done ? C.green : C.borderFocus;
-                      event.currentTarget.style.filter = "brightness(1.3)";
-                    }}
-                    onMouseLeave={(event) => {
-                      if (!unlocked) return;
-                      event.currentTarget.style.background = isCurrent ? C.accentBg : done ? C.bgSubtle : "rgba(255,255,255,0.015)";
-                      event.currentTarget.style.borderColor = isCurrent ? C.accentBorder : done ? C.greenBorder : C.border;
-                      event.currentTarget.style.filter = "none";
-                    }}
-                  >
-                    <div className="ui-chip-pop" style={{
-                      width: 40, height: 40, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: 13, fontWeight: 700, flexShrink: 0,
-                      background: done ? C.greenBg : isCurrent ? C.accentBg : "rgba(255,255,255,0.03)",
-                      color: done ? C.green : isCurrent ? C.accent : C.textDim,
-                      border: `1px solid ${done ? C.greenBorder : isCurrent ? C.accentBorder : "transparent"}`,
-                    }}>
-                      {done ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg> : unlocked ? level.id : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>}
-                    </div>
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <p style={{ fontSize: 13, fontWeight: 600, color: done ? C.greenLight : unlocked ? C.text : C.textDim, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{localizedLevel.title}</p>
-                      <p style={{ fontSize: 11, color: C.accentTextDim, margin: "3px 0 0" }}>{localizedLevel.subtitle}</p>
-                    </div>
-                    {level.tags.includes("boss") && <span className="ui-badge-pop" style={{ fontSize: 10, padding: "3px 10px", borderRadius: 20, background: C.amberBg, border: `1px solid ${C.amberBorder}`, color: C.amber, fontWeight: 700, letterSpacing: 0 }}>{t("boss")}</span>}
-                    {isCurrent && <div className="ui-current-dot" style={{ width: 6, height: 6, borderRadius: "50%", background: C.accent, boxShadow: `0 0 8px ${C.accentGlow}`, flexShrink: 0 }} />}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        ))}
+    <main style={{ flex: 1, width: "100%", maxWidth: 700, margin: "0 auto", padding: "20px 16px 64px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
+        <button type="button" className="ui-btn" aria-label={t("backToCurrentLevel")} onClick={onBack} style={{
+          color: C.muted, background: "none", border: `1px solid ${C.line}`, cursor: "pointer", padding: "8px 12px", borderRadius: 10, display: "flex",
+        }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
+        </button>
+        <h1 style={{ color: C.text, fontSize: 20, fontWeight: 800, margin: 0, flex: 1 }}>{t("allLevels")}</h1>
+        <span style={{ fontSize: 13, color: C.muted, fontWeight: 700 }}>{totalDone}/{sets.length}</span>
       </div>
-      <style>{getGlobalStyles(C)}</style>
-    </div>
+
+      {[1, 2, 3].map((phase) => (
+        <section key={phase} style={{ marginBottom: 28 }}>
+          <h2 style={{ fontSize: 13, fontWeight: 800, color: C.muted, letterSpacing: 1, textTransform: "uppercase", margin: "0 0 10px" }}>{t("phaseName" + phase)}</h2>
+          <div style={{ display: "grid", gap: 6 }}>
+            {sets.map((set, index) => ({ set, index })).filter(({ set }) => set.phase === phase).map(({ set, index }) => {
+              const unlocked = isUnlocked(progress, sets, index);
+              const done = Boolean(progress.topics[set.id]?.done);
+              const count = doneCount(progress, set);
+              const isCurrent = index === progress.current;
+              return (
+                <button key={set.id} type="button" className="ui-btn" data-testid={`topic-${set.id}`} data-locked={!unlocked} disabled={!unlocked}
+                  aria-current={isCurrent ? "true" : undefined} onClick={() => goToTopic(index)} style={{
+                    display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 12, textAlign: "left", fontFamily: "inherit", width: "100%",
+                    border: `1px solid ${isCurrent ? C.accentLine : C.line}`, background: C.surface,
+                    cursor: unlocked ? "pointer" : "not-allowed", opacity: unlocked ? 1 : 0.5, color: C.text,
+                  }}>
+                  <span style={{
+                    width: 34, height: 34, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                    fontSize: 13, fontWeight: 800, background: done ? mix(C.pass, 16) : C.raised, color: done ? C.pass : C.muted,
+                  }}>
+                    {unlocked ? set.id : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-label={t("locked")}><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" /></svg>}
+                  </span>
+                  <span style={{ flex: 1, minWidth: 0, fontSize: 15, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{pick(set.title, lang)}</span>
+                  <span data-testid={`topic-${set.id}-count`} style={{ fontSize: 13, fontWeight: 700, color: done ? C.pass : C.muted, fontVariantNumeric: "tabular-nums", flexShrink: 0 }}>{count}/{set.reps.length}</span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      ))}
+    </main>
   );
 }
