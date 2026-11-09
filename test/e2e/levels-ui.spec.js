@@ -128,6 +128,18 @@ test("a correct answer passes the topic 1 rep 4 fix", async ({ page }) => {
   await expect(page.getByTestId("win-overlay")).toBeVisible({ timeout: RUN_TIMEOUT });
 });
 
+test("names from an earlier run do not leak into the next", async ({ page }) => {
+  await page.goto(levelUrl(1, "en", [], 4));
+  await setCode(page, 'Hello = "Hello"');
+  await page.getByTestId("run-button").click();
+  await expect(page.getByTestId("output-row").first()).toBeVisible({ timeout: RUN_TIMEOUT });
+
+  await setCode(page, "print(Hello)");
+  await page.getByTestId("run-button").click();
+  await expect(page.getByTestId("feedback-message")).toHaveText("Line 1: Hello is text, so it needs quotes.", { timeout: RUN_TIMEOUT });
+  await expect(page.getByTestId("win-overlay")).toBeHidden();
+});
+
 test("showing the answer makes the rep DONE for 5 XP", async ({ page }) => {
   await page.goto(levelUrl(1));
   await startRep(page);
@@ -339,6 +351,22 @@ test("a late editor focus never steals focus from settings", async ({ page }) =>
   await page.getByTestId("open-settings").click();
   await page.waitForTimeout(400);
   await expect(page.getByTestId("close-settings")).toBeFocused();
+});
+
+test("enter in settings over set done activates the focused button", async ({ page }) => {
+  await page.goto(levelUrl(1, "en", [], 4));
+  await setCode(page, TOPIC_1[3]);
+  await page.getByTestId("run-button").click();
+  await expect(page.getByTestId("win-overlay")).toBeVisible({ timeout: RUN_TIMEOUT });
+  await page.getByTestId("win-next").click();
+  await expect(page.getByTestId("set-done")).toBeVisible();
+
+  await page.getByTestId("open-settings").click();
+  await page.getByTestId("theme-light").focus();
+  await page.waitForTimeout(500);
+  await page.keyboard.press("Enter");
+  await expect(page.getByTestId("theme-light")).toHaveAttribute("aria-checked", "true");
+  await expect(page.getByTestId("set-done")).toBeVisible();
 });
 
 test("Korean mode localizes labels and content", async ({ page }) => {

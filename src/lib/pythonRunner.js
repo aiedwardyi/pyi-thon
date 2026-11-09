@@ -34,6 +34,7 @@ __builtins__.input = input
   const captured = () => {
     try { return py.runPython("_captured_output.getvalue()").trimEnd(); } catch { return ""; }
   };
+  const scope = py.toPy({});
   try {
     // Loop guard: stops runaway loops before they freeze the tab.
     py.runPython(`
@@ -51,7 +52,7 @@ def _loop_guard(frame, event, arg):
     return _loop_guard
 sys.settrace(_loop_guard)
 `);
-    py.runPython(code);
+    py.runPython(code, { globals: scope });
     py.runPython(`
 _sys = __import__('sys')
 _sys.settrace(_original_trace if '_original_trace' in dir() else None)
@@ -72,5 +73,7 @@ if hasattr(_sys, '__stdout__'):
     const lines = msg.split("\n");
     const pyErr = lines.filter((line) => line.match(/Error:|error:/i)).pop() || lines[lines.length - 1] || msg;
     return { success: false, output: captured(), error: pyErr.trim(), errorText: msg };
+  } finally {
+    scope.destroy();
   }
 }

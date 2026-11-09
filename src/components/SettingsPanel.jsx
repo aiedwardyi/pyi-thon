@@ -142,7 +142,7 @@ export default function SettingsPanel({
             <input type="password" aria-labelledby="api-key-label" aria-describedby="api-key-desc" value={apiKeyInput} onChange={(event) => setApiKeyInput(event.target.value)} placeholder={apiKey ? "••••••••" : providerConfig.keyPlaceholder}
               style={{
                 width: "100%", padding: "12px 16px", borderRadius: 10, background: C.well,
-                border: `1px solid ${C.line}`, color: C.text, fontSize: 13, outline: "none",
+                border: `1px solid ${C.line}`, color: C.text, fontSize: 16, outline: "none",
                 fontFamily: MONO_FONT, marginBottom: 12, transition: "border-color 0.2s",
               }}
               onFocus={(event) => { event.target.style.borderColor = C.accentLine; }}
