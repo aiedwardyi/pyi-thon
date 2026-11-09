@@ -1,4 +1,4 @@
-import { getGlobalStyles } from "../theme/themes";
+import { getIntroStyles } from "../theme/introTheme";
 
 export default function WelcomeScreen({
   C,
@@ -52,7 +52,7 @@ export default function WelcomeScreen({
           onMouseLeave={(event) => { event.currentTarget.style.color = C.accentTextDim; }}
         >{t("configureApiKey")}</button>
       </div>
-      <style>{getGlobalStyles(C)}</style>
+      <style>{getIntroStyles(C)}</style>
     </div>
   );
 }

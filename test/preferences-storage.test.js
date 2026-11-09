@@ -36,17 +36,18 @@ function withMockLocalStorage(fn) {
   }
 }
 
-run("Tokyo Night is the default theme when no valid theme is stored", () => {
-  assert.equal(DEFAULT_THEME_KEY, "tokyo");
-  assert.equal(resolveStoredThemeKey(""), "tokyo");
-  assert.equal(resolveStoredThemeKey("unknown-theme"), "tokyo");
-  assert.equal(resolveStoredThemeKey("__proto__"), "tokyo");
-  assert.equal(resolveStoredThemeKey("constructor"), "tokyo");
+run("dark is the default theme when no valid theme is stored", () => {
+  assert.equal(DEFAULT_THEME_KEY, "dark");
+  assert.equal(resolveStoredThemeKey(""), "dark");
+  assert.equal(resolveStoredThemeKey("unknown-theme"), "dark");
+  assert.equal(resolveStoredThemeKey("__proto__"), "dark");
+  assert.equal(resolveStoredThemeKey("constructor"), "dark");
 });
 
-run("stored theme preference wins over the Tokyo Night default", () => {
+run("stored light preference wins and old dark themes map to dark", () => {
   assert.equal(resolveStoredThemeKey("light"), "light");
-  assert.equal(resolveStoredThemeKey("gruvbox"), "gruvbox");
+  assert.equal(resolveStoredThemeKey("gruvbox"), "dark");
+  assert.equal(resolveStoredThemeKey("tokyo"), "dark");
 });
 
 run("level progress is saved to browser localStorage", () => {

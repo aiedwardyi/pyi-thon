@@ -1,6 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const PORT = 4173;
+const PORT = Number(process.env.PW_PORT) || 4173;
 const baseURL = `http://127.0.0.1:${PORT}`;
 
 export default defineConfig({
@@ -10,9 +10,10 @@ export default defineConfig({
   use: {
     baseURL,
     trace: "on-first-retry",
+    launchOptions: { args: ["--mute-audio"] },
   },
   webServer: {
-    command: "npm run build && npx vite preview --host 127.0.0.1 --port 4173",
+    command: `npm run build && npx vite preview --host 127.0.0.1 --port ${PORT} --strictPort`,
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
