@@ -108,6 +108,13 @@ export function getGlobalStyles(theme) {
   @keyframes shake { 0%, 100% { transform: none; } 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(4px); } }
   @keyframes pop { from { transform: scale(0.7); opacity: 0; } to { transform: none; opacity: 1; } }
   @keyframes spin { to { transform: rotate(360deg); } }
+  .ui-head-logo { animation: headLogoFloat 3.6s ease-in-out infinite; transform-origin: center; }
+  .ui-head-logo-line { stroke-dasharray: 170; stroke-dashoffset: 170; animation: headLogoStroke 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+  .ui-head-logo-line:nth-of-type(2) { animation-delay: 0.07s; }
+  .ui-head-logo-line:nth-of-type(3) { animation-delay: 0.14s; }
+  .ui-head-logo-line:nth-of-type(4) { animation-delay: 0.21s; }
+  @keyframes headLogoFloat { 0%, 100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-6px) rotate(1deg); } }
+  @keyframes headLogoStroke { from { stroke-dashoffset: 170; } to { stroke-dashoffset: 0; } }
 
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
