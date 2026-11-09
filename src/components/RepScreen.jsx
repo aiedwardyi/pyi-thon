@@ -15,13 +15,19 @@ import { CodeBlock, Kbd, ghostButton, primaryButton } from "./parts";
 const HINT_BUTTON = ["hint", "hintExample", "hintAnswer"];
 const HINT_LABEL = ["hintLabelNudge", "hintLabelExample", "hintLabelAnswer"];
 
+const MAX_ROWS = 20;
+
 function outputRows(result) {
   const rows = result.lines.map((line) => ({ ...line }));
-  if (result.passed) return rows;
-  const wrong = result.errorLine == null && !result.isError ? rows.findIndex((row) => !row.ok) : -1;
-  if (wrong >= 0) rows[wrong].message = result.message;
-  else rows.push({ text: "", ok: false, message: result.message });
-  return rows;
+  if (!result.passed) {
+    const wrong = result.errorLine == null && !result.isError ? rows.findIndex((row) => !row.ok) : -1;
+    if (wrong >= 0) rows[wrong].message = result.message;
+    else rows.push({ text: "", ok: false, message: result.message });
+  }
+  if (rows.length <= MAX_ROWS) return rows;
+  const tip = rows.findIndex((row) => row.message);
+  const tail = tip >= MAX_ROWS ? [rows[tip]] : [];
+  return [...rows.slice(0, MAX_ROWS), { more: rows.length - MAX_ROWS - tail.length }, ...tail];
 }
 
 export default function RepScreen({ ai, C, hidden, isLast, lang, onMiss, onNext, onPass, rep, repIndex, set, startWithSee, t, xpEl }) {
@@ -186,7 +192,11 @@ export default function RepScreen({ ai, C, hidden, isLast, lang, onMiss, onNext,
         <section ref={outputRef} data-testid="output" aria-live="polite" style={{ display: "grid", gap: 8, paddingBottom: 32, scrollMarginBottom: 80 }}>
           <span style={{ fontSize: 12, fontWeight: 800, color: C.muted, letterSpacing: 1, textTransform: "uppercase" }}>{t("yourOutput")}</span>
           <div style={{ border: `1px solid ${C.line}`, borderRadius: 10, overflow: "hidden" }}>
-            {rows.map((row, index) => (
+            {rows.map((row, index) => row.more ? (
+              <div key={index} data-testid="output-more" style={{ padding: "10px 16px", borderTop: `1px solid ${C.line}`, fontSize: 14, color: C.muted }}>
+                … {t("moreLines").replace("{n}", row.more.toLocaleString(lang === "ko" ? "ko-KR" : "en-US"))}
+              </div>
+            ) : (
               <div key={index} data-testid="output-row" data-ok={row.ok} style={{
                 display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 16px",
                 borderTop: index ? `1px solid ${C.line}` : "none", background: row.ok ? "transparent" : mix(C.miss, 9),

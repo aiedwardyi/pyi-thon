@@ -140,6 +140,16 @@ test("names from an earlier run do not leak into the next", async ({ page }) => 
   await expect(page.getByTestId("win-overlay")).toBeHidden();
 });
 
+test("a runaway loop shows the loop tip without flooding the output", async ({ page }) => {
+  await page.goto(levelUrl(8, "en", [1, 2, 3, 4, 5, 6, 7]));
+  await startRep(page);
+  await setCode(page, "i = 0\ncount = 0\nwhile i < 6:\n    count += 1\n    print(i)");
+  await page.getByTestId("run-button").click();
+  await expect(page.getByTestId("feedback-message")).toContainText("Your loop never stops", { timeout: RUN_TIMEOUT });
+  expect(await page.getByTestId("output-row").count()).toBeLessThanOrEqual(21);
+  await expect(page.getByTestId("output-more")).toContainText("more lines");
+});
+
 test("showing the answer makes the rep DONE for 5 XP", async ({ page }) => {
   await page.goto(levelUrl(1));
   await startRep(page);
