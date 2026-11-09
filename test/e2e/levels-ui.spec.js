@@ -4,9 +4,9 @@ const TOTAL_LEVELS = 30;
 const RUN_TIMEOUT = 60_000;
 const TOPIC_1 = ['print("Hello, World!")', 'print("Python is fun")', 'print("Ready?")\nprint("Go!")', 'print("Hello")'];
 
-function levelUrl(levelId, lang = "en", completed = []) {
+function levelUrl(levelId, lang = "en", completed = [], rep = null) {
   const done = completed.length ? `&qaCompleted=${completed.join(",")}` : "";
-  return `/?qa=1&qaSkipWelcome=1&qaLevel=${levelId}&qaLang=${lang}${done}`;
+  return `/?qa=1&qaSkipWelcome=1&qaLevel=${levelId}&qaLang=${lang}${done}${rep ? `&qaRep=${rep}` : ""}`;
 }
 
 const allBefore = (levelId) => Array.from({ length: levelId - 1 }, (_, index) => index + 1);
@@ -89,6 +89,43 @@ test("a miss shows output rows and one message", async ({ page }) => {
   await expect(page.locator(".cm-errline")).toHaveCount(1, { timeout: RUN_TIMEOUT });
   await expect(page.getByTestId("feedback-message")).toHaveCount(1);
   await expect(page.getByTestId("output-row").last()).toHaveAttribute("data-ok", "false");
+});
+
+const FIX_REPS = [
+  { name: "topic 1", level: 1, message: "Line 1: Hello is text, so it needs quotes.", errLine: "print(Hello)" },
+  { name: "topic 3", level: 3, message: "Line 3: + can't join text and a number. Use str().", errLine: 'print(name + " is " + age)' },
+  { name: "topic 4", level: 4, message: 'Line 1: expected "Hello, Sam", got "Hello, name".', errLine: null },
+];
+
+for (const { name, level, message, errLine } of FIX_REPS) {
+  test(`${name} rep 4 starter shows the plain message`, async ({ page }) => {
+    await page.goto(levelUrl(level, "en", allBefore(level), 4));
+    await expect(page.getByTestId("rep-count")).toHaveText("4/4");
+    await page.getByTestId("run-button").click();
+    await expect(page.getByTestId("feedback-message")).toHaveText(message, { timeout: RUN_TIMEOUT });
+    if (errLine) {
+      await expect(page.locator(".cm-errline")).toHaveCount(1);
+      await expect(page.locator(".cm-errline")).toHaveText(errLine);
+    } else {
+      await expect(page.locator(".cm-errline")).toHaveCount(0);
+    }
+  });
+}
+
+test("korean message shows for the topic 1 rep 4 starter", async ({ page }) => {
+  await page.goto(levelUrl(1, "ko", [], 4));
+  await expect(page.getByTestId("rep-count")).toHaveText("4/4");
+  await page.getByTestId("run-button").click();
+  await expect(page.getByTestId("feedback-message")).toHaveText("1번째 줄: 글자 Hello에는 따옴표가 필요해요.", { timeout: RUN_TIMEOUT });
+  await expect(page.locator(".cm-errline")).toHaveCount(1);
+});
+
+test("a correct answer passes the topic 1 rep 4 fix", async ({ page }) => {
+  await page.goto(levelUrl(1, "en", [], 4));
+  await expect(page.getByTestId("rep-count")).toHaveText("4/4");
+  await setCode(page, TOPIC_1[3]);
+  await page.getByTestId("run-button").click();
+  await expect(page.getByTestId("win-overlay")).toBeVisible({ timeout: RUN_TIMEOUT });
 });
 
 test("showing the answer makes the rep DONE for 5 XP", async ({ page }) => {
