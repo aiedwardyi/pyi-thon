@@ -42,6 +42,7 @@ export default function RepScreen({ ai, attempt = {}, C, hidden, isLast, lang, m
   const shakeRef = useRef(null);
   const codeRef = useRef(attempt.code ?? rep.starterCode);
   const missesRef = useRef(attempt.misses || 0);
+  const hintStepRef = useRef(attempt.hintStep || 0);
   const aliveRef = useRef(true);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState(null);
@@ -53,7 +54,6 @@ export default function RepScreen({ ai, attempt = {}, C, hidden, isLast, lang, m
   const [shake, setShake] = useState(0);
 
   const hints = rep.hints;
-  const answerShown = hints.slice(0, hintStep).some((hint) => hint.type === "answer");
 
   const run = async () => {
     if (busy || passed || win || seeOpen || modalOpen || hidden) return;
@@ -83,7 +83,8 @@ export default function RepScreen({ ai, attempt = {}, C, hidden, isLast, lang, m
     setResult(execution);
     editorRef.current?.markError(verdict.errorLine);
     if (verdict.passed) {
-      const outcome = answerShown ? "done" : missesRef.current === 0 && hintStep === 0 ? "clean" : "solved";
+      const answerShown = hints.slice(0, hintStepRef.current).some((hint) => hint.type === "answer");
+      const outcome = answerShown ? "done" : missesRef.current === 0 && hintStepRef.current === 0 ? "clean" : "solved";
       const reward = onPass(outcome);
       setPassed(true);
       floatXp(`+${reward.total} XP`, xpEl);
@@ -184,7 +185,7 @@ export default function RepScreen({ ai, attempt = {}, C, hidden, isLast, lang, m
       </div>
 
       <div data-testid="action-row" style={{ position: "sticky", bottom: 0, zIndex: 4, display: "flex", alignItems: "center", gap: 12, padding: "10px 0", background: C.base }}>
-        <button type="button" className="ui-btn" data-testid="hint-button" disabled={hintStep >= hints.length} onClick={() => { setHintStep(hintStep + 1); onAttempt({ hintStep: hintStep + 1 }); }} style={ghostButton(C, { opacity: hintStep >= hints.length ? 0.5 : 1 })}>{hintLabel}</button>
+        <button type="button" className="ui-btn" data-testid="hint-button" disabled={hintStep >= hints.length} onClick={() => { hintStepRef.current += 1; setHintStep(hintStepRef.current); onAttempt({ hintStep: hintStepRef.current }); }} style={ghostButton(C, { opacity: hintStep >= hints.length ? 0.5 : 1 })}>{hintLabel}</button>
         <div style={{ flex: 1 }} />
         {passed
           ? <button type="button" className="ui-btn" data-testid="next-rep" onClick={onNext} style={primaryButton(C)}>{isLast ? t("setDone") : t("nextRep")}</button>
@@ -220,8 +221,8 @@ export default function RepScreen({ ai, attempt = {}, C, hidden, isLast, lang, m
         </section>
       )}
 
-      {!hidden && seeOpen && createElement(SeeCard, { C, lang, onStart: () => { setSeeOpen(false); onAttempt({ started: true }); }, set, t })}
-      {!hidden && win && (
+      {!hidden && !modalOpen && seeOpen && createElement(SeeCard, { C, lang, onStart: () => { setSeeOpen(false); onAttempt({ started: true }); }, set, t })}
+      {!hidden && !modalOpen && !seeOpen && win && (
         createElement(WinOverlay, { C, isLast, onNext, onStay: () => setWin(null), repIndex, repTotal: set.reps.length, reward: win, t })
       )}
     </main>

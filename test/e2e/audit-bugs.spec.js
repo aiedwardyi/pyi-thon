@@ -192,3 +192,24 @@ test("B7 language changes update existing feedback and editor metadata", async (
     await expect(page.locator(".cm-content")).toHaveAttribute("aria-label", label);
   }
 });
+
+test("a pending run honors answer reveals and Settings focus", async ({ page }) => {
+  let release;
+  const held = new Promise((resolve) => { release = resolve; });
+  await page.route("**/pyodide.asm.wasm", async (route) => { await held; await route.continue(); });
+  await openRep(page);
+  await setCode(page, HELLO);
+  await page.getByTestId("run-button").click();
+  await expect(page.getByTestId("run-button")).toBeDisabled();
+  for (let i = 0; i < 3; i += 1) await page.getByTestId("hint-button").click();
+  await page.getByTestId("open-settings").click();
+  const settings = page.getByRole("dialog", { name: "Settings", includeHidden: true });
+  release();
+  await expect.poll(async () => (await savedProgress(page)).xp, { timeout: RUN_TIMEOUT }).toBeGreaterThan(0);
+  expect.soft((await savedProgress(page)).xp).toBe(5);
+  expect(await settings.evaluate((el) => el.contains(document.activeElement))).toBe(true);
+  await expect(page.getByTestId("win-overlay")).toBeHidden();
+  await page.getByTestId("close-settings").click();
+  await expect(page.getByTestId("win-word")).toHaveText("DONE");
+  await expect(page.getByTestId("win-xp")).toHaveText("+5");
+});
