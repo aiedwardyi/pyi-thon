@@ -28,7 +28,7 @@ const LEGACY_MUST_USE = {
   25: [rule("def ", "Define a function.", "함수를 정의하세요."), rule("sum\\(", "Use sum() and len().", "sum()과 len()을 사용하세요."), rule("len\\(", "Use sum() and len().", "sum()과 len()을 사용하세요.")],
   26: [rule("\\[.+for .+ in .+\\]", "Use a list comprehension: [expr for x in iterable].", "리스트 컴프리헨션을 사용하세요: [표현식 for x in 반복가능].")],
   27: [rule("\\.split\\(", "Use .split() and .join().", ".split()과 .join()을 사용하세요."), rule("\\.join\\(", "Use .split() and .join().", ".split()과 .join()을 사용하세요.")],
-  28: [rule("f\"|f'", 'Use an f-string: f"...{variable}..."', 'f-string을 사용하세요: f"...{변수}..."')],
+  28: [rule("(?:[fF][rR]?|[rR][fF])[\"']", 'Use an f-string: f"...{variable}..."', 'f-string을 사용하세요: f"...{변수}..."')],
   29: [rule("lambda", "Use a lambda function.", "lambda 함수를 사용하세요."), rule("map\\(", "Use map().", "map()을 사용하세요.")],
   30: [rule("for ", "Use a for loop.", "for 반복문을 사용하세요."), rule("if ", "Use an if statement to filter.", "if문을 사용하여 필터링하세요.")],
 };

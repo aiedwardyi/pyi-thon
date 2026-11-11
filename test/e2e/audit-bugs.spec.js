@@ -149,6 +149,10 @@ test("B5 valid whitespace in Python calls passes", async ({ page }) => {
   await setCode(page, 'city = "Seoul"\nprint (city)');
   await page.getByTestId("run-button").click();
   await expect(page.getByTestId("win-word")).toHaveText("CLEAN", { timeout: RUN_TIMEOUT });
+  await openRep(page, 28);
+  await setCode(page, 'language = "Python"\nversion = 3\nprint (rf"{language} version {version} is awesome!")');
+  await page.getByTestId("run-button").click();
+  await expect(page.getByTestId("win-word")).toHaveText("CLEAN", { timeout: RUN_TIMEOUT });
 });
 
 test("B6 Settings owns focus and blocks the covered Run shortcut", async ({ page }) => {

@@ -222,3 +222,13 @@ run("comments and strings cannot stand in for executable constructs", () => {
   const input = SETS[3].reps[1];
   assert.equal(checkRep({ ...input, code: '# blue\nprint(input())', stdout: "blue", expected: "blue" }).passed, true);
 });
+
+run("formatted string checks accept Python prefixes and reject plain text", () => {
+  const task = SETS[27].reps[0];
+  for (const prefix of ["f", "F", "rf", "Rf", "rF", "RF", "fr", "fR", "Fr", "FR"]) {
+    const code = `language = "Python"\nversion = 3\nprint (${prefix}"{language} version {version} is awesome!")`;
+    assert.equal(checkRep({ ...task, code, stdout: task.expectedOutput, expected: task.expectedOutput }).passed, true, prefix);
+  }
+  const code = 'text = "f\'example\'"\nprint("Python version 3 is awesome!")';
+  assert.equal(checkRep({ ...task, code, stdout: task.expectedOutput, expected: task.expectedOutput }).passed, false);
+});
