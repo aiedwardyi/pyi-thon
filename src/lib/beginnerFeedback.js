@@ -1,3 +1,5 @@
+import { pythonLanguage } from "@codemirror/lang-python";
+
 const LOOP_RE = /infinite loop detected/i;
 const ERROR_LINE_RE = /^([A-Za-z_][\w.]*(?:Error|Exception)):?\s*(.*)$/;
 
@@ -66,6 +68,7 @@ const MESSAGES = {
     mismatch: (n, exp, got) => `Line ${n}: expected "${exp}", got "${got}".`,
     missing: (n, exp) => `Missing line ${n}: "${exp}".`,
     extra: (n) => `Line ${n} wasn't expected.`,
+    boundary: (values, expected, got) => `With ${values}: expected "${expected}", got "${got}".`,
   },
   ko: {
     line: (n, body) => `${n}번째 줄: ${body}`,
@@ -92,6 +95,7 @@ const MESSAGES = {
     mismatch: (n, exp, got) => `${n}번째 줄: 기대 "${exp}", 실제 "${got}".`,
     missing: (n, exp) => `${n}번째 줄이 빠졌어요: "${exp}".`,
     extra: (n) => `${n}번째 줄은 필요 없어요.`,
+    boundary: (values, expected, got) => `${values}일 때: 기대 "${expected}", 실제 "${got}".`,
   },
 };
 
@@ -149,7 +153,7 @@ function pickMessage(message, lang) {
   return message?.[lang] || message?.en || "";
 }
 
-export function checkRep({ code, stdout, errorText, expected, mustUse = [], mustNotUse = [], topic = 1, lang = "en" }) {
+export function checkRep({ code, stdout, errorText, expected, mustUse = [], mustNotUse = [], checks = [], topic = 1, lang = "en" }) {
   const text = MESSAGES[lang] || MESSAGES.en;
   const expectedLines = expected ? expected.trimEnd().split(/\r?\n/) : [];
   const gotLines = stdout ? stdout.trimEnd().split(/\r?\n/) : [];
@@ -180,9 +184,25 @@ export function checkRep({ code, stdout, errorText, expected, mustUse = [], must
   if (gotLines.length < expectedLines.length) return result(false, text.missing(gotLines.length + 1, expectedLines[gotLines.length]));
   if (gotLines.length > expectedLines.length) return result(false, text.extra(expectedLines.length + 1));
 
+  const tree = pythonLanguage.parser.parse(code);
   for (const rule of [...mustUse.map((r) => [r, true]), ...mustNotUse.map((r) => [r, false])]) {
     const [{ pattern, message }, wanted] = rule;
-    if (new RegExp(pattern).test(code) !== wanted) return result(false, pickMessage(message, lang));
+    const spaced = pattern.replaceAll("\\(", "\\s*\\(\\s*").replaceAll("\\)", "\\s*\\)").replaceAll(" ", "\\s+");
+    const found = [...code.matchAll(new RegExp(spaced, "g"))].some((match) => {
+      for (let node = tree.resolveInner(match.index, 1); node; node = node.parent) {
+        if (node.name === "Comment" || (wanted && node.name === "String")) return false;
+        if (node.name === "FormatReplacement") break;
+        if (wanted && node.name === "FormatString" && match.index !== node.from) return false;
+      }
+      return true;
+    });
+    if (found !== wanted) return result(false, pickMessage(message, lang));
+  }
+  for (const check of checks) {
+    if (check.errorText || check.output.trimEnd() !== check.expectedOutput) {
+      const values = Object.entries(check.variables).map(([name, value]) => `${name} = ${value}`).join(", ");
+      return result(false, text.boundary(values, check.expectedOutput, check.output.trimEnd()));
+    }
   }
   return result(true, "");
 }

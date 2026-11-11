@@ -13,7 +13,7 @@ export function loadPyodideRuntime() {
   return loading;
 }
 
-export async function runPython(code, simulatedInput) {
+export async function runPython(code, simulatedInput, variables = {}) {
   const py = await loadPyodideRuntime();
   const inputs = simulatedInput ? simulatedInput.split("\n") : [];
   py.runPython(`
@@ -34,8 +34,25 @@ __builtins__.input = input
   const captured = () => {
     try { return py.runPython("_captured_output.getvalue()").trimEnd(); } catch { return ""; }
   };
-  const scope = py.toPy({});
+  const scope = py.toPy(variables);
   try {
+    if (Object.keys(variables).length) {
+      const context = py.toPy({ source: code, values: variables });
+      try {
+        code = py.runPython(`
+import ast
+tree = ast.parse(source)
+pending = dict(values)
+for node in tree.body:
+    target = node.targets[0] if isinstance(node, ast.Assign) and len(node.targets) == 1 else node.target if isinstance(node, ast.AnnAssign) else None
+    if isinstance(target, ast.Name) and target.id in pending:
+        node.value = ast.Constant(value=pending.pop(target.id))
+ast.unparse(ast.fix_missing_locations(tree))
+`, { globals: context });
+      } finally {
+        context.destroy();
+      }
+    }
     // Loop guard: stops runaway loops before they freeze the tab.
     py.runPython(`
 import sys
@@ -76,4 +93,17 @@ if hasattr(_sys, '__stdout__'):
   } finally {
     scope.destroy();
   }
+}
+
+export async function runRep(code, rep) {
+  const result = await runPython(code, rep.simulatedInput || "");
+  const checks = [];
+  if (!result.errorText && result.output.trimEnd() === rep.expectedOutput.trimEnd()) {
+    for (const test of rep.cases || []) {
+      const check = await runPython(code, rep.simulatedInput || "", test.variables);
+      checks.push({ ...test, ...check });
+      if (check.errorText || check.output.trimEnd() !== test.expectedOutput) break;
+    }
+  }
+  return { ...result, checks };
 }

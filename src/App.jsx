@@ -9,7 +9,7 @@ import WelcomeScreen from "./components/WelcomeScreen";
 import { STRINGS } from "./data/appConfig";
 import { SETS, pick } from "./data/sets";
 import {
-  advanceRep, emptyProgress, hasProgress, isUnlocked, migrateProgress, recordMiss, recordPass, startTopic, topicState,
+  advanceRep, emptyProgress, hasProgress, isUnlocked, migrateProgress, recordMiss, recordPass, saveAttempt, startTopic, topicState,
 } from "./lib/progress";
 import { loadPyodideRuntime } from "./lib/pythonRunner";
 import { dayKey, streakStats } from "./lib/streak";
@@ -46,11 +46,7 @@ function getQaConfig() {
 }
 
 function initialProgress(qa) {
-  if (!qa) {
-    const progress = migrateProgress(loadProgress(), SETS);
-    const set = SETS[progress.current];
-    return topicState(progress, set).rep >= set.reps.length ? startTopic(progress, SETS, progress.current) : progress;
-  }
+  if (!qa) return migrateProgress(loadProgress(), SETS);
   let progress = migrateProgress({ completedLevels: qa.completedLevels }, SETS);
   const index = qa.levelId ? SETS.findIndex((set) => set.id === qa.levelId) : 0;
   progress = startTopic(progress, SETS, Math.max(index, 0));
@@ -107,7 +103,7 @@ export default function PyithonApp() {
     if (offlineMode) loadPyodideRuntime().then(() => setPyodideStatus("ready")).catch(() => setPyodideStatus("error"));
   }, [offlineMode]);
   useEffect(() => { safeLocalStorageSet("pyithon-theme", themeKey); }, [themeKey]);
-  useEffect(() => { safeLocalStorageSet("pyithon-lang", lang); }, [lang]);
+  useEffect(() => { safeLocalStorageSet("pyithon-lang", lang); document.documentElement.lang = lang; }, [lang]);
   useEffect(() => { safeLocalStorageSet("pyithon-provider", provider); }, [provider]);
 
   // Welcome typing animation
@@ -146,10 +142,16 @@ export default function PyithonApp() {
 
   const goToTopic = useCallback((target) => {
     if (!isUnlocked(progress, SETS, target)) return;
-    setProgress(startTopic(progress, SETS, target));
-    setRepKey((k) => k + 1);
+    if (target !== progress.current || topicState(progress, SETS[target]).rep >= SETS[target].reps.length) {
+      setProgress(startTopic(progress, SETS, target));
+      setRepKey((k) => k + 1);
+    }
     setView("rep");
   }, [progress]);
+
+  const onAttempt = useCallback((changes) => {
+    setProgress((prev) => saveAttempt(prev, set, repIndex, changes));
+  }, [repIndex, set]);
 
   const onPass = useCallback((outcome) => {
     const today = dayKey();
@@ -233,13 +235,17 @@ export default function PyithonApp() {
       {view !== "setDone" && !(view === "history" && backTo === "setDone") && createElement(RepScreen, {
         key: `${set.id}-${repIndex}-${repKey}`,
         ai: { enabled: !offlineMode && Boolean(apiKey), apiKey, provider },
+        attempt: topic.attempt,
         C,
         hidden: view !== "rep",
         isLast,
         lang,
+        modalOpen: showApiSetup,
+        onAttempt,
         onMiss,
         onNext,
         onPass,
+        outcome: topic.outcomes[repIndex],
         rep: set.reps[repIndex],
         repIndex,
         set,

@@ -1,7 +1,7 @@
-import { useEffect, useRef } from "react";
+import { createElement } from "react";
 import { AI_PROVIDERS } from "../data/appConfig";
 import { MONO_FONT, mix } from "../theme/themes";
-import { primaryButton } from "./parts";
+import { Dialog, primaryButton } from "./parts";
 
 function toggleStyle(active, C) {
   return {
@@ -44,43 +44,24 @@ export default function SettingsPanel({
   t,
   themeKey,
 }) {
-  const closeButtonRef = useRef(null);
   const providerConfig = AI_PROVIDERS[provider] || AI_PROVIDERS.claude;
   const closeSettings = () => setShowApiSetup(false);
   const rowStyle = { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 0", borderBottom: `1px solid ${C.line}` };
   const labelStyle = { color: C.text, fontSize: 14, fontWeight: 600, margin: 0 };
   const descStyle = { color: C.muted, fontSize: 12, margin: "2px 0 0" };
 
-  useEffect(() => {
-    const previouslyFocused = document.activeElement;
-    closeButtonRef.current?.focus();
-
-    const handleKeyDown = (event) => {
-      if (event.key === "Escape") setShowApiSetup(false);
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      if (previouslyFocused instanceof HTMLElement) previouslyFocused.focus();
-    };
-  }, [setShowApiSetup]);
-
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 80, display: "flex", alignItems: "center", justifyContent: "center", padding: 16, overflowY: "auto" }}>
+    createElement(Dialog, { labelledBy: "settings-title", onClose: closeSettings, style: { zIndex: 80, background: "transparent" } }, <>
       <div data-testid="settings-backdrop" onClick={closeSettings} style={{ position: "fixed", inset: 0, background: C.scrim, zIndex: 0 }} />
       <div
         className="ui-rise"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="settings-title"
         style={{
           maxWidth: 440, width: "100%", background: C.surface, border: `1px solid ${C.line}`, borderRadius: 18, padding: 24,
           boxShadow: C.shadow, position: "relative", zIndex: 1, maxHeight: "calc(100vh - 32px)", overflowY: "auto",
         }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
           <h2 id="settings-title" style={{ color: C.text, fontSize: 20, fontWeight: 700, margin: 0 }}>{t("settings")}</h2>
-          <button ref={closeButtonRef} type="button" className="ui-btn" aria-label={t("closeSettings")} data-testid="close-settings" onClick={closeSettings} style={{ color: C.muted, background: "none", border: "none", cursor: "pointer", padding: 4 }}>
+          <button data-autofocus type="button" className="ui-btn" aria-label={t("closeSettings")} data-testid="close-settings" onClick={closeSettings} style={{ color: C.muted, background: "none", border: "none", cursor: "pointer", padding: 4 }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
           </button>
         </div>
@@ -153,6 +134,6 @@ export default function SettingsPanel({
           </div>
         )}
       </div>
-    </div>
+    </>)
   );
 }

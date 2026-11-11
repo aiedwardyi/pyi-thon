@@ -2,6 +2,7 @@ import { LEVELS, getLocalizedLevel } from "./levels.js";
 import { PILOT_SETS } from "./pilotSets.js";
 
 const rule = (pattern, en, ko) => ({ pattern, message: { en, ko } });
+const LEGACY_ANSWERS = new Set([7, 8, 9, 10, 11, 12, 13, 14, 16, 18, 19, 21, 22, 24, 26, 27, 28, 29, 30]);
 
 // Today's construct checks for topics 6-30, as mustUse rules.
 const LEGACY_MUST_USE = {
@@ -46,7 +47,7 @@ function legacySet(level) {
       starterCode: level.starterCode,
       expectedOutput: level.expectedOutput,
       simulatedInput: level.simulatedInput || null,
-      hints: [{ en: level.hint, ko: ko.hint }],
+      hints: [{ type: LEGACY_ANSWERS.has(level.id) ? "answer" : "nudge", text: { en: level.hint, ko: ko.hint } }],
       starterError: null,
       mustUse: LEGACY_MUST_USE[level.id] || [],
       mustNotUse: [],
@@ -56,7 +57,14 @@ function legacySet(level) {
 
 export const SETS = LEVELS.map((level) => {
   const pilot = PILOT_SETS.find((set) => set.id === level.id);
-  return pilot ? { ...pilot, phase: level.phase, legacy: false } : legacySet(level);
+  return pilot ? {
+    ...pilot, phase: level.phase, legacy: false,
+    reps: pilot.reps.map((rep) => ({ ...rep, hints: [
+      { type: "nudge", text: rep.hints[0] },
+      { type: "example", text: rep.hints[1] },
+      { type: "answer", text: rep.hints[2] },
+    ] })),
+  } : legacySet(level);
 });
 
 export function pick(value, lang) {

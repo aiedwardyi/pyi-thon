@@ -15,7 +15,7 @@ export function topicState(progress, set) {
   if (!saved) return blankTopic(set);
   const outcomes = set.reps.map((_, index) => saved.outcomes?.[index] ?? null);
   const rep = Math.min(Math.max(Number(saved.rep) || 0, 0), set.reps.length);
-  return { rep, outcomes, done: Boolean(saved.done) };
+  return { rep, outcomes, done: Boolean(saved.done), ...(saved.attempt?.rep === rep ? { attempt: saved.attempt } : {}) };
 }
 
 function withTopic(progress, set, topic) {
@@ -79,13 +79,20 @@ export function recordMiss(progress) {
   return { ...progress, combo: 0 };
 }
 
+export function saveAttempt(progress, set, rep, changes) {
+  const topic = topicState(progress, set);
+  if (topic.rep !== rep) return progress;
+  return withTopic(progress, set, { ...topic, attempt: { ...topic.attempt, ...changes, rep } });
+}
+
 export function recordPass(progress, set, repIndex, outcome, today = dayKey()) {
+  const topic = topicState(progress, set);
+  if (topic.outcomes[repIndex]) return { progress, reward: { outcome: topic.outcomes[repIndex], parts: [], total: 0, combo: progress.combo, dayStreak: 0 } };
   const parts = outcome === "clean"
     ? [{ key: "solved", xp: XP.solved }, { key: "firstTry", xp: XP.firstTry }]
     : outcome === "solved" ? [{ key: "solved", xp: XP.solved }] : [{ key: "done", xp: XP.done }];
   const total = parts.reduce((sum, part) => sum + part.xp, 0);
   const combo = outcome === "clean" ? progress.combo + 1 : 0;
-  const topic = topicState(progress, set);
   const outcomes = topic.outcomes.map((value, index) => (index === repIndex ? outcome : value));
   const next = withTopic(progress, set, { ...topic, outcomes });
   const before = progress.days[today];
@@ -98,7 +105,7 @@ export function recordPass(progress, set, repIndex, outcome, today = dayKey()) {
 
 export function advanceRep(progress, sets, index) {
   const set = sets[index];
-  const topic = topicState(progress, set);
+  const { attempt: _attempt, ...topic } = topicState(progress, set);
   const rep = topic.rep + 1;
   if (rep < set.reps.length) return { progress: withTopic(progress, set, { ...topic, rep }), setDone: false, bonus: 0 };
   const bonus = topic.done ? 0 : XP.setDone;

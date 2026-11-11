@@ -71,10 +71,11 @@ function themeFor(C) {
   return [view, syntaxHighlighting(highlight)];
 }
 
-const CodeEditor = forwardRef(function CodeEditor({ C, initialCode, label, onChange, onRun }, ref) {
+const CodeEditor = forwardRef(function CodeEditor({ C, initialCode, label, lang, onChange, onRun }, ref) {
   const hostRef = useRef(null);
   const viewRef = useRef(null);
   const themeRef = useRef(new Compartment());
+  const languageRef = useRef(new Compartment());
   const handlers = useRef({ onChange, onRun });
   handlers.current = { onChange, onRun };
 
@@ -92,7 +93,8 @@ const CodeEditor = forwardRef(function CodeEditor({ C, initialCode, label, onCha
         ]),
         EditorView.updateListener.of((u) => { if (u.docChanged) handlers.current.onChange(u.state.doc.toString()); }),
         EditorView.lineWrapping,
-        EditorView.contentAttributes.of({ autocapitalize: "off", autocorrect: "off", autocomplete: "off", spellcheck: "false", "aria-label": label }),
+        EditorView.contentAttributes.of({ autocapitalize: "off", autocorrect: "off", autocomplete: "off", spellcheck: "false" }),
+        languageRef.current.of(EditorView.contentAttributes.of({ "aria-label": label, lang })),
       ],
     });
     const view = new EditorView({ state, parent: hostRef.current });
@@ -105,6 +107,10 @@ const CodeEditor = forwardRef(function CodeEditor({ C, initialCode, label, onCha
   useEffect(() => {
     viewRef.current?.dispatch({ effects: themeRef.current.reconfigure(themeFor(C)) });
   }, [C]);
+
+  useEffect(() => {
+    viewRef.current?.dispatch({ effects: languageRef.current.reconfigure(EditorView.contentAttributes.of({ "aria-label": label, lang })) });
+  }, [label, lang]);
 
   useImperativeHandle(ref, () => ({
     markError(line) {

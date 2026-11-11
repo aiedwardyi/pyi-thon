@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 
 import { checkRep } from "../src/lib/beginnerFeedback.js";
+import { SETS } from "../src/data/sets.js";
 import { FIXTURES } from "./beginner-feedback-fixtures.js";
 
 function run(name, fn) {
@@ -192,4 +193,32 @@ run("checkRep checks mustUse only when the output matches", () => {
   assert.equal(result.message, 'Line 1: expected "hi", got "bye".');
   const withError = checkRep({ ...rules, ...FIXTURES.nameHello, stdout: "" });
   assert.equal(withError.message, "Line 1: Hello is text, so it needs quotes.");
+});
+
+run("construct checks accept whitespace in pilot and legacy calls", () => {
+  for (const [topic, rep, code] of [
+    [2, 1, 'name = "Alice"\nprint ( name )'],
+    [2, 2, 'city = "Seoul"\nprint\t(\n city\n)'],
+    [3, 3, 'score = 90\nprint ("Score: " + str ( score ))'],
+    [4, 2, 'color = input ( "Color? " )\nprint ( color )'],
+    [16, 1, 'nums = [1, 2, 3]\nnums.append (4)\nprint (len (nums))'],
+    [18, 1, 'scores = {"math": 90, "science": 85}\nfor subject, score in scores.items ( ):\n    print (subject + ": " + str (score))'],
+  ]) {
+    const task = SETS[topic - 1].reps[rep - 1];
+    assert.equal(checkRep({ ...task, code, stdout: task.expectedOutput, expected: task.expectedOutput }).passed, true, `${topic}/${rep}`);
+  }
+});
+
+run("comments and strings cannot stand in for executable constructs", () => {
+  const task = SETS[1].reps[1];
+  for (const code of [
+    '# city = "Seoul"\n# print(city)\nprint("Seoul")',
+    'text = "city = print(city)"\nprint("Seoul")',
+    'text = """city = "Seoul"\nprint(city)"""\nprint("Seoul")',
+    'text = f"city = print(city)"\nprint("Seoul")',
+  ]) {
+    assert.equal(checkRep({ ...task, code, stdout: "Seoul", expected: "Seoul" }).passed, false);
+  }
+  const input = SETS[3].reps[1];
+  assert.equal(checkRep({ ...input, code: '# blue\nprint(input())', stdout: "blue", expected: "blue" }).passed, true);
 });
