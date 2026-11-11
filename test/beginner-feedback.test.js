@@ -166,6 +166,22 @@ const rules = {
   mustNotUse: [{ pattern: "print", message: { en: "No print.", ko: "print 금지." } }],
 };
 
+for (const [topic, solution] of [
+  [15, 'fruits = ["apple", "banana", "cherry"]\nprint(fruits[1])'],
+  [17, 'person = {"name": "Alice", "age": 25}\nprint(person["name"])'],
+]) {
+  run(`checkRep finds topic ${topic} constructs after comments and strings`, () => {
+    const rep = SETS.find((set) => set.id === topic).reps[0];
+    for (const prefix of [`# ${solution.split("\n")[0]}\n`, `'''${solution}'''\n`, `f'''${topic === 15 ? "[example]" : "{{example}}"}'''\n`]) {
+      for (const lang of ["en", "ko"]) {
+        const input = { stdout: rep.expectedOutput, expected: rep.expectedOutput, mustUse: rep.mustUse, topic, lang };
+        assert.equal(checkRep({ ...input, code: prefix + solution }).passed, true, prefix);
+        assert.equal(checkRep({ ...input, code: `${prefix}print(${JSON.stringify(rep.expectedOutput)})` }).passed, false, prefix);
+      }
+    }
+  });
+}
+
 run("checkRep reports the first failing mustUse before mustNotUse", () => {
   const result = checkRep(rules);
   assert.equal(result.passed, false);

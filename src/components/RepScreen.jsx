@@ -105,6 +105,9 @@ export default function RepScreen({ ai, attempt = {}, C, hidden, isLast, lang, m
     }
   };
 
+  const runRef = useRef(run);
+  useEffect(() => { runRef.current = run; });
+
   useEffect(() => {
     aliveRef.current = true;
     return () => { aliveRef.current = false; };
@@ -115,11 +118,11 @@ export default function RepScreen({ ai, attempt = {}, C, hidden, isLast, lang, m
     const onKey = (event) => {
       if (event.defaultPrevented || !(event.ctrlKey || event.metaKey) || event.key !== "Enter") return;
       event.preventDefault();
-      void run();
+      void runRef.current();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  });
+  }, [hidden, modalOpen]);
 
   useEffect(() => {
     if (!result || win || window.innerWidth >= 900) return;

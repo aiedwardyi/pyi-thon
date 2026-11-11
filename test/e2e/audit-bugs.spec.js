@@ -160,6 +160,7 @@ test("B6 Settings owns focus and blocks the covered Run shortcut", async ({ page
   await setCode(page, HELLO);
   await page.getByTestId("open-settings").click();
   const dialog = page.getByRole("dialog", { name: "Settings" });
+  expect(await dialog.evaluate((el) => getComputedStyle(el, "::backdrop").backgroundColor)).toBe("rgba(0, 0, 0, 0)");
   await expect(page.getByTestId("close-settings")).toBeFocused();
   await page.keyboard.press("Shift+Tab");
   expect(await dialog.evaluate((el) => el.contains(document.activeElement))).toBe(true);
@@ -172,6 +173,38 @@ test("B6 Settings owns focus and blocks the covered Run shortcut", async ({ page
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
   await expect(page.getByTestId("open-settings")).toBeFocused();
+});
+
+test("documented list and dictionary solutions pass construct checks", async ({ page }) => {
+  for (const [topic, code] of [
+    [15, 'fruits = ["apple", "banana", "cherry"]\nprint(fruits[1])'],
+    [17, 'person = {"name": "Alice", "age": 25}\nprint(person["name"])'],
+  ]) {
+    await openRep(page, topic);
+    await setCode(page, `# ${code.split("\n")[0]}\n${code}`);
+    await page.getByTestId("run-button").click();
+    await expect(page.getByTestId("win-word")).toHaveText("CLEAN", { timeout: RUN_TIMEOUT });
+  }
+});
+
+test("Run shortcut keeps its listener and uses the latest hint state", async ({ page }) => {
+  await page.addInitScript(() => {
+    const add = window.addEventListener;
+    window.runListenerAdds = 0;
+    window.addEventListener = function (type, listener, options) {
+      if (type === "keydown" && listener.toString().includes("defaultPrevented")) window.runListenerAdds += 1;
+      return add.call(this, type, listener, options);
+    };
+  });
+  await openRep(page);
+  const before = await page.evaluate(() => window.runListenerAdds);
+  expect(before).toBeGreaterThan(0);
+  await page.getByTestId("hint-button").click();
+  await setCode(page, HELLO);
+  expect(await page.evaluate(() => window.runListenerAdds)).toBe(before);
+  await page.keyboard.press("ControlOrMeta+Enter");
+  await expect(page.getByTestId("win-word")).toHaveText("SOLVED", { timeout: RUN_TIMEOUT });
+  await expect(page.getByTestId("win-xp")).toHaveText("+20");
 });
 
 test("B7 language changes update existing feedback and editor metadata", async ({ page }) => {

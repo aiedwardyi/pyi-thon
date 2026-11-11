@@ -188,7 +188,8 @@ export function checkRep({ code, stdout, errorText, expected, mustUse = [], must
   for (const rule of [...mustUse.map((r) => [r, true]), ...mustNotUse.map((r) => [r, false])]) {
     const [{ pattern, message }, wanted] = rule;
     const spaced = pattern.replaceAll("\\(", "\\s*\\(\\s*").replaceAll("\\)", "\\s*\\)").replaceAll(" ", "\\s+");
-    const found = [...code.matchAll(new RegExp(spaced, "g"))].some((match) => {
+    // Rejected comments and strings must not consume later executable matches.
+    const found = [...code.matchAll(new RegExp(`(?=${spaced})`, "g"))].some((match) => {
       for (let node = tree.resolveInner(match.index, 1); node; node = node.parent) {
         if (node.name === "Comment" || (wanted && node.name === "String")) return false;
         if (node.name === "FormatReplacement") break;
