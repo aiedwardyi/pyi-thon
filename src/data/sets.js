@@ -2,6 +2,7 @@ import { LEVELS, getLocalizedLevel } from "./levels.js";
 import { PILOT_SETS } from "./pilotSets.js";
 
 const rule = (pattern, en, ko) => ({ pattern, message: { en, ko } });
+const LEGACY_ANSWERS = new Set([7, 8, 9, 10, 11, 12, 13, 14, 16, 18, 19, 21, 22, 24, 26, 27, 28, 29, 30]);
 
 // Today's construct checks for topics 6-30, as mustUse rules.
 const LEGACY_MUST_USE = {
@@ -27,7 +28,7 @@ const LEGACY_MUST_USE = {
   25: [rule("def ", "Define a function.", "함수를 정의하세요."), rule("sum\\(", "Use sum() and len().", "sum()과 len()을 사용하세요."), rule("len\\(", "Use sum() and len().", "sum()과 len()을 사용하세요.")],
   26: [rule("\\[.+for .+ in .+\\]", "Use a list comprehension: [expr for x in iterable].", "리스트 컴프리헨션을 사용하세요: [표현식 for x in 반복가능].")],
   27: [rule("\\.split\\(", "Use .split() and .join().", ".split()과 .join()을 사용하세요."), rule("\\.join\\(", "Use .split() and .join().", ".split()과 .join()을 사용하세요.")],
-  28: [rule("f\"|f'", 'Use an f-string: f"...{variable}..."', 'f-string을 사용하세요: f"...{변수}..."')],
+  28: [rule("(?:[fF][rR]?|[rR][fF])[\"']", 'Use an f-string: f"...{variable}..."', 'f-string을 사용하세요: f"...{변수}..."')],
   29: [rule("lambda", "Use a lambda function.", "lambda 함수를 사용하세요."), rule("map\\(", "Use map().", "map()을 사용하세요.")],
   30: [rule("for ", "Use a for loop.", "for 반복문을 사용하세요."), rule("if ", "Use an if statement to filter.", "if문을 사용하여 필터링하세요.")],
 };
@@ -46,7 +47,7 @@ function legacySet(level) {
       starterCode: level.starterCode,
       expectedOutput: level.expectedOutput,
       simulatedInput: level.simulatedInput || null,
-      hints: [{ en: level.hint, ko: ko.hint }],
+      hints: [{ type: LEGACY_ANSWERS.has(level.id) ? "answer" : "nudge", text: { en: level.hint, ko: ko.hint } }],
       starterError: null,
       mustUse: LEGACY_MUST_USE[level.id] || [],
       mustNotUse: [],
@@ -56,7 +57,14 @@ function legacySet(level) {
 
 export const SETS = LEVELS.map((level) => {
   const pilot = PILOT_SETS.find((set) => set.id === level.id);
-  return pilot ? { ...pilot, phase: level.phase, legacy: false } : legacySet(level);
+  return pilot ? {
+    ...pilot, phase: level.phase, legacy: false,
+    reps: pilot.reps.map((rep) => ({ ...rep, hints: [
+      { type: "nudge", text: rep.hints[0] },
+      { type: "example", text: rep.hints[1] },
+      { type: "answer", text: rep.hints[2] },
+    ] })),
+  } : legacySet(level);
 });
 
 export function pick(value, lang) {

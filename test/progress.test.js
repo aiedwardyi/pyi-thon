@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 
-import { advanceRep, isUnlocked, migrateProgress, recordMiss, recordPass, startTopic, topicState } from "../src/lib/progress.js";
+import { advanceRep, isUnlocked, migrateProgress, recordMiss, recordPass, saveAttempt, startTopic, topicState } from "../src/lib/progress.js";
 
 function run(name, fn) {
   try {
@@ -85,4 +85,38 @@ run("replaying a done topic resets reps but keeps it done and skips the bonus", 
   assert.deepEqual(topicState(progress, SETS[2]), { rep: 0, outcomes: [null], done: true });
   progress = recordPass(progress, SETS[2], 0, "clean").progress;
   assert.equal(advanceRep(progress, SETS, 2).bonus, 0);
+});
+
+run("drafts keep code, misses and hints across topic changes and reloads", () => {
+  const attempt = { code: 'print("Hello")', misses: 2, hintStep: 3, started: true };
+  let progress = startTopic(migrateProgress(null, SETS), SETS, 0);
+  progress = saveAttempt(progress, SETS[0], 0, attempt);
+  progress = startTopic(startTopic(progress, SETS, 1), SETS, 0);
+  progress = migrateProgress(JSON.parse(JSON.stringify(progress)), SETS);
+  assert.deepEqual(topicState(progress, SETS[0]).attempt, { ...attempt, rep: 0 });
+  progress = advanceRep(progress, SETS, 0).progress;
+  assert.equal(topicState(progress, SETS[0]).attempt, undefined);
+  assert.equal(saveAttempt(progress, SETS[0], 0, attempt), progress);
+});
+
+run("a saved pass is credited once across reloads, days and changed outcomes", () => {
+  const first = recordPass(migrateProgress(null, SETS), SETS[0], 0, "done", "2026-11-10");
+  const restored = migrateProgress(JSON.parse(JSON.stringify(first.progress)), SETS);
+  const duplicate = recordPass(restored, SETS[0], 0, "clean", "2026-11-11");
+  assert.equal(duplicate.progress, restored);
+  assert.equal(duplicate.reward.total, 0);
+  assert.equal(duplicate.reward.outcome, "done");
+  assert.equal(restored.xp, 5);
+  assert.equal(restored.combo, 0);
+  assert.deepEqual(restored.days, { "2026-11-10": { reps: 1, clean: 0 } });
+});
+
+run("explicit replay credits a new attempt once", () => {
+  let progress = recordPass(migrateProgress(null, SETS), SETS[2], 0, "clean", "2026-11-10").progress;
+  progress = advanceRep(progress, SETS, 2).progress;
+  const before = progress.xp;
+  progress = startTopic(progress, SETS, 2);
+  progress = recordPass(progress, SETS[2], 0, "clean", "2026-11-11").progress;
+  assert.equal(progress.xp, before + 30);
+  assert.equal(recordPass(progress, SETS[2], 0, "clean").progress, progress);
 });

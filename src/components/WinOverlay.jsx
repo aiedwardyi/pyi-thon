@@ -65,7 +65,7 @@ export default function WinOverlay({ C, isLast, onNext, onStay, repIndex, repTot
 
   const wordColor = outcome === "clean" ? C.accentLine : outcome === "solved" ? C.text : C.muted;
   return (
-    createElement(Overlay, { C, label: t(WORD[outcome]), testId: "win-overlay" }, <>
+    createElement(Overlay, { C, label: t(WORD[outcome]), onClose: () => finish(onStay), testId: "win-overlay" }, <>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, textAlign: "center" }}>
         <div className="ui-slam" data-testid="win-word" style={{ fontSize: "clamp(48px, 14vw, 72px)", fontWeight: 900, lineHeight: 0.95, letterSpacing: 1, color: wordColor }}>{t(WORD[outcome])}</div>
         <div style={{ width: 64, height: 5, borderRadius: 3, background: C.accentLine, margin: "2px 0 4px" }} />
@@ -95,7 +95,7 @@ export default function WinOverlay({ C, isLast, onNext, onStay, repIndex, repTot
         )}
         <div style={{ display: "flex", gap: 10, width: "100%", marginTop: 16 }}>
           <button type="button" className="ui-btn" onClick={() => finish(onStay)} style={ghostButton(C, { flex: 1, padding: "14px 10px" })}>{t("seeCode")}</button>
-          <button type="button" className="ui-btn" autoFocus data-testid="win-next" onClick={() => finish(onNext)} style={primaryButton(C, { flex: 1, padding: "14px 10px" })}>
+          <button type="button" className="ui-btn" data-autofocus data-testid="win-next" onClick={() => finish(onNext)} style={primaryButton(C, { flex: 1, padding: "14px 10px" })}>
             {isLast ? t("setDone") : t("nextRep")}{createElement(Kbd, null, "Enter")}
           </button>
         </div>

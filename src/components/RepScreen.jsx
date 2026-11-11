@@ -1,10 +1,10 @@
-import { createElement, useCallback, useEffect, useRef, useState } from "react";
+import { createElement, useEffect, useRef, useState } from "react";
 import { pick } from "../data/sets";
 import { formatHintText } from "../hintFormatting";
 import { evaluateWithAI } from "../lib/aiEvaluation";
 import { checkRep } from "../lib/beginnerFeedback";
 import { floatXp, motionOK } from "../lib/motion";
-import { runPython } from "../lib/pythonRunner";
+import { runRep } from "../lib/pythonRunner";
 import { sound } from "../lib/sound";
 import { MONO_FONT, mix } from "../theme/themes";
 import CodeEditor from "./CodeEditor";
@@ -12,10 +12,15 @@ import SeeCard from "./SeeCard";
 import WinOverlay from "./WinOverlay";
 import { CodeBlock, Kbd, ghostButton, primaryButton } from "./parts";
 
-const HINT_BUTTON = ["hint", "hintExample", "hintAnswer"];
-const HINT_LABEL = ["hintLabelNudge", "hintLabelExample", "hintLabelAnswer"];
+const HINT_BUTTON = { nudge: "hint", example: "hintExample", answer: "hintAnswer" };
+const HINT_LABEL = { nudge: "hintLabelNudge", example: "hintLabelExample", answer: "hintLabelAnswer" };
 
 const MAX_ROWS = 20;
+
+function feedbackFor(result, lang, t) {
+  if (result.messageKey) return { passed: false, lines: [], errorLine: null, message: t(result.messageKey), isError: true };
+  return { ...checkRep({ ...result, lang }), isError: Boolean(result.errorText) };
+}
 
 function outputRows(result) {
   const rows = result.lines.map((line) => ({ ...line }));
@@ -31,54 +36,55 @@ function outputRows(result) {
   return [...rows.slice(0, MAX_ROWS), { more }, ...tail];
 }
 
-export default function RepScreen({ ai, C, hidden, isLast, lang, onMiss, onNext, onPass, rep, repIndex, set, startWithSee, t, xpEl }) {
+export default function RepScreen({ ai, attempt = {}, C, hidden, isLast, lang, modalOpen, onAttempt, onMiss, onNext, onPass, outcome, rep, repIndex, set, startWithSee, t, xpEl }) {
   const editorRef = useRef(null);
   const outputRef = useRef(null);
   const shakeRef = useRef(null);
-  const codeRef = useRef(rep.starterCode);
-  const missesRef = useRef(0);
+  const codeRef = useRef(attempt.code ?? rep.starterCode);
+  const missesRef = useRef(attempt.misses || 0);
+  const hintStepRef = useRef(attempt.hintStep || 0);
   const aliveRef = useRef(true);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState(null);
-  const [hintStep, setHintStep] = useState(0);
-  const [passed, setPassed] = useState(false);
+  const [hintStep, setHintStep] = useState(attempt.hintStep || 0);
+  const [passed, setPassed] = useState(Boolean(outcome));
   const [win, setWin] = useState(null);
-  const [seeOpen, setSeeOpen] = useState(startWithSee);
+  const [seeOpen, setSeeOpen] = useState(startWithSee && !attempt.started);
   const [aiLine, setAiLine] = useState(null);
   const [shake, setShake] = useState(0);
 
   const hints = rep.hints;
-  const answerShown = hints.length === 3 && hintStep >= 3;
 
-  const run = useCallback(async () => {
-    if (busy || passed || win || seeOpen) return;
+  const run = async () => {
+    if (busy || passed || win || seeOpen || modalOpen || hidden) return;
     const code = codeRef.current;
     editorRef.current?.markError(null);
     setAiLine(null);
     if (!code.trim()) {
-      setResult({ passed: false, lines: [], errorLine: null, message: t("writeCodeFirst") });
+      setResult({ messageKey: "writeCodeFirst" });
       setShake((n) => n + 1);
       return;
     }
     setBusy(true);
     sound.tick();
-    let verdict;
+    let execution;
     try {
-      const res = await runPython(code, rep.simulatedInput || "");
-      verdict = checkRep({
+      const res = await runRep(code, rep);
+      execution = {
         code, stdout: res.output, errorText: res.errorText, expected: rep.expectedOutput,
-        mustUse: rep.mustUse, mustNotUse: rep.mustNotUse, topic: set.id, lang,
-      });
-      verdict.isError = Boolean(res.errorText);
+        mustUse: rep.mustUse, mustNotUse: rep.mustNotUse, checks: res.checks, topic: set.id,
+      };
     } catch {
-      verdict = { passed: false, lines: [], errorLine: null, message: t("pythonLoadError"), isError: true };
+      execution = { messageKey: "pythonLoadError" };
     }
     if (!aliveRef.current) return;
+    const verdict = feedbackFor(execution, lang, t);
     setBusy(false);
-    setResult(verdict);
+    setResult(execution);
     editorRef.current?.markError(verdict.errorLine);
     if (verdict.passed) {
-      const outcome = answerShown ? "done" : missesRef.current === 0 && hintStep === 0 ? "clean" : "solved";
+      const answerShown = hints.slice(0, hintStepRef.current).some((hint) => hint.type === "answer");
+      const outcome = answerShown ? "done" : missesRef.current === 0 && hintStepRef.current === 0 ? "clean" : "solved";
       const reward = onPass(outcome);
       setPassed(true);
       floatXp(`+${reward.total} XP`, xpEl);
@@ -87,16 +93,20 @@ export default function RepScreen({ ai, C, hidden, isLast, lang, onMiss, onNext,
       return;
     }
     missesRef.current += 1;
+    onAttempt({ misses: missesRef.current });
     onMiss();
     sound.fail();
     setShake((n) => n + 1);
     if (ai.enabled) {
-      const level = { concept: pick(set.see.text, lang), task: pick(rep.goal, lang), expectedOutput: rep.expectedOutput, simulatedInput: rep.simulatedInput, hint: hints[2] || pick(hints[0], lang) };
+      const level = { concept: pick(set.see.text, lang), task: pick(rep.goal, lang), expectedOutput: rep.expectedOutput, simulatedInput: rep.simulatedInput, hint: pick((hints[2] || hints[0]).text, lang) };
       evaluateWithAI(code, level, ai.apiKey, lang, ai.provider)
         .then((res) => setAiLine(res.fallbackToLocal ? { text: res.sourceMessage, source: true } : { text: res.feedback || "", source: false }))
         .catch(() => {});
     }
-  }, [ai, answerShown, busy, hintStep, hints, lang, onMiss, onPass, passed, rep, seeOpen, set, t, win, xpEl]);
+  };
+
+  const runRef = useRef(run);
+  useEffect(() => { runRef.current = run; });
 
   useEffect(() => {
     aliveRef.current = true;
@@ -104,15 +114,15 @@ export default function RepScreen({ ai, C, hidden, isLast, lang, onMiss, onNext,
   }, []);
 
   useEffect(() => {
-    if (hidden) return;
+    if (hidden || modalOpen) return;
     const onKey = (event) => {
       if (event.defaultPrevented || !(event.ctrlKey || event.metaKey) || event.key !== "Enter") return;
       event.preventDefault();
-      void run();
+      void runRef.current();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [hidden, run]);
+  }, [hidden, modalOpen]);
 
   useEffect(() => {
     if (!result || win || window.innerWidth >= 900) return;
@@ -134,8 +144,8 @@ export default function RepScreen({ ai, C, hidden, isLast, lang, onMiss, onNext,
     requestAnimationFrame(() => { if (document.activeElement === focused) editorRef.current?.focus(); });
   }, [seeOpen]);
 
-  const rows = result ? outputRows(result) : [];
-  const hintLabel = hintStep >= hints.length ? t("noMoreHints") : t(HINT_BUTTON[hintStep]);
+  const rows = result ? outputRows(feedbackFor(result, lang, t)) : [];
+  const hintLabel = hintStep >= hints.length ? t("noMoreHints") : t(HINT_BUTTON[hints[hintStep].type]);
 
   return (
     <main style={{ flex: 1, width: "100%", maxWidth: 732, margin: "0 auto", padding: "28px 16px 0", display: hidden ? "none" : "flex", flexDirection: "column", gap: 16 }}>
@@ -149,11 +159,11 @@ export default function RepScreen({ ai, C, hidden, isLast, lang, onMiss, onNext,
       {hintStep > 0 && (
         <div data-testid="hint-panel" style={{ display: "grid", gap: 8 }}>
           {hints.slice(0, hintStep).map((hint, index) => {
-            const text = index === 0 ? formatHintText(pick(hint, lang)) : hint;
-            const isCode = index > 0 || text.includes("\n");
+            const text = formatHintText(pick(hint.text, lang));
+            const isCode = hint.type !== "nudge" || text.includes("\n");
             return (
               <div key={index} className="ui-rise" style={{ background: C.surface, border: `1px dashed ${C.line}`, borderRadius: 10, padding: "10px 12px", display: "grid", gap: 6 }}>
-                <span style={{ fontSize: 12, fontWeight: 800, color: C.muted }}>{t(HINT_LABEL[index])}</span>
+                <span style={{ fontSize: 12, fontWeight: 800, color: C.muted }}>{t(HINT_LABEL[hint.type])}</span>
                 {isCode ? createElement(CodeBlock, { C, code: text }) : <p style={{ margin: 0, fontSize: 15, color: C.text }}>{text}</p>}
               </div>
             );
@@ -174,11 +184,11 @@ export default function RepScreen({ ai, C, hidden, isLast, lang, onMiss, onNext,
       </div>
 
       <div ref={shakeRef}>
-        {createElement(CodeEditor, { ref: editorRef, C, initialCode: rep.starterCode, label: t("editor"), onChange: (code) => { codeRef.current = code; }, onRun: () => void run() })}
+        {createElement(CodeEditor, { ref: editorRef, C, initialCode: attempt.code ?? rep.starterCode, label: t("editor"), lang, onChange: (code) => { codeRef.current = code; onAttempt({ code }); }, onRun: () => void run() })}
       </div>
 
       <div data-testid="action-row" style={{ position: "sticky", bottom: 0, zIndex: 4, display: "flex", alignItems: "center", gap: 12, padding: "10px 0", background: C.base }}>
-        <button type="button" className="ui-btn" data-testid="hint-button" disabled={hintStep >= hints.length} onClick={() => setHintStep((n) => n + 1)} style={ghostButton(C, { opacity: hintStep >= hints.length ? 0.5 : 1 })}>{hintLabel}</button>
+        <button type="button" className="ui-btn" data-testid="hint-button" disabled={hintStep >= hints.length} onClick={() => { hintStepRef.current += 1; setHintStep(hintStepRef.current); onAttempt({ hintStep: hintStepRef.current }); }} style={ghostButton(C, { opacity: hintStep >= hints.length ? 0.5 : 1 })}>{hintLabel}</button>
         <div style={{ flex: 1 }} />
         {passed
           ? <button type="button" className="ui-btn" data-testid="next-rep" onClick={onNext} style={primaryButton(C)}>{isLast ? t("setDone") : t("nextRep")}</button>
@@ -214,8 +224,8 @@ export default function RepScreen({ ai, C, hidden, isLast, lang, onMiss, onNext,
         </section>
       )}
 
-      {!hidden && seeOpen && createElement(SeeCard, { C, lang, onStart: () => setSeeOpen(false), set, t })}
-      {!hidden && win && (
+      {!hidden && !modalOpen && seeOpen && createElement(SeeCard, { C, lang, onStart: () => { setSeeOpen(false); onAttempt({ started: true }); }, set, t })}
+      {!hidden && !modalOpen && !seeOpen && win && (
         createElement(WinOverlay, { C, isLast, onNext, onStay: () => setWin(null), repIndex, repTotal: set.reps.length, reward: win, t })
       )}
     </main>

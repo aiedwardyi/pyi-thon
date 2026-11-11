@@ -87,6 +87,7 @@ export function getGlobalStyles(theme) {
     outline-offset: 2px;
   }
   button:disabled { cursor: not-allowed; }
+  dialog::backdrop { background: none; }
   ::selection { background: ${mix(theme.accent, 30)}; }
 
   .ui-btn { transition: transform 120ms ease, filter 120ms ease, background-color 120ms ease; }

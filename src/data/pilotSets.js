@@ -276,6 +276,7 @@ export const PILOT_SETS = [
       {
         kind: "write",
         goal: { en: "Print adult if age is 18 or more. Else print kid.", ko: "age가 18 이상이면 adult, 아니면 kid를 출력하세요." },
+        cases: [17, 18, 19, 20].map((age) => ({ variables: { age }, expectedOutput: age >= 18 ? "adult" : "kid" })),
         starterCode: "age = 20\n",
         expectedOutput: "adult",
         simulatedInput: null,
@@ -291,6 +292,7 @@ export const PILOT_SETS = [
       {
         kind: "change",
         goal: { en: "Below 20, print charge. Otherwise print ok.", ko: "20 미만이면 charge, 아니면 ok를 출력하세요." },
+        cases: [15, 19, 20, 21].map((battery) => ({ variables: { battery }, expectedOutput: battery < 20 ? "charge" : "ok" })),
         starterCode: "battery = 15\n",
         expectedOutput: "charge",
         simulatedInput: null,
