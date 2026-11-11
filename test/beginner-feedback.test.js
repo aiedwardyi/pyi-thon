@@ -211,6 +211,12 @@ run("checkRep checks mustUse only when the output matches", () => {
   assert.equal(withError.message, "Line 1: Hello is text, so it needs quotes.");
 });
 
+run("boundary checks show the exception when output matches", () => {
+  const check = { variables: { age: 17 }, expectedOutput: "kid", output: "kid\n", errorText: 'Traceback (most recent call last):\n  File "<exec>", line 5, in <module>\nZeroDivisionError: division by zero' };
+  const result = checkRep({ code: "print('kid')", stdout: "kid", expected: "kid", checks: [check] });
+  assert.equal(result.message, 'With age = 17: expected "kid", got "ZeroDivisionError: division by zero".');
+});
+
 run("construct checks accept whitespace in pilot and legacy calls", () => {
   for (const [topic, rep, code] of [
     [2, 1, 'name = "Alice"\nprint ( name )'],

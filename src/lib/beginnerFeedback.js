@@ -202,7 +202,9 @@ export function checkRep({ code, stdout, errorText, expected, mustUse = [], must
   for (const check of checks) {
     if (check.errorText || check.output.trimEnd() !== check.expectedOutput) {
       const values = Object.entries(check.variables).map(([name, value]) => `${name} = ${value}`).join(", ");
-      return result(false, text.boundary(values, check.expectedOutput, check.output.trimEnd()));
+      const { type, detail } = check.errorText ? parseError(check.errorText) : {};
+      const got = check.errorText ? `${type}${detail ? `: ${detail}` : ""}` : check.output.trimEnd();
+      return result(false, text.boundary(values, check.expectedOutput, got));
     }
   }
   return result(true, "");
